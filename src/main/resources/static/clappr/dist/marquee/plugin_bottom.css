@@ -1,0 +1,12 @@
+.marquee {
+      width: 100%  !important ;
+      overflow: hidden  !important;
+      background: #ccc  !important;
+      display:block !important ;
+      z-index: 9999 !important;
+      position:absolute;
+      bottom:0px;
+    }
+  video {
+            object-fit: fill;
+        }

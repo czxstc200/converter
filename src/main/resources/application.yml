@@ -1,0 +1,4 @@
+spring.thymeleaf.prefix: classpath:/
+spring.thymeleaf.suffix: .html
+spring.thymeleaf.mode: LEGACYHTML5
+spring.thymeleaf.cache: true
