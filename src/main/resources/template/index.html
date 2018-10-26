@@ -6,7 +6,7 @@
     <title>Title</title>
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script type="text/javascript" th:src="@{clappr/dist/clappr.min.js}"></script>
-    <script type="text/javascript" th:src="@{clappr/dist/rtmp.min.js}"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/video-dev/clappr-rtmp-plugin@latest/dist/rtmp.min.js"></script>
     <script type="text/javascript" th:src="@{clappr/dist/main.min.js}"></script>
     <script type="text/javascript" th:src="@{clappr/dist/level-selector.js}"></script>
     <script type="text/javascript" th:src="@{clappr/dist/dynamic/plugin.js}"></script>
@@ -21,7 +21,7 @@
     <div id="player3"></div>
     <div id="player4"></div>
     <div id="player5"></div>
-    <script>
+    <script type="text/javascript">
 
         var player = new Clappr.Player({
             source: "http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4",
@@ -45,24 +45,16 @@
             }
         });
 
-
-        var player2 = new Clappr.Player({
-//            source: "rtmp://10.112.77.117/liveapp/hello",
-            source: "rtmp://localhost/oflaDemo/test",
+        var player = new Clappr.Player({
+            source: "rtmp://localhost/oflaDemo/hello",
             parentId: "#player2",
-            plugins: [MarqueeOverlay,RTMP],
+            plugins: [RTMP],
 //            plugins: [MarqueeOverlay,OverlayPlugin,RTMP],
 //            emrePluginConfig:{
 //                textContent:"rtmp://localhost/oflaDemo/hello",
 //                changeDuration:1000,
 //            },
-            marqueePluginConfig:{
-                textContent:"source:'rtmp://localhost/oflaDemo/hello'",
-                duration:10000,
-                direction:'left'
-            },
             rtmpConfig: {
-                swfPath: 'dist/assets/RTMP.swf',
                 scaling:'stretch',
                 playbackType: 'live',
                 bufferTime: 1,
@@ -86,6 +78,81 @@
                 }
             }
         });
+
+        var player2 = new Clappr.Player({
+//            source: "rtmp://10.112.77.117/liveapp/hello",
+            source: "rtmp://localhost/oflaDemo/2.flv",
+            parentId: "#player2",
+            plugins: [MarqueeOverlay,RTMP],
+//            plugins: [MarqueeOverlay,OverlayPlugin,RTMP],
+//            emrePluginConfig:{
+//                textContent:"rtmp://localhost/oflaDemo/hello",
+//                changeDuration:1000,
+//            },
+            marqueePluginConfig:{
+                textContent:"source:'rtmp://localhost/oflaDemo/hello'",
+                duration:10000,
+                direction:'left'
+            },
+            rtmpConfig: {
+                scaling:'stretch',
+                playbackType: 'vod',
+                bufferTime: 1,
+                startLevel: 0,
+                switchRules: {
+                    "SufficientBandwidthRule": {
+                        "bandwidthSafetyMultiple": 1.15,
+                        "minDroppedFps": 2
+                    },
+                    "InsufficientBufferRule": {
+                        "minBufferLength": 2
+                    },
+                    "DroppedFramesRule": {
+                        "downSwitchByOne": 10,
+                        "downSwitchByTwo": 20,
+                        "downSwitchToZero": 24
+                    },
+                    "InsufficientBandwidthRule": {
+                        "bitrateMultiplier": 1.15
+                    }
+                }
+            }
+        });
+
+//        var player4 = new Clappr.Player({
+////            source: "rtmp://10.112.77.117/liveapp/hello",
+//            source: "rtmp://localhost/oflaDemo/2.flv",
+//            parentId: "#player4",
+//            plugins: [RTMP],
+////            plugins: [MarqueeOverlay,OverlayPlugin,RTMP],
+////            emrePluginConfig:{
+////                textContent:"rtmp://localhost/oflaDemo/hello",
+////                changeDuration:1000,
+////            },
+//            rtmpConfig: {
+//                scaling:'stretch',
+//                playbackType: 'vod',
+//                bufferTime: 1,
+//                startLevel: 0,
+//                switchRules: {
+//                    "SufficientBandwidthRule": {
+//                        "bandwidthSafetyMultiple": 1.15,
+//                        "minDroppedFps": 2
+//                    },
+//                    "InsufficientBufferRule": {
+//                        "minBufferLength": 2
+//                    },
+//                    "DroppedFramesRule": {
+//                        "downSwitchByOne": 10,
+//                        "downSwitchByTwo": 20,
+//                        "downSwitchToZero": 24
+//                    },
+//                    "InsufficientBandwidthRule": {
+//                        "bitrateMultiplier": 1.15
+//                    }
+//                }
+//            }
+//        });
 
     </script>
 </body>
