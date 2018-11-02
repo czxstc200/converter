@@ -47,7 +47,7 @@
 
         var player2 = new Clappr.Player({
 //            source: "rtmp://10.112.77.117/liveapp/hello",
-            source: "rtmp://10.112.77.117/liveapp/hello.flv",
+            source: "rtmp://localhost/oflaDemo/hello",
             parentId: "#player2",
             plugins: [MarqueeOverlay,RTMP],
 //            plugins: [MarqueeOverlay,OverlayPlugin,RTMP],
@@ -63,7 +63,7 @@
             rtmpConfig: {
                 swfPath: 'dist/assets/RTMP.swf',
                 scaling:'stretch',
-                playbackType: 'vod',
+                playbackType: 'live',
                 bufferTime: 1,
                 startLevel: 0,
                 switchRules: {

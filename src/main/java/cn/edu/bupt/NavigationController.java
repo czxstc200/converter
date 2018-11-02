@@ -18,4 +18,9 @@ public class NavigationController {
     public String  index2() {
         return "template/definition";
     }
+
+    @RequestMapping("/home3")
+    public String  index3() {
+        return "static/demo/cn/demo";
+    }
 }

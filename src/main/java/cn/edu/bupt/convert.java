@@ -1,6 +1,7 @@
 package cn.edu.bupt;
 
 import org.bytedeco.javacpp.avcodec;
+import org.bytedeco.javacpp.avutil;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
 import org.bytedeco.javacv.Frame;
@@ -20,7 +21,7 @@ public class convert {
 
         //ffmpeg -f rtsp -rtsp_transport tcp -i rtsp://admin:leeking123@192.168.1.64:554/h264/ch1/main/av_stream rtmp://casic207-pc1/live360p/ss1
         // ffmpeg -i  rtsp://admin:123123@192.168.1.64:554/h264/ch1/main/av_stream -vcodec copy -acodec copy -f flv rtmp://casic207-pc1/live360p/ss1
-        int audioRecord =1; // 0 = 不录制，1=录制
+        int audioRecord =0; // 0 = 不录制，1=录制
         boolean saveVideo = false;
         test(rtmpPath,rtspPath,audioRecord,saveVideo);
         System.out.println("end...");
@@ -44,8 +45,8 @@ public class convert {
         recorder.setVideoOption("crf","28");
         recorder.setVideoCodec(avcodec.AV_CODEC_ID_H264); // 28
         recorder.setFormat("flv"); // rtmp的类型
-        recorder.setFrameRate(25);
-        recorder.setPixelFormat(0); // yuv420p
+        recorder.setFrameRate(10);
+        recorder.setPixelFormat(avutil.AV_PIX_FMT_YUVJ420P); // yuv420p
         System.out.println("recorder start");
         recorder.start();
         //
