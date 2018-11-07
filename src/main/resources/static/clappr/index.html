@@ -17,6 +17,8 @@
 <body>
     <div id="player"></div>
     <div id="player2"></div>
+    <button onclick="control()">左</button>
+    <button onclick="sub()">注册</button>
     <div id="player3"></div>
     <div id="player4"></div>
     <div id="player5"></div>
@@ -86,6 +88,33 @@
             }
         });
 
+        function control(){
+            $.ajax({
+                url:"/control?cmd=up&status=0",
+                type:"GET",
+                success:function (resp) {
+
+                },
+                error:function () {
+
+                    alert("fail");
+                }
+            });
+        }
+
+        function sub(){
+            $.ajax({
+                url:"/subscribe",
+                type:"GET",
+                success:function (resp) {
+
+                },
+                error:function () {
+
+                    alert("fail");
+                }
+            });
+        }
     </script>
 </body>
 </html>

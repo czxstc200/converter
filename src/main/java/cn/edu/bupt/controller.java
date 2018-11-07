@@ -93,7 +93,10 @@ public class controller {
             return false;
         }
         NativeLong nativeLong = new NativeLong(1L);
-        return hCNetSDK.NET_DVR_PTZControl_Other(HikUtil.lUserID,nativeLong,command,status);
+        hCNetSDK.NET_DVR_PTZControl_Other(HikUtil.lUserID,nativeLong,command,0);
+        Thread.sleep(2000);
+        hCNetSDK.NET_DVR_PTZControl_Other(HikUtil.lUserID,nativeLong,command,1);
+        return true;
     }
 
 

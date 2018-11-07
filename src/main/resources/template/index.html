@@ -18,42 +18,56 @@
 <body>
     <div id="player"></div>
     <div id="player2"></div>
+    <button onclick="up()">上</button>
+    <button onclick="stopUp()">停止上转</button>
+    <button onclick="down()">下</button>
+    <button onclick="stopDown()">停止下转</button>
+    <button onclick="left()">左</button>
+    <button onclick="stopLeft()">停止左转</button>
+    <button onclick="right()">右</button>
+    <button onclick="stopRight()">停止右转</button>
+    <button onclick="sub()">注册</button>
     <div id="player3"></div>
     <div id="player4"></div>
     <div id="player5"></div>
     <script type="text/javascript">
 
-        var player = new Clappr.Player({
-            source: "http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4",
-            poster: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/HelloWorld.svg/512px-HelloWorld.svg.png",
-            parentId: "#player",
-            hideMediaControl: !1,
-            autoPlay: !0,
-            mute: !0,
-            plugins: [PlaybackSpeedPlugin],
-            playbackSpeedPluginConfig: {
-                playbackSpeeds: [
-                    {value: .25, label: "0.25x"},
-                    {value: .5, label: "0.5x"},
-                    {value: .75,label: "0.75x"},
-                    {value: 1, label: "Normal"},
-                    {value: 1.5, label: "1.5x"},
-                    {value: 2, label: "2x"},
-                    {value: 3, label: "3x"},
-                    {value: 4, label: "4x"}
-                ]
-            }
-        });
+//        var player = new Clappr.Player({
+//            source: "http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4",
+//            poster: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/HelloWorld.svg/512px-HelloWorld.svg.png",
+//            parentId: "#player",
+//            hideMediaControl: !1,
+//            autoPlay: !0,
+//            mute: !0,
+//            plugins: [PlaybackSpeedPlugin],
+//            playbackSpeedPluginConfig: {
+//                playbackSpeeds: [
+//                    {value: .25, label: "0.25x"},
+//                    {value: .5, label: "0.5x"},
+//                    {value: .75,label: "0.75x"},
+//                    {value: 1, label: "Normal"},
+//                    {value: 1.5, label: "1.5x"},
+//                    {value: 2, label: "2x"},
+//                    {value: 3, label: "3x"},
+//                    {value: 4, label: "4x"}
+//                ]
+//            }
+//        });
 
         var player = new Clappr.Player({
             source: "rtmp://localhost/oflaDemo/hello",
             parentId: "#player2",
-            plugins: [RTMP],
+            plugins: [MarqueeOverlay,RTMP],
 //            plugins: [MarqueeOverlay,OverlayPlugin,RTMP],
 //            emrePluginConfig:{
 //                textContent:"rtmp://localhost/oflaDemo/hello",
 //                changeDuration:1000,
 //            },
+            marqueePluginConfig:{
+                textContent:"source:'rtmp://localhost/oflaDemo/hello'",
+                duration:10000,
+                direction:'left'
+            },
             rtmpConfig: {
                 scaling:'stretch',
                 playbackType: 'live',
@@ -79,45 +93,45 @@
             }
         });
 
-        var player2 = new Clappr.Player({
-//            source: "rtmp://10.112.77.117/liveapp/hello",
-            source: "rtmp://localhost/oflaDemo/2.flv",
-            parentId: "#player2",
-            plugins: [MarqueeOverlay,RTMP],
-//            plugins: [MarqueeOverlay,OverlayPlugin,RTMP],
-//            emrePluginConfig:{
-//                textContent:"rtmp://localhost/oflaDemo/hello",
-//                changeDuration:1000,
+//        var player2 = new Clappr.Player({
+////            source: "rtmp://10.112.77.117/liveapp/hello",
+//            source: "rtmp://localhost/oflaDemo/2.flv",
+//            parentId: "#player2",
+//            plugins: [MarqueeOverlay,RTMP],
+////            plugins: [MarqueeOverlay,OverlayPlugin,RTMP],
+////            emrePluginConfig:{
+////                textContent:"rtmp://localhost/oflaDemo/hello",
+////                changeDuration:1000,
+////            },
+//            marqueePluginConfig:{
+//                textContent:"source:'rtmp://localhost/oflaDemo/hello'",
+//                duration:10000,
+//                direction:'left'
 //            },
-            marqueePluginConfig:{
-                textContent:"source:'rtmp://localhost/oflaDemo/hello'",
-                duration:10000,
-                direction:'left'
-            },
-            rtmpConfig: {
-                scaling:'stretch',
-                playbackType: 'vod',
-                bufferTime: 1,
-                startLevel: 0,
-                switchRules: {
-                    "SufficientBandwidthRule": {
-                        "bandwidthSafetyMultiple": 1.15,
-                        "minDroppedFps": 2
-                    },
-                    "InsufficientBufferRule": {
-                        "minBufferLength": 2
-                    },
-                    "DroppedFramesRule": {
-                        "downSwitchByOne": 10,
-                        "downSwitchByTwo": 20,
-                        "downSwitchToZero": 24
-                    },
-                    "InsufficientBandwidthRule": {
-                        "bitrateMultiplier": 1.15
-                    }
-                }
-            }
-        });
+//            rtmpConfig: {
+//                scaling:'stretch',
+//                playbackType: 'vod',
+//                bufferTime: 1,
+//                startLevel: 0,
+//                switchRules: {
+//                    "SufficientBandwidthRule": {
+//                        "bandwidthSafetyMultiple": 1.15,
+//                        "minDroppedFps": 2
+//                    },
+//                    "InsufficientBufferRule": {
+//                        "minBufferLength": 2
+//                    },
+//                    "DroppedFramesRule": {
+//                        "downSwitchByOne": 10,
+//                        "downSwitchByTwo": 20,
+//                        "downSwitchToZero": 24
+//                    },
+//                    "InsufficientBandwidthRule": {
+//                        "bitrateMultiplier": 1.15
+//                    }
+//                }
+//            }
+//        });
 
 //        var player4 = new Clappr.Player({
 ////            source: "rtmp://10.112.77.117/liveapp/hello",
@@ -153,7 +167,131 @@
 //                }
 //            }
 //        });
+    function up(){
+        $.ajax({
+            url:"/control?cmd=up&status=0",
+            type:"GET",
+            success:function (resp) {
+                alert(resp);
+            },
+            error:function () {
 
+                alert("fail");
+            }
+        });
+    }
+
+    function stopUp(){
+        $.ajax({
+            url:"/control?cmd=up&status=1",
+            type:"GET",
+            success:function (resp) {
+                alert(resp);
+            },
+            error:function () {
+
+                alert("fail");
+            }
+        });
+    }
+
+    function left(){
+        $.ajax({
+            url:"/control?cmd=left&status=0",
+            type:"GET",
+            success:function (resp) {
+                alert(resp);
+            },
+            error:function () {
+
+                alert("fail");
+            }
+        });
+    }
+
+    function stopLeft(){
+        $.ajax({
+            url:"/control?cmd=left&status=1",
+            type:"GET",
+            success:function (resp) {
+                alert(resp);
+            },
+            error:function () {
+
+                alert("fail");
+            }
+        });
+    }
+
+    function right(){
+        $.ajax({
+            url:"/control?cmd=right&status=0",
+            type:"GET",
+            success:function (resp) {
+                alert(resp);
+            },
+            error:function () {
+
+                alert("fail");
+            }
+        });
+    }
+
+    function stopRight(){
+        $.ajax({
+            url:"/control?cmd=right&status=1",
+            type:"GET",
+            success:function (resp) {
+                    alert(resp);
+            },
+            error:function () {
+
+                alert("fail");
+            }
+        });
+    }
+
+    function down(){
+        $.ajax({
+            url:"/control?cmd=down&status=0",
+            type:"GET",
+            success:function (resp) {
+                alert(resp);
+            },
+            error:function () {
+
+                alert("fail");
+            }
+        });
+    }
+
+    function stopDown(){
+        $.ajax({
+            url:"/control?cmd=down&status=1",
+            type:"GET",
+            success:function (resp) {
+                    alert(resp);
+            },
+            error:function () {
+
+                alert("fail");
+            }
+        });
+    }
+
+    function sub(){
+        $.ajax({
+            url:"/subscribe",
+            type:"GET",
+            success:function (resp) {
+                alert(resp);
+            },
+            error:function () {
+
+                alert("fail");
+            }
+        });
+    }
     </script>
 </body>
 </html>
