@@ -113,20 +113,26 @@ public class convert {
         //FrameGrabber grabber = FrameGrabber.createDefault(0); // 本机摄像头 默认
         // 使用rtsp的时候需要使用 FFmpegFrameGrabber，不能再用 FrameGrabber
 
-        int width = 640,height = 480;
+        int width = 1920,height = 1080;
         FFmpegFrameGrabber grabber = FFmpegFrameGrabber.createDefault(rtspPath);
-//        grabber.setOption("rtsp_transport", "tcp"); // 使用tcp的方式，不然会丢包很严重
+        grabber.setOption("rtsp_transport", "tcp"); // 使用tcp的方式，不然会丢包很严重
+//        grabber.setVideoBitrate(4096);
+//        grabber.setVideoFrameNumber(15);
         // 一直报错的原因！！！就是因为是 2560 * 1440的太大了。。
-        grabber.setImageWidth(width);
-        grabber.setImageHeight(height);
+//        grabber.setImageWidth(width);
+//        grabber.setImageHeight(height);
         System.out.println("grabber start");
         grabber.start();
         //FrameRecorder recorder = FrameRecorder.createDefault(rtmpPath, 640,480,0);
         // 流媒体输出地址，分辨率（长，高），是否录制音频（0:不录制/1:录制）
         FFmpegFrameRecorder recorder = new FFmpegFrameRecorder(rtmpPath, width, height, audioRecord);
+
 //        recorder.setInterleaved(true);
 //        recorder.setVideoOption("crf","28");
         recorder.setVideoCodec(avcodec.AV_CODEC_ID_H264); // 28
+        recorder.setFrameRate(15);
+        recorder.setVideoOption("preset", "ultrafast");
+//        recorder.setVideoBitrate(4096);
         recorder.setFormat("flv"); // rtmp的类型
 //        recorder.setFrameRate(10);
         recorder.setPixelFormat(avutil.AV_PIX_FMT_YUV420P); // yuv420p

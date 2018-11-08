@@ -17,9 +17,10 @@
 				container: '#video', //容器的ID或className
 				variable: 'player',//播放函数名称
 //				poster:'material/poster.jpg',//封面图片
-				//flashplayer:true,
+				flashplayer:false,
+                autoplay:true,//自动播放
 //                rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov
-				video: 'rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov'
+				video: 'rtmp://localhost/oflaDemo/hello'
 			};
 			var player = new ckplayer(videoObject);
 		</script>
