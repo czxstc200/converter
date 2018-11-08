@@ -19,13 +19,13 @@
     <div id="player"></div>
     <div id="player2"></div>
     <button onclick="up()">上</button>
-    <button onclick="stopUp()">停止上转</button>
+    <!--<button onclick="stopUp()">停止上转</button>-->
     <button onclick="down()">下</button>
-    <button onclick="stopDown()">停止下转</button>
+    <!--<button onclick="stopDown()">停止下转</button>-->
     <button onclick="left()">左</button>
-    <button onclick="stopLeft()">停止左转</button>
+    <!--<button onclick="stopLeft()">停止左转</button>-->
     <button onclick="right()">右</button>
-    <button onclick="stopRight()">停止右转</button>
+    <!--<button onclick="stopRight()">停止右转</button>-->
     <button onclick="sub()">注册</button>
     <div id="player3"></div>
     <div id="player4"></div>
@@ -58,6 +58,7 @@
             source: "rtmp://localhost/oflaDemo/hello",
             parentId: "#player2",
             plugins: [MarqueeOverlay,RTMP],
+            autoPlay: !0,
 //            plugins: [MarqueeOverlay,OverlayPlugin,RTMP],
 //            emrePluginConfig:{
 //                textContent:"rtmp://localhost/oflaDemo/hello",
@@ -172,7 +173,7 @@
             url:"/control?cmd=up&status=0",
             type:"GET",
             success:function (resp) {
-                alert(resp);
+//                alert(resp);
             },
             error:function () {
 
@@ -181,26 +182,26 @@
         });
     }
 
-    function stopUp(){
-        $.ajax({
-            url:"/control?cmd=up&status=1",
-            type:"GET",
-            success:function (resp) {
-                alert(resp);
-            },
-            error:function () {
-
-                alert("fail");
-            }
-        });
-    }
+//    function stopUp(){
+//        $.ajax({
+//            url:"/control?cmd=up&status=1",
+//            type:"GET",
+//            success:function (resp) {
+//                alert(resp);
+//            },
+//            error:function () {
+//
+//                alert("fail");
+//            }
+//        });
+//    }
 
     function left(){
         $.ajax({
             url:"/control?cmd=left&status=0",
             type:"GET",
             success:function (resp) {
-                alert(resp);
+//                alert(resp);
             },
             error:function () {
 
@@ -208,27 +209,27 @@
             }
         });
     }
-
-    function stopLeft(){
-        $.ajax({
-            url:"/control?cmd=left&status=1",
-            type:"GET",
-            success:function (resp) {
-                alert(resp);
-            },
-            error:function () {
-
-                alert("fail");
-            }
-        });
-    }
+//
+//    function stopLeft(){
+//        $.ajax({
+//            url:"/control?cmd=left&status=1",
+//            type:"GET",
+//            success:function (resp) {
+//                alert(resp);
+//            },
+//            error:function () {
+//
+//                alert("fail");
+//            }
+//        });
+//    }
 
     function right(){
         $.ajax({
             url:"/control?cmd=right&status=0",
             type:"GET",
             success:function (resp) {
-                alert(resp);
+//                alert(resp);
             },
             error:function () {
 
@@ -237,26 +238,26 @@
         });
     }
 
-    function stopRight(){
-        $.ajax({
-            url:"/control?cmd=right&status=1",
-            type:"GET",
-            success:function (resp) {
-                    alert(resp);
-            },
-            error:function () {
-
-                alert("fail");
-            }
-        });
-    }
+//    function stopRight(){
+//        $.ajax({
+//            url:"/control?cmd=right&status=1",
+//            type:"GET",
+//            success:function (resp) {
+//                    alert(resp);
+//            },
+//            error:function () {
+//
+//                alert("fail");
+//            }
+//        });
+//    }
 
     function down(){
         $.ajax({
             url:"/control?cmd=down&status=0",
             type:"GET",
             success:function (resp) {
-                alert(resp);
+//                alert(resp);
             },
             error:function () {
 
@@ -265,19 +266,19 @@
         });
     }
 
-    function stopDown(){
-        $.ajax({
-            url:"/control?cmd=down&status=1",
-            type:"GET",
-            success:function (resp) {
-                    alert(resp);
-            },
-            error:function () {
-
-                alert("fail");
-            }
-        });
-    }
+//    function stopDown(){
+//        $.ajax({
+//            url:"/control?cmd=down&status=1",
+//            type:"GET",
+//            success:function (resp) {
+//                    alert(resp);
+//            },
+//            error:function () {
+//
+//                alert("fail");
+//            }
+//        });
+//    }
 
     function sub(){
         $.ajax({
