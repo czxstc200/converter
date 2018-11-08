@@ -39,7 +39,7 @@ public class controller {
                           @RequestParam(required = false) String rtmp) throws Exception{
 //        String rtmpPath = "rtmp://localhost/oflaDemo/hello";
 //        String rtspPath = "rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov";
-        String rtmpPath = rtmp==null?"rtmp://localhost/oflaDemo/hello":rtmp;
+        String rtmpPath = rtmp==null?"rtmp://localhost/liveapp/haikang1":rtmp;
         String rtspPath = rtsp==null?"rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov":rtsp;
         if(resultMap.containsKey(rtmpPath)){
             return "该rtmp地址已经存在！";
