@@ -42,7 +42,7 @@ public class controller {
         String rtmpPath = rtmp==null?"rtmp://localhost/liveapp/haikang1":rtmp;
         String rtspPath = rtsp==null?"rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov":rtsp;
         if(resultMap.containsKey(rtmpPath)){
-            return "该rtmp地址已经存在！";
+            return "该rtmp地址已经存在!！";
         }
         Future<String> future = executorService.submit(new Callable<String>() {
             @Override
