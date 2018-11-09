@@ -80,6 +80,13 @@
 			<artifactId>jna</artifactId>
 			<version>3.0.9</version>
 		</dependency>
+		<dependency>
+			<groupId>cn.edu.bupt</groupId>
+			<artifactId>example</artifactId>
+			<version>1.0</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/examples.jar</systemPath>
+		</dependency>
 
 
 	</dependencies>
