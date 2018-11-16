@@ -54,55 +54,119 @@
 //            }
 //        });
 
-        var player = new Clappr.Player({
-            source: "rtmp://127.0.0.1/oflaDemo/hello",
-            parentId: "#player2",
-            plugins: [MarqueeOverlay,RTMP],
-            autoPlay: !0,
-//            plugins: [MarqueeOverlay,OverlayPlugin,RTMP],
-//            emrePluginConfig:{
-//                textContent:"rtmp://localhost/oflaDemo/hello",
-//                changeDuration:1000,
-//            },
-            marqueePluginConfig:{
-                textContent:"source:'rtmp://localhost/oflaDemo/hello'",
-                duration:10000,
-                direction:'left'
-            },
-            rtmpConfig: {
-                scaling:'stretch',
-                playbackType: 'live',
-                bufferTime: 1,
-                startLevel: 0,
-                switchRules: {
-                    "SufficientBandwidthRule": {
-                        "bandwidthSafetyMultiple": 1.15,
-                        "minDroppedFps": 2
-                    },
-                    "InsufficientBufferRule": {
-                        "minBufferLength": 2
-                    },
-                    "DroppedFramesRule": {
-                        "downSwitchByOne": 10,
-                        "downSwitchByTwo": 20,
-                        "downSwitchToZero": 24
-                    },
-                    "InsufficientBandwidthRule": {
-                        "bitrateMultiplier": 1.15
-                    }
+    var now = new Clappr.Player({
+        source: "rtmp://127.0.0.1/oflaDemo/hello",
+        parentId: "#player",
+        width: 640,
+        height: 360,
+        plugins: [RTMP],
+    //            plugins: [MarqueeOverlay,RTMP],
+        autoPlay: !0,
+        preload: 'auto',
+    //            marqueePluginConfig:{
+    //                textContent:"source:'rtmp://localhost/oflaDemo/hello'",
+    //                duration:10000,
+    //                direction:'left'
+    //            },
+        rtmpConfig: {
+            scaling:'stretch',
+            playbackType: 'live',
+            bufferTime: 1,
+            startLevel: 0,
+            switchRules: {
+                "SufficientBandwidthRule": {
+                    "bandwidthSafetyMultiple": 1.15,
+                    "minDroppedFps": 2
+                },
+                "InsufficientBufferRule": {
+                    "minBufferLength": 2
+                },
+                "DroppedFramesRule": {
+                    "downSwitchByOne": 10,
+                    "downSwitchByTwo": 20,
+                    "downSwitchToZero": 24
+                },
+                "InsufficientBandwidthRule": {
+                    "bitrateMultiplier": 1.15
                 }
             }
-        });
+        }
+    });
+
+    var next = new Clappr.Player({
+        source: "rtmp://127.0.0.1/oflaDemo/test",
+        parentId: "#player2",
+        width: 8,
+        height: 8,
+        plugins: [RTMP],
+        autoPlay: !0,
+        preload: 'auto',
+        marqueePluginConfig:{
+            textContent:"source:'rtmp://localhost/oflaDemo/hello'",
+            duration:10000,
+            direction:'left'
+        },
+        rtmpConfig: {
+            scaling:'stretch',
+            playbackType: 'live',
+            bufferTime: 1,
+            startLevel: 0,
+            switchRules: {
+                "SufficientBandwidthRule": {
+                    "bandwidthSafetyMultiple": 1.15,
+                    "minDroppedFps": 2
+                },
+                "InsufficientBufferRule": {
+                    "minBufferLength": 2
+                },
+                "DroppedFramesRule": {
+                    "downSwitchByOne": 10,
+                    "downSwitchByTwo": 20,
+                    "downSwitchToZero": 24
+                },
+                "InsufficientBandwidthRule": {
+                    "bitrateMultiplier": 1.15
+                }
+            }
+        }
+    });
+
     var array = new Array('rtmp://127.0.0.1/oflaDemo/test','rtmp://127.0.0.1/oflaDemo/hello');
     var index = 0;
     self.setInterval(function test(){
         var source = array[index];
-        player.configure({
-            source: source,
-            // [...]
-        });
+    //            player.configure({
+    //                source: source,
+    //                parentId: "#player112",
+    //                // [...]
+    //            });
         index++;
         index = index % 2;
+
+        var temp = now;
+        now = next;
+        next = temp;
+        now.resize({
+            width: 640,
+            height: 360
+        });
+        next.resize({
+            width: 8,
+            height: 8
+        });
+        next.source(source);
+
+    //
+    //            player2.resize({
+    //                width: 600,
+    //                height: 600
+    //            })
+    //            player = player2.
+    //
+    //            player2 = temp;
+
+
+
     },5000);
 
 
