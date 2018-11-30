@@ -3,7 +3,6 @@ package cn.edu.bupt.util;
 import lombok.extern.slf4j.Slf4j;
 import org.bytedeco.javacpp.avcodec;
 import org.bytedeco.javacpp.avutil;
-import org.bytedeco.javacv.CanvasFrame;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
 import org.bytedeco.javacv.Frame;
@@ -28,7 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class VideoConverter {
 
     private static long timestamp;
-
 
     private static String videoRootDir;
 
@@ -72,7 +70,7 @@ public class VideoConverter {
         // 推流record
         FFmpegFrameRecorder recorder = new FFmpegFrameRecorder(rtmpPath, grabber.getImageWidth(), grabber.getImageHeight(), audioRecord);
         recorder.setVideoCodec(avcodec.AV_CODEC_ID_H264);
-        recorder.setFrameRate(grabber.getFrameRate());
+        recorder.setFrameRate(15);
         recorder.setVideoOption("preset", "ultrafast");
         recorder.setFormat("flv");
         recorder.setPixelFormat(avutil.AV_PIX_FMT_YUV420P);

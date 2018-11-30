@@ -1,6 +1,6 @@
 package cn.edu.bupt.controller;
 
-import cn.edu.bupt.hikVision.HikUtil;
+import cn.edu.bupt.hikVision.win.HikUtil;
 import cn.edu.bupt.util.VideoConverter;
 import com.sun.jna.NativeLong;
 import io.swagger.annotations.ApiOperation;
@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.concurrent.*;
 
-import static cn.edu.bupt.hikVision.HikUtil.hCNetSDK;
+import static cn.edu.bupt.hikVision.win.HikUtil.hCNetSDK;
 
 /**
  * @Description: 视频的controller

@@ -1,9 +1,12 @@
-package cn.edu.bupt.hikVision;
+package cn.edu.bupt.hikVision.win;
 
 import com.sun.jna.NativeLong;
 
 /**
- * Created by CZX on 2018/11/2.
+ * @Description: 海康视频控制
+ * @Author: CZX
+ * @CreateDate: 2018/11/30 15:55
+ * @Version: 1.0
  */
 public class HikUtil {
     public static HCNetSDK hCNetSDK = HCNetSDK.INSTANCE;
