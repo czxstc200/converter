@@ -29,11 +29,11 @@
     <script type="text/javascript">
 
         var player2 = new Clappr.Player({
-            source: "rtmp://localhost/oflaDemo/haikang1",
+            source: "rtmp://10.112.17.185/oflaDemo/haikang1",
             parentId: "#player",
             plugins: [MarqueeOverlay,RTMP],
             marqueePluginConfig:{
-                textContent:"source:'rtmp://localhost/oflaDemo/haikang1'",
+                textContent:"source:'rtmp://10.112.17.185/oflaDemo/haikang1'",
                 duration:10000,
                 direction:'left'
             },
@@ -117,18 +117,31 @@
 
 
     function sub(){
-        $.ajax({
-            url:"/subscribe",
-            type:"GET",
-            success:function (resp) {
-                alert(resp);
-            },
-            error:function () {
+            $.ajax({
+                url:"/subscribe",
+                type:"GET",
+                success:function (resp) {
+                    alert(resp);
+                },
+                error:function () {
 
-                alert("fail");
-            }
-        });
-    }
+                    alert("fail");
+                }
+            });
+        }
+
+        function record(){
+            $.ajax({
+                url:"/record?rtmp=rtmp://10.112.17.185/oflaDemo/haikang1",
+                type:"GET",
+                success:function (resp) {
+
+                },
+                error:function () {
+                    alert("fail");
+                }
+            });
+        }
     </script>
 </body>
 </html>

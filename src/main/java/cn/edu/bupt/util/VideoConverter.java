@@ -70,7 +70,7 @@ public class VideoConverter {
         // 推流record
         FFmpegFrameRecorder recorder = new FFmpegFrameRecorder(rtmpPath, grabber.getImageWidth(), grabber.getImageHeight(), audioRecord);
         recorder.setVideoCodec(avcodec.AV_CODEC_ID_H264);
-        recorder.setFrameRate(15);
+        recorder.setFrameRate(grabber.getFrameRate());
         recorder.setVideoOption("preset", "ultrafast");
         recorder.setFormat("flv");
         recorder.setPixelFormat(avutil.AV_PIX_FMT_YUV420P);
@@ -186,11 +186,16 @@ public class VideoConverter {
      * @author CZX
      * @date 2018/11/30 14:23
      * @param [rtmpPath]
-     * @return void
+     * @return java.lang.String
      */
-    public static void record(String rtmpPath){
+    public static String record(String rtmpPath){
         boolean save = saveMap.get(rtmpPath);
         saveMap.put(rtmpPath,!save);
+        if(save==true){
+            return "停止录制";
+        }else {
+            return "开始录制";
+        }
     }
 
     /**

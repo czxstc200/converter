@@ -45,7 +45,7 @@ public class VideoController {
                           @RequestParam(required = false) Integer audio,
                           @RequestParam(required = false) Boolean save ) throws Exception{
 //        String rtspPath = "rtsp://admin:ydslab215@10.112.239.157:554/h264/ch1/main/av_stream";
-        String rtmpPath = rtmp==null?"rtmp://localhost/oflaDemo/haikang1":rtmp;
+        String rtmpPath = rtmp==null?"rtmp://10.112.17.185/oflaDemo/haikang1":rtmp;
         String rtspPath = rtsp==null?"rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov":rtsp;
         int audioRecord = audio==null?1:audio;
         boolean saveVideo = save==null?false:save;
@@ -66,8 +66,8 @@ public class VideoController {
     @ApiOperation("视频录制")
     @RequestMapping(value = "/record", method = RequestMethod.GET)
     @ResponseBody
-    public void record(@RequestParam String rtmp) throws Exception{
-        VideoConverter.record(rtmp);
+    public String record(@RequestParam String rtmp) throws Exception{
+        return VideoConverter.record(rtmp);
     }
 
     @ApiOperation("停止视频推流")
