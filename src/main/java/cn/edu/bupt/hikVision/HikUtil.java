@@ -1,4 +1,4 @@
-package cn.edu.bupt;
+package cn.edu.bupt.hikVision;
 
 import com.sun.jna.NativeLong;
 
@@ -6,15 +6,15 @@ import com.sun.jna.NativeLong;
  * Created by CZX on 2018/11/2.
  */
 public class HikUtil {
-    static HCNetSDK hCNetSDK = HCNetSDK.INSTANCE;
+    public static HCNetSDK hCNetSDK = HCNetSDK.INSTANCE;
 
-    static PlayCtrl playControl = PlayCtrl.INSTANCE;
+    public static PlayCtrl playControl = PlayCtrl.INSTANCE;
 
-    static HCNetSDK.NET_DVR_DEVICEINFO_V30 m_strDeviceInfo;
+    public static HCNetSDK.NET_DVR_DEVICEINFO_V30 m_strDeviceInfo;
 
-    static NativeLong lUserID;
+    public static NativeLong lUserID;
 
-    static NativeLong lPreviewHandle;
+    public static NativeLong lPreviewHandle;
 
     public static boolean subscribe(){
         boolean initSuc = hCNetSDK.NET_DVR_Init();

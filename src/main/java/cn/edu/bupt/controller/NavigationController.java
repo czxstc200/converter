@@ -1,10 +1,13 @@
-package cn.edu.bupt;
+package cn.edu.bupt.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
- * Created by CZX on 2018/10/25.
+ * @Description: 用于路由的controller
+ * @Author: CZX
+ * @CreateDate: 2018/11/30 11:12
+ * @Version: 1.0
  */
 @Controller
 public class NavigationController {
@@ -14,13 +17,8 @@ public class NavigationController {
         return "template/index";
     }
 
-    @RequestMapping("/home2")
-    public String  index2() {
-        return "template/definition";
-    }
-
-    @RequestMapping("/home3")
-    public String  index3() {
-        return "static/demo/cn/demo";
+    @RequestMapping("/single")
+    public String  single() {
+        return "template/singleVideo";
     }
 }

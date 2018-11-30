@@ -1,59 +1,84 @@
-package cn.edu.bupt;
+package cn.edu.bupt.controller;
 
+import cn.edu.bupt.hikVision.HikUtil;
+import cn.edu.bupt.util.VideoConverter;
 import com.sun.jna.NativeLong;
-import org.bytedeco.javacpp.avcodec;
-import org.bytedeco.javacv.FFmpegFrameGrabber;
-import org.bytedeco.javacv.FFmpegFrameRecorder;
-import org.bytedeco.javacv.Frame;
-import org.bytedeco.javacv.OpenCVFrameConverter;
-import org.springframework.stereotype.Controller;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
-import static cn.edu.bupt.Main.hCNetSDK;
+import static cn.edu.bupt.hikVision.HikUtil.hCNetSDK;
 
 /**
- * Created by CZX on 2018/10/12.
+ * @Description: 视频的controller
+ * @Author: CZX
+ * @CreateDate: 2018/11/30 10:48
+ * @Version: 1.0
  */
 @RestController
-public class controller {
+public class VideoController {
 
     private static ExecutorService executorService = Executors.newCachedThreadPool();
 
     private static Map<String,Future<String>> resultMap = new ConcurrentHashMap<>();
 
-    @RequestMapping(value = "/get", method = RequestMethod.GET)
+    @ApiOperation("查看推流状态")
+    @RequestMapping(value = "/status", method = RequestMethod.GET)
     @ResponseBody
-    public boolean getStatus() throws Exception{
-        Future<String> fs = resultMap.get("rtmp://localhost/oflaDemo/hello");
-        return fs.isDone();
+    public boolean getStatus(@RequestParam String rtmp) throws Exception{
+        try {
+            Future<String> fs = resultMap.get(rtmp);
+            return fs.isDone();
+        }catch (Exception e){
+            throw new Exception("该rtmp地址不存在");
+        }
+
     }
 
-    @RequestMapping(value = "/test", method = RequestMethod.GET)
+    @ApiOperation(value = "对视频进行推流")
+    @RequestMapping(value = "/convert", method = RequestMethod.GET)
     @ResponseBody
     public String convert(@RequestParam(required = false) String rtsp,
-                          @RequestParam(required = false) String rtmp) throws Exception{
-//        String rtmpPath = "rtmp://localhost/oflaDemo/hello";
-//        String rtspPath = "rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov";
-        String rtmpPath = rtmp==null?"rtmp://localhost/liveapp/haikang1":rtmp;
+                          @RequestParam(required = false) String rtmp,
+                          @RequestParam(required = false) Integer audio,
+                          @RequestParam(required = false) Boolean save ) throws Exception{
+//        String rtspPath = "rtsp://admin:ydslab215@10.112.239.157:554/h264/ch1/main/av_stream";
+        String rtmpPath = rtmp==null?"rtmp://localhost/oflaDemo/haikang1":rtmp;
         String rtspPath = rtsp==null?"rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov":rtsp;
+        int audioRecord = audio==null?1:audio;
+        boolean saveVideo = save==null?false:save;
         if(resultMap.containsKey(rtmpPath)){
-            return "该rtmp地址已经存在!！";
+            throw new Exception("该rtmp地址已经存在!");
         }
         Future<String> future = executorService.submit(new Callable<String>() {
             @Override
             public String call() throws Exception {
-                convert.begin(rtspPath,rtmpPath);
+                VideoConverter.convert(rtspPath,rtmpPath,audioRecord,saveVideo);
                 return String.valueOf(System.currentTimeMillis());
             }
         });
         resultMap.put(rtmpPath,future);
-        return "{rtsp:'"+rtspPath+"',"+"rtmp:'"+rtmpPath+"'}";
+        return "{rtsp:'"+rtspPath+"',"+"rtmp:'"+rtmpPath+"',"+"audio:"+String.valueOf(audioRecord)+",saveVideo:"+String.valueOf(saveVideo)+"}";
     }
+
+    @ApiOperation("视频录制")
+    @RequestMapping(value = "/record", method = RequestMethod.GET)
+    @ResponseBody
+    public void record(@RequestParam String rtmp) throws Exception{
+        VideoConverter.record(rtmp);
+    }
+
+    @ApiOperation("停止视频推流")
+    @RequestMapping(value = "/stopConvert", method = RequestMethod.GET)
+    @ResponseBody
+    public void stopConvert(@RequestParam String rtmp) throws Exception{
+        VideoConverter.stopConvert(rtmp);
+        resultMap.remove(rtmp);
+    }
+
+    //以下是视频控制
 
     @RequestMapping(value = "/subscribe", method = RequestMethod.GET)
     @ResponseBody
@@ -98,12 +123,4 @@ public class controller {
         hCNetSDK.NET_DVR_PTZControl_Other(HikUtil.lUserID,nativeLong,command,1);
         return true;
     }
-
-
-
-//        HCNetSDK.NET_DVR_WORKSTATE_V30 devwork=new HCNetSDK.NET_DVR_WORKSTATE_V30();
-//        if(!hCNetSDK.NET_DVR_GetDVRWorkState_V30(lUserID, devwork)){
-//            //返回Boolean值，判断是否获取设备能力
-//            System.out.println("返回设备状态失败");
-//        }
 }

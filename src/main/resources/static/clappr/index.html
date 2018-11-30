@@ -93,14 +93,14 @@
             width: 640,
             height: 360,
             plugins: [RTMP],
-//            plugins: [MarqueeOverlay,RTMP],
+            plugins: [MarqueeOverlay,RTMP],
             autoPlay: !0,
             preload: 'auto',
-//            marqueePluginConfig:{
-//                textContent:"source:'rtmp://localhost/oflaDemo/hello'",
-//                duration:10000,
-//                direction:'left'
-//            },
+            marqueePluginConfig:{
+                textContent:"source:'rtmp://localhost/oflaDemo/hello'",
+                duration:10000,
+                direction:'left'
+            },
             rtmpConfig: {
                 scaling:'stretch',
                 playbackType: 'live',
@@ -133,12 +133,11 @@
             height: 8,
             plugins: [RTMP],
             autoPlay: !0,
-            preload: 'auto',
-            marqueePluginConfig:{
-                textContent:"source:'rtmp://localhost/oflaDemo/hello'",
-                duration:10000,
-                direction:'left'
-            },
+//            marqueePluginConfig:{
+//                textContent:"source:'rtmp://localhost/oflaDemo/test'",
+//                duration:10000,
+//                direction:'left'
+//            },
             rtmpConfig: {
                 scaling:'stretch',
                 playbackType: 'live',
@@ -188,18 +187,6 @@
                 height: 8
             });
             next.source(source);
-
-//
-//            player2.resize({
-//                width: 600,
-//                height: 600
-//            })
-//            player = player2.
-//
-//            player2 = temp;
-
-
-
         },5000);
     </script>
 </body>

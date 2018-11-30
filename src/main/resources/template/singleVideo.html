@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" th:src="@{clappr/dist/clappr.min.js}"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/video-dev/clappr-rtmp-plugin@latest/dist/rtmp.min.js"></script>
+    <script type="text/javascript" th:src="@{clappr/dist/main.min.js}"></script>
+    <script type="text/javascript" th:src="@{clappr/dist/level-selector.js}"></script>
+    <script type="text/javascript" th:src="@{clappr/dist/dynamic/plugin.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{clappr/dist/dynamic/plugin.css}">
+    <script type="text/javascript" th:src="@{clappr/dist/marquee/plugin_bottom.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{clappr/dist/marquee/plugin_bottom.css}">
+    <script type='text/javascript' src='//cdn.jsdelivr.net/jquery.marquee/1.4.0/jquery.marquee.min.js'></script>
+</head>
+<body>
+    <div id="player"></div>
+    <button onclick="up()">上</button>
+    <!--<button onclick="stopUp()">停止上转</button>-->
+    <button onclick="down()">下</button>
+    <!--<button onclick="stopDown()">停止下转</button>-->
+    <button onclick="left()">左</button>
+    <!--<button onclick="stopLeft()">停止左转</button>-->
+    <button onclick="right()">右</button>
+    <!--<button onclick="stopRight()">停止右转</button>-->
+    <button onclick="sub()">注册</button>
+    <script type="text/javascript">
+
+        var player2 = new Clappr.Player({
+            source: "rtmp://localhost/oflaDemo/haikang1",
+            parentId: "#player",
+            plugins: [MarqueeOverlay,RTMP],
+            marqueePluginConfig:{
+                textContent:"source:'rtmp://localhost/oflaDemo/haikang1'",
+                duration:10000,
+                direction:'left'
+            },
+            rtmpConfig: {
+                scaling:'stretch',
+                playbackType: 'live',
+                bufferTime: 1,
+                startLevel: 0,
+                switchRules: {
+                    "SufficientBandwidthRule": {
+                        "bandwidthSafetyMultiple": 1.15,
+                        "minDroppedFps": 2
+                    },
+                    "InsufficientBufferRule": {
+                        "minBufferLength": 2
+                    },
+                    "DroppedFramesRule": {
+                        "downSwitchByOne": 10,
+                        "downSwitchByTwo": 20,
+                        "downSwitchToZero": 24
+                    },
+                    "InsufficientBandwidthRule": {
+                        "bitrateMultiplier": 1.15
+                    }
+                }
+            }
+        });
+
+    function up(){
+        $.ajax({
+            url:"/control?cmd=up&status=0",
+            type:"GET",
+            success:function (resp) {
+            },
+            error:function () {
+
+                alert("fail");
+            }
+        });
+    }
+
+    function left(){
+        $.ajax({
+            url:"/control?cmd=left&status=0",
+            type:"GET",
+            success:function (resp) {
+            },
+            error:function () {
+
+                alert("fail");
+            }
+        });
+    }
+
+    function right(){
+        $.ajax({
+            url:"/control?cmd=right&status=0",
+            type:"GET",
+            success:function (resp) {
+            },
+            error:function () {
+
+                alert("fail");
+            }
+        });
+    }
+
+    function down(){
+        $.ajax({
+            url:"/control?cmd=down&status=0",
+            type:"GET",
+            success:function (resp) {
+//                alert(resp);
+            },
+            error:function () {
+
+                alert("fail");
+            }
+        });
+    }
+
+
+    function sub(){
+        $.ajax({
+            url:"/subscribe",
+            type:"GET",
+            success:function (resp) {
+                alert(resp);
+            },
+            error:function () {
+
+                alert("fail");
+            }
+        });
+    }
+    </script>
+</body>
+</html>

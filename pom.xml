@@ -80,6 +80,8 @@
 			<artifactId>jna</artifactId>
 			<version>3.0.9</version>
 		</dependency>
+
+		<!--Swagger-->
 		<dependency>
 			<groupId>cn.edu.bupt</groupId>
 			<artifactId>example</artifactId>
@@ -87,7 +89,16 @@
 			<scope>system</scope>
 			<systemPath>${project.basedir}/lib/examples.jar</systemPath>
 		</dependency>
-
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger2</artifactId>
+			<version>2.2.2</version>
+		</dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger-ui</artifactId>
+			<version>2.2.2</version>
+		</dependency>
 
 	</dependencies>
 
