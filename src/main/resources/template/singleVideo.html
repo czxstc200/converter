@@ -26,6 +26,8 @@
     <button onclick="right()">右</button>
     <!--<button onclick="stopRight()">停止右转</button>-->
     <button onclick="sub()">注册</button>
+    <button onclick="record()">录制</button>
+    <button onclick="records()">查看录像</button>
     <script type="text/javascript">
 
         var player2 = new Clappr.Player({
@@ -135,7 +137,19 @@
                 url:"/record?rtmp=rtmp://10.112.17.185/oflaDemo/haikang1",
                 type:"GET",
                 success:function (resp) {
-
+                    alert(resp);
+                },
+                error:function () {
+                    alert("fail");
+                }
+            });
+        }
+        function records(){
+            $.ajax({
+                url:"/records?rtmp=rtmp://10.112.17.185/oflaDemo/haikang1",
+                type:"GET",
+                success:function (resp) {
+                    alert(resp);
                 },
                 error:function () {
                     alert("fail");

@@ -6,6 +6,8 @@ import com.sun.jna.NativeLong;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -76,6 +78,13 @@ public class VideoController {
     public void stopConvert(@RequestParam String rtmp) throws Exception{
         VideoConverter.stopConvert(rtmp);
         resultMap.remove(rtmp);
+    }
+
+    @ApiOperation("获取录像")
+    @RequestMapping(value = "/records", method = RequestMethod.GET)
+    @ResponseBody
+    public List<String> getRecords(@RequestParam String rtmp) throws Exception{
+        return VideoConverter.getFiles(rtmp);
     }
 
     //以下是视频控制

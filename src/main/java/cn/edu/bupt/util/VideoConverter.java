@@ -11,7 +11,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -175,7 +177,7 @@ public class VideoConverter {
      * @return java.lang.String
      */
     private static String generateFilenameByDate(){
-        SimpleDateFormat sdf=new SimpleDateFormat("yyyy_MM_dd_hh_mm");
+        SimpleDateFormat sdf=new SimpleDateFormat("yyyy_MM_dd_HH_mm");
         Date date=new Date();
         String dateStringParse = sdf.format(date);
         return dateStringParse;
@@ -220,5 +222,25 @@ public class VideoConverter {
         Long currentTimestamps=System.currentTimeMillis();
         Long oneDayTimestamps= Long.valueOf(60*60*24*1000);
         return currentTimestamps-(currentTimestamps+60*60*8*1000)%oneDayTimestamps+oneDayTimestamps;
+    }
+
+    /**
+     * @Description 根据rtmp获取该视频流下的所有录像文件
+     * @author CZX
+     * @date 2018/11/30 18:55
+     * @param [rtmpPath]
+     * @return java.util.List<java.lang.String>
+     */
+    public static List<String> getFiles(String rtmpPath){
+        String path = videoRootDir+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length());
+        File file = new File(path);
+        File[] files = file.listFiles();
+        List<String> fileList = new ArrayList<>();
+        for (int i = 0; i < files.length; i++) {
+            if (files[i].isFile()) {
+                fileList.add(files[i].getName());
+            }
+        }
+        return fileList;
     }
 }
