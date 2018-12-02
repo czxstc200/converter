@@ -11,5 +11,8 @@ import java.util.EventListener;
  * @Version: 1.0
  */
 public interface Listener extends EventListener {
+
     public void fireAfterEventInvoked(Event event);
+
+    public String getName();
 }

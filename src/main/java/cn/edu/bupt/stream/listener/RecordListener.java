@@ -16,17 +16,40 @@ import org.bytedeco.javacv.Frame;
 @Slf4j
 public class RecordListener implements Listener {
 
+    private String name;
+
     FFmpegFrameRecorder fileRecorder;
+
+    String fileName;
 
     boolean isInit;
 
     boolean isStarted;
 
     public RecordListener(String filename, FFmpegFrameGrabber grabber) {
+        this.fileName = filename;
         fileRecorderInit(filename,grabber);
     }
 
-    
+    public RecordListener(String listenerName,String filename, FFmpegFrameGrabber grabber) {
+        this.fileName = filename;
+        fileRecorderInit(filename,grabber);
+        this.name = listenerName;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
     /**
      * @Description recorder在初始化之后还需要进行启动，启动调用该方法
      * @author czx

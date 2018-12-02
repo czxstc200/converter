@@ -18,17 +18,41 @@ import org.bytedeco.javacv.Frame;
 @Slf4j
 public class PushListener implements Listener {
 
+    private String name;
+
     FFmpegFrameRecorder pushRecorder;
+
+    String rtmpPath;
 
     boolean isInit;
 
     boolean isStarted;
 
-    public PushListener(String rtmpPath, FFmpegFrameGrabber grabber) {
+    public PushListener(String listenerName,String rtmpPath,FFmpegFrameGrabber grabber){
+        this.rtmpPath = rtmpPath;
         pushRecorderInit(rtmpPath,grabber);
+        this.name = listenerName;
     }
 
-    
+    public PushListener(String rtmpPath, FFmpegFrameGrabber grabber) {
+        this.rtmpPath = rtmpPath;
+        pushRecorderInit(rtmpPath,grabber);
+        this.name = "Push Listener";
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getRtmpPath() {
+        return rtmpPath;
+    }
+
     /**
      * @Description recorder在初始化之后还需要进行启动，启动调用该方法
      * @author czx
