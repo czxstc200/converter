@@ -40,7 +40,11 @@ public class VideoAdapter {
         return listeners.remove(listener);
     }
 
-    public void start(){
+    public void start() throws Exception{
+
+    }
+
+    public void stop(){
 
     }
 }

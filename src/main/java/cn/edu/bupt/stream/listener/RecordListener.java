@@ -57,6 +57,7 @@ public class RecordListener implements Listener {
      * @param []
      * @return void
      */
+    @Override
     public void start(){
         try {
             if(isInit) {
@@ -79,6 +80,7 @@ public class RecordListener implements Listener {
      * @param []
      * @return void
      */
+    @Override
     public void close(){
         try {
             fileRecorder.stop();

@@ -15,4 +15,8 @@ public interface Listener extends EventListener {
     public void fireAfterEventInvoked(Event event);
 
     public String getName();
+
+    public void start();
+
+    public void close();
 }

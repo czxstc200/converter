@@ -60,6 +60,7 @@ public class PushListener implements Listener {
      * @param []
      * @return void
      */
+    @Override
     public void start(){
         try {
             if(isInit) {
@@ -82,6 +83,7 @@ public class PushListener implements Listener {
      * @param []
      * @return void
      */
+    @Override
     public void close(){
         try {
             pushRecorder.stop();
@@ -127,7 +129,6 @@ public class PushListener implements Listener {
      */
     private void pushRecorderInit(String rtmpPath,FFmpegFrameGrabber grabber){
         this.pushRecorder = new FFmpegFrameRecorder(rtmpPath,grabber.getImageWidth(),grabber.getImageHeight(),grabber.getAudioChannels());
-        pushRecorder.setFormat("mp4");
         pushRecorder.setVideoCodec(avcodec.AV_CODEC_ID_H264);
         pushRecorder.setFrameRate(grabber.getFrameRate());
         pushRecorder.setVideoOption("preset", "ultrafast");
