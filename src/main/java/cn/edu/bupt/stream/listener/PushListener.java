@@ -90,6 +90,10 @@ public class PushListener implements Listener {
             pushRecorder.release();
             isStarted = false;
             this.pushRecorder = null;
+            if(executor!=null){
+                executor.shutdown();
+                executor=null;
+            }
             log.info("Push recorder stopped");
         }catch (Exception e){
             log.error("Push recorder failed to close");
@@ -107,14 +111,15 @@ public class PushListener implements Listener {
     @Override
     public void fireAfterEventInvoked(Event event) {
         if(isStarted){
-            try {
-                GrabEvent grabEvent = (GrabEvent) event;
-                Frame frame = grabEvent.getFrame();
-                pushRecorder.record(frame);
-            }catch (Exception e){
-                log.error("Push recorder failed to record");
-                e.printStackTrace();
-            }
+            pushEvent(event);
+//            try {
+//                GrabEvent grabEvent = (GrabEvent) event;
+//                Frame frame = grabEvent.getFrame();
+//                pushRecorder.record(frame);
+//            }catch (Exception e){
+//                log.error("Push recorder failed to record");
+//                e.printStackTrace();
+//            }
         }else {
             log.warn("Failed to fire the listener.You should start this Push recorder before you start pushing");
         }

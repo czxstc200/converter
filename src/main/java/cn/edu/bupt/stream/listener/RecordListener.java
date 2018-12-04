@@ -17,13 +17,9 @@ import org.bytedeco.javacv.Frame;
 public class RecordListener implements Listener {
 
     private String name;
-
     FFmpegFrameRecorder fileRecorder;
-
     String fileName;
-
     boolean isInit;
-
     boolean isStarted;
 
     public RecordListener(String filename, FFmpegFrameGrabber grabber) {

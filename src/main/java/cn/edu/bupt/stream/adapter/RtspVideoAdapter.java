@@ -136,6 +136,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         rtspVideoAdapter.addListener(pushListener);
         try {
             rtspVideoAdapter.start();
+
         }catch (Exception e){
 
         }
