@@ -39,7 +39,6 @@ public class RecordListener implements Listener {
         this.queueThreshold = 240;
         this.offerTimeout = 100L;
         this.isSubmitted = false;
-        this.closeNotifiaction = false;
     }
 
     public RecordListener(String filename, FFmpegFrameGrabber grabber) {
@@ -99,16 +98,11 @@ public class RecordListener implements Listener {
     @Override
     public void close(){
         try {
-            this.closeNotifiaction = true;
-//            fileRecorder.stop();
-//            fileRecorder.release();
-//            isStarted = false;
-//            this.fileRecorder = null;
-//            if(executor!=null){
-//                executor.shutdown();
-//                executor=null;
-//            }
-//            log.info("File recorder stopped");
+            isStarted = false;
+            if(executor!=null){
+                executor.shutdown();
+            }
+            log.info("File recorder stopped");
         }catch (Exception e){
             log.error("File recorder failed to close");
             e.printStackTrace();
@@ -126,14 +120,6 @@ public class RecordListener implements Listener {
     public void fireAfterEventInvoked(Event event) {
         if(isStarted){
             pushEvent(event);
-//            try {
-//                GrabEvent grabEvent = (GrabEvent) event;
-//                Frame frame = grabEvent.getFrame();
-//                fileRecorder.record(frame);
-//            }catch (Exception e){
-//                log.error("File recorder failed to record");
-//                e.printStackTrace();
-//            }
         }else {
             log.warn("Failed to fire the listener.You should start this file recorder before you start recording");
         }
@@ -148,8 +134,6 @@ public class RecordListener implements Listener {
      */
     private void fileRecorderInit(String filename,FFmpegFrameGrabber grabber){
         this.fileRecorder = new FFmpegFrameRecorder(filename,grabber.getImageWidth(),grabber.getImageHeight(),grabber.getAudioChannels());
-        fileRecorder.setFrameRate(grabber.getFrameRate());
-        fileRecorder.setFormat("mp4");
         this.isInit = true;
     }
 
@@ -194,25 +178,23 @@ public class RecordListener implements Listener {
                                 fileRecorder.record(nextEvent.getFrame());
                                 log.trace("Processing event from queue[size:{}]", queue.size());
                             }
-                            if(closeNotifiaction){
-                                while(!RecordListener.this.queue.isEmpty()){
-                                    GrabEvent nextEvent = (GrabEvent) RecordListener.this.queue.take();
-                                    fileRecorder.record(nextEvent.getFrame());
-                                }
-                                fileRecorder.stop();
-                                fileRecorder.release();
-                                isStarted = false;
-                                fileRecorder = null;
-//                                if(executor!=null){
-//                                    executor.shutdown();
-//                                    executor=null;
-//                                }
-                                log.info("File recorder stopped");
-                            }
                         }catch (Exception e){
                             log.warn("Failed to record event");
                         }
+                    }
+                    while(!RecordListener.this.queue.isEmpty()){
+                        try {
+                            GrabEvent nextEvent = (GrabEvent) RecordListener.this.queue.take();
+                            fileRecorder.record(nextEvent.getFrame());
+                        }catch (Exception e){
 
+                        }
+                    }
+                    try {
+                        fileRecorder.stop();
+                        fileRecorder.release();
+                        fileRecorder = null;
+                    }catch (Exception e){
 
                     }
                 }

@@ -32,7 +32,6 @@ public class PushListener implements Listener {
     private BlockingQueue<Event> queue;
     private long offerTimeout;
     private boolean isSubmitted;
-    private boolean closeNotification;
 
     public PushListener(){
         this.isStarted = false;
@@ -41,7 +40,6 @@ public class PushListener implements Listener {
         this.queueThreshold = 240;
         this.offerTimeout = 100L;
         this.isSubmitted = false;
-        this.closeNotification = false;
     }
 
     public PushListener(String listenerName,String rtmpPath,FFmpegFrameGrabber grabber){
@@ -101,10 +99,11 @@ public class PushListener implements Listener {
     @Override
     public void close(){
         try {
-
-            //todo
-            closeNotification = true;
-
+            isStarted = false;
+            if(executor!=null){
+                executor.shutdown();
+            }
+            log.info("File recorder stopped");
         }catch (Exception e){
             log.error("Push recorder failed to close");
             e.printStackTrace();
@@ -122,14 +121,6 @@ public class PushListener implements Listener {
     public void fireAfterEventInvoked(Event event) {
         if(isStarted){
             pushEvent(event);
-//            try {
-//                GrabEvent grabEvent = (GrabEvent) event;
-//                Frame frame = grabEvent.getFrame();
-//                pushRecorder.record(frame);
-//            }catch (Exception e){
-//                log.error("Push recorder failed to record");
-//                e.printStackTrace();
-//            }
         }else {
             log.warn("Failed to fire the listener.You should start this Push recorder before you start pushing");
         }
@@ -144,11 +135,9 @@ public class PushListener implements Listener {
      */
     private void pushRecorderInit(String rtmpPath,FFmpegFrameGrabber grabber){
         this.pushRecorder = new FFmpegFrameRecorder(rtmpPath,grabber.getImageWidth(),grabber.getImageHeight(),grabber.getAudioChannels());
-//        pushRecorder.setVideoCodec(avcodec.AV_CODEC_ID_H264);
         pushRecorder.setFrameRate(grabber.getFrameRate());
         pushRecorder.setVideoOption("preset", "ultrafast");
         pushRecorder.setFormat("flv");
-//        pushRecorder.setPixelFormat(avutil.AV_PIX_FMT_YUV420P);
         this.isInit = true;
     }
 
@@ -189,27 +178,29 @@ public class PushListener implements Listener {
                 public void run() {
                     while(isStarted){
                         try{
-                            if(!PushListener.this.queue.isEmpty()) {
+                            while(!PushListener.this.queue.isEmpty()) {
                                 GrabEvent nextEvent = (GrabEvent) PushListener.this.queue.take();
                                 pushRecorder.record(nextEvent.getFrame());
                                 log.trace("Processing event from queue[size:{}]", queue.size());
                             }
-
-                            //todo
-                            if(closeNotification){
-                                pushRecorder.stop();
-                                pushRecorder.release();
-                                isStarted = false;
-                                pushRecorder = null;
-//            if(executor!=null){
-//                executor.shutdown();
-//                executor=null;
-//            }
-                                log.info("Push recorder stopped");
-                            }
                         }catch (Exception e){
                             log.warn("Failed to record event");
                         }
+                    }
+                    while(!PushListener.this.queue.isEmpty()){
+                        try {
+                            GrabEvent nextEvent = (GrabEvent) PushListener.this.queue.take();
+                            pushRecorder.record(nextEvent.getFrame());
+                            log.trace("Processing event from queue[size:{}]", queue.size());
+                        }catch (Exception e){
+                            log.warn("Failed to record event");
+                        }
+                    }
+                    try {
+                        pushRecorder.stop();
+                        pushRecorder.release();
+                        pushRecorder = null;
+                    }catch (Exception e){
 
                     }
                 }

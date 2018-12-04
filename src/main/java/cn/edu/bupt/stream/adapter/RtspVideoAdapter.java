@@ -82,8 +82,7 @@ public class RtspVideoAdapter extends VideoAdapter{
                 listener.fireAfterEventInvoked(new GrabEvent(this,frame));
             }
 
-            //todo
-            if(count>500){
+            if(count>1000){
                 stop();
             }
         }
@@ -146,7 +145,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         rtspVideoAdapter.addListener(recordListener);
         try {
             rtspVideoAdapter.start();
-
+            Thread.sleep(1000);
         }catch (Exception e){
 
         }
