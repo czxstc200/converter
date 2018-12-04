@@ -12,11 +12,39 @@ import java.util.EventListener;
  */
 public interface Listener extends EventListener {
 
-    public void fireAfterEventInvoked(Event event);
+    /**
+     * @Description 当事件（拉流）发生时调用，用于完成功能
+     * @author CZX
+     * @date 2018/12/4 9:32
+     * @param [event]
+     * @return void
+     */
+    void fireAfterEventInvoked(Event event);
 
-    public String getName();
+    /**
+     * @Description 获取监听器的名字
+     * @author CZX
+     * @date 2018/12/4 9:33
+     * @param []
+     * @return java.lang.String
+     */
+    String getName();
 
-    public void start();
+    /**
+     * @Description 启动监听器
+     * @author CZX
+     * @date 2018/12/4 9:33
+     * @param []
+     * @return void
+     */
+    void start();
 
-    public void close();
+    /**
+     * @Description 关闭监听器
+     * @author CZX
+     * @date 2018/12/4 9:33
+     * @param []
+     * @return void
+     */
+    void close();
 }
