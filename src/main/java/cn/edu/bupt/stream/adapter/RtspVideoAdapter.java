@@ -3,8 +3,10 @@ package cn.edu.bupt.stream.adapter;
 import cn.edu.bupt.stream.event.GrabEvent;
 import cn.edu.bupt.stream.listener.Listener;
 import cn.edu.bupt.stream.listener.PushListener;
+import cn.edu.bupt.stream.listener.RecordListener;
 import lombok.extern.slf4j.Slf4j;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
+import org.bytedeco.javacv.Frame;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.ArrayList;
@@ -75,8 +77,14 @@ public class RtspVideoAdapter extends VideoAdapter{
             if(count % 100 == 0){
                 log.debug("Video[{}] counts={}",rtspPath,count);
             }
+            Frame frame = grabber.grabImage();
             for(Listener listener:listeners){
-                listener.fireAfterEventInvoked(new GrabEvent(this,grabber.grabImage()));
+                listener.fireAfterEventInvoked(new GrabEvent(this,frame));
+            }
+
+            //todo
+            if(count>500){
+                stop();
             }
         }
         log.info("Grabber ends for video rtsp:{}",rtspPath);
@@ -134,6 +142,8 @@ public class RtspVideoAdapter extends VideoAdapter{
         rtspVideoAdapter.grabberInit();
         PushListener pushListener = new PushListener("rtmp://10.112.17.185/oflaDemo/haikang1",rtspVideoAdapter.getGrabber());
         rtspVideoAdapter.addListener(pushListener);
+        RecordListener recordListener = new RecordListener("/Users/czx/Downloads/test.mp4",rtspVideoAdapter.getGrabber());
+        rtspVideoAdapter.addListener(recordListener);
         try {
             rtspVideoAdapter.start();
 

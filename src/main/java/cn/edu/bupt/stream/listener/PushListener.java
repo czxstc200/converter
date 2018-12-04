@@ -32,6 +32,7 @@ public class PushListener implements Listener {
     private BlockingQueue<Event> queue;
     private long offerTimeout;
     private boolean isSubmitted;
+    private boolean closeNotification;
 
     public PushListener(){
         this.isStarted = false;
@@ -40,6 +41,7 @@ public class PushListener implements Listener {
         this.queueThreshold = 240;
         this.offerTimeout = 100L;
         this.isSubmitted = false;
+        this.closeNotification = false;
     }
 
     public PushListener(String listenerName,String rtmpPath,FFmpegFrameGrabber grabber){
@@ -99,15 +101,10 @@ public class PushListener implements Listener {
     @Override
     public void close(){
         try {
-            pushRecorder.stop();
-            pushRecorder.release();
-            isStarted = false;
-            this.pushRecorder = null;
-            if(executor!=null){
-                executor.shutdown();
-                executor=null;
-            }
-            log.info("Push recorder stopped");
+
+            //todo
+            closeNotification = true;
+
         }catch (Exception e){
             log.error("Push recorder failed to close");
             e.printStackTrace();
@@ -196,6 +193,19 @@ public class PushListener implements Listener {
                                 GrabEvent nextEvent = (GrabEvent) PushListener.this.queue.take();
                                 pushRecorder.record(nextEvent.getFrame());
                                 log.trace("Processing event from queue[size:{}]", queue.size());
+                            }
+
+                            //todo
+                            if(closeNotification){
+                                pushRecorder.stop();
+                                pushRecorder.release();
+                                isStarted = false;
+                                pushRecorder = null;
+//            if(executor!=null){
+//                executor.shutdown();
+//                executor=null;
+//            }
+                                log.info("Push recorder stopped");
                             }
                         }catch (Exception e){
                             log.warn("Failed to record event");
