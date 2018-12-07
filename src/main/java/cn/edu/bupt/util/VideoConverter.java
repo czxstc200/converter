@@ -66,14 +66,15 @@ public class VideoConverter {
         // 使用rtsp的时候需要使用 FFmpegFrameGrabber，不能再用 FrameGrabber
         FFmpegFrameGrabber grabber = FFmpegFrameGrabber.createDefault(rtspPath);
         // 使用tcp的方式，不然会丢包很严重
-        grabber.setOption("rtsp_transport", "tcp");
+//        grabber.setOption("rtsp_transport", "tcp");
         grabber.start();
         log.info("Grabber starts for video rtsp:{}",rtspPath);
         // 推流record
         FFmpegFrameRecorder recorder = new FFmpegFrameRecorder(rtmpPath, grabber.getImageWidth(), grabber.getImageHeight(), audioRecord);
         recorder.setVideoCodec(avcodec.AV_CODEC_ID_H264);
-        recorder.setFrameRate(grabber.getFrameRate());
+        recorder.setFrameRate(15);
         recorder.setVideoOption("preset", "ultrafast");
+        recorder.setVideoOption("tune","zerolatency");
         recorder.setFormat("flv");
         recorder.setPixelFormat(avutil.AV_PIX_FMT_YUV420P);
         recorder.start();

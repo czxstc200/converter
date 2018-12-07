@@ -72,6 +72,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         log.info("Grabber starts for video rtsp:{}",rtspPath);
         startAllListeners();
         int count = 0;
+
         while(!stop){
             count++;
             if(count % 100 == 0){
@@ -82,7 +83,15 @@ public class RtspVideoAdapter extends VideoAdapter{
                 listener.fireAfterEventInvoked(new GrabEvent(this,frame));
             }
 
-            if(count>1000){
+            if(count==200){
+                restartRecording("/Users/czx/Downloads/test2.mp4");
+            }
+
+            if(count==400){
+                restartRecording("/Users/czx/Downloads/test2.mp4");
+            }
+
+            if(count>600){
                 stop();
             }
         }
@@ -132,12 +141,31 @@ public class RtspVideoAdapter extends VideoAdapter{
         listeners.removeAll(listeners);
     }
 
+    private void removeListener(String name){
+        Listener removedListener = null;
+        for(Listener listener:listeners){
+            if(listener.getName().equals(name)){
+                listener.close();
+                removedListener = listener;
+            }
+        }
+        listeners.remove(removedListener);
+    }
+
+    private void restartRecording(String filename){
+        removeListener("Record Listener");
+        RecordListener recordListener = new RecordListener(filename,getGrabber());
+        addListener(recordListener);
+        recordListener.start();
+
+    }
+
     public FFmpegFrameGrabber getGrabber() {
         return grabber;
     }
 
     public static void main(String[] args) {
-        RtspVideoAdapter rtspVideoAdapter = new RtspVideoAdapter("rtsp","rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov");
+        RtspVideoAdapter rtspVideoAdapter = new RtspVideoAdapter("rtsp","rtsp://admin:LITFYL@10.112.239.157:554/h264/ch1/main/av_stream");
         rtspVideoAdapter.grabberInit();
         PushListener pushListener = new PushListener("rtmp://10.112.17.185/oflaDemo/haikang1",rtspVideoAdapter.getGrabber());
         rtspVideoAdapter.addListener(pushListener);

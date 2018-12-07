@@ -176,6 +176,7 @@ public class RecordListener implements Listener {
                             if(!RecordListener.this.queue.isEmpty()) {
                                 GrabEvent nextEvent = (GrabEvent) RecordListener.this.queue.take();
                                 fileRecorder.record(nextEvent.getFrame());
+                                GrabEvent oldEvent = nextEvent;
                                 log.trace("Processing event from queue[size:{}]", queue.size());
                             }
                         }catch (Exception e){

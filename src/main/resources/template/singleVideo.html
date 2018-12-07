@@ -33,12 +33,13 @@
         var player2 = new Clappr.Player({
             source: "rtmp://10.112.17.185/oflaDemo/haikang1",
             parentId: "#player",
-            plugins: [MarqueeOverlay,RTMP],
-            marqueePluginConfig:{
-                textContent:"source:'rtmp://10.112.17.185/oflaDemo/haikang1'",
-                duration:10000,
-                direction:'left'
-            },
+            plugins: [RTMP],
+            autoPlay: !0,
+            // marqueePluginConfig:{
+            //     textContent:"source:'rtmp://10.112.17.185/oflaDemo/haikang1'",
+            //     duration:10000,
+            //     direction:'left'
+            // },
             rtmpConfig: {
                 scaling:'stretch',
                 playbackType: 'live',

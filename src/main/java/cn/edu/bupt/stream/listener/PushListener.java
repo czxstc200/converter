@@ -36,7 +36,7 @@ public class PushListener implements Listener {
     public PushListener(){
         this.isStarted = false;
         this.isInit = false;
-        this.executor = new ScheduledThreadPoolExecutor(1,new BasicThreadFactory.Builder().namingPattern("PushListener-pool-%d").daemon(true).build());
+        this.executor = new ScheduledThreadPoolExecutor(1,new BasicThreadFactory.Builder().namingPattern("PushListener-pool-%d").daemon(false).build());
         this.queueThreshold = 240;
         this.offerTimeout = 100L;
         this.isSubmitted = false;
