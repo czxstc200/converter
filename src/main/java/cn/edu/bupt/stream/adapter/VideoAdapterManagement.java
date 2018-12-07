@@ -45,6 +45,7 @@ public class VideoAdapterManagement {
         adapter.stop();
         futures.get(adapter.getName()).cancel(false);
         futures.remove(adapter.getName());
+        map.remove(adapter.getName());
     }
 
     public static VideoAdapter getVideoAdapter(String name){

@@ -61,7 +61,7 @@ public class VideoController {
                           @RequestParam(required = false) String rtmp,
                           @RequestParam(required = false) Boolean save ) throws Exception{
 //        String rtspPath = "rtsp://admin:ydslab215@10.112.239.157:554/h264/ch1/main/av_stream";
-        String rtmpPath = rtmp==null?"rtmp://10.112.17.185/oflaDemo/haikang1":rtmp;
+        String rtmpPath = rtmp==null?"rtmp://localhost/oflaDemo/haikang1":rtmp;
         String rtspPath = rtsp==null?"rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov":rtsp;
         boolean saveVideo = save==null?false:save;
         VideoAdapterManagement.startAdapter(new RtspVideoAdapter(rtspPath,rtmpPath,saveVideo));
@@ -119,7 +119,7 @@ public class VideoController {
     @ApiOperation("停止视频推流")
     @RequestMapping(value = "/stopConvert", method = RequestMethod.GET)
     @ResponseBody
-    public void stopConvert(@RequestParam String rtmp) throws Exception{
+    public void stopConvert(@RequestParam String rtmp){
         VideoAdapterManagement.stopAdapter(VideoAdapterManagement.getVideoAdapter(rtmp));
     }
 
