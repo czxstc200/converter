@@ -7,10 +7,14 @@ import cn.edu.bupt.stream.listener.RecordListener;
 import lombok.extern.slf4j.Slf4j;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
-import org.springframework.beans.factory.annotation.Value;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+
+import static cn.edu.bupt.stream.Constants.*;
 
 /**
  * @Description: RtspVideoAdapter
@@ -21,9 +25,15 @@ import java.util.List;
 @Slf4j
 public class RtspVideoAdapter extends VideoAdapter{
 
+    private String name;
+
     private static long timestamp;
 
     private String videoRootDir;
+    
+    private boolean isRecording;
+
+    private boolean isPushing;
 
     private boolean stop;
 
@@ -31,19 +41,70 @@ public class RtspVideoAdapter extends VideoAdapter{
 
     private String rtspPath;
 
+    private String rtmpPath;
+
     private List<Listener> listeners;
 
-    public RtspVideoAdapter(String adapterName) {
-        super(adapterName);
+    private boolean save;
+
+    public RtspVideoAdapter(){
         listeners = new ArrayList<>();
+        isRecording = false;
         stop = false;
+        videoRootDir = ROOT_DIR;
+        timestamp = getZeroTimestamp();
+        save = false;
     }
 
-    public RtspVideoAdapter(String adapterName, String rtspPath) {
-        super(adapterName);
+    public RtspVideoAdapter(String adapterName) {
+        this();
+        name = adapterName;
+
+    }
+
+    public RtspVideoAdapter(String rtspPath, String rtmpPath,boolean save) {
+        this(rtmpPath);
         this.rtspPath = rtspPath;
-        listeners = new ArrayList<>();
-        stop = false;
+        this.rtmpPath =rtmpPath;
+        this.save = save;
+    }
+
+    public String getVideoRootDir() {
+        return videoRootDir;
+    }
+
+    public boolean isRecording() {
+        return isRecording;
+    }
+
+    public boolean isPushing() {
+        return isPushing;
+    }
+
+    public boolean isStop() {
+        return stop;
+    }
+
+    public String getRtspPath() {
+        return rtspPath;
+    }
+
+    public String getRtmpPath() {
+        return rtmpPath;
+    }
+
+    public FFmpegFrameGrabber getGrabber() {
+        return grabber;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name = name;
     }
 
     @Override
@@ -67,13 +128,25 @@ public class RtspVideoAdapter extends VideoAdapter{
      */
     @Override
     public void start() throws Exception{
-        log.info("RtspVideoAdapter starts for {rtsp is {}}",rtspPath);
+
+        log.info("RtspVideoAdapter starts for {rtsp is {},rtmp is {}}",rtspPath,rtmpPath);
         grabberInit();
         log.info("Grabber starts for video rtsp:{}",rtspPath);
         startAllListeners();
-        int count = 0;
+        String filePath = videoRootDir+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length())+"/";
+        judeDirExists(filePath);
+        if(save){
+            startRecording(filePath+generateFilenameByDate()+".mp4");
+        }
+        startPushing();
 
+
+        int count = 0;
         while(!stop){
+            if(isRecording&&timestamp<getZeroTimestamp()){
+                timestamp = getZeroTimestamp();
+                restartRecording(filePath+generateFilenameByDate()+".mp4");
+            }
             count++;
             if(count % 100 == 0){
                 log.debug("Video[{}] counts={}",rtspPath,count);
@@ -81,18 +154,6 @@ public class RtspVideoAdapter extends VideoAdapter{
             Frame frame = grabber.grabImage();
             for(Listener listener:listeners){
                 listener.fireAfterEventInvoked(new GrabEvent(this,frame));
-            }
-
-            if(count==200){
-                restartRecording("/Users/czx/Downloads/test2.mp4");
-            }
-
-            if(count==400){
-                restartRecording("/Users/czx/Downloads/test2.mp4");
-            }
-
-            if(count>600){
-                stop();
             }
         }
         log.info("Grabber ends for video rtsp:{}",rtspPath);
@@ -103,6 +164,71 @@ public class RtspVideoAdapter extends VideoAdapter{
     @Override
     public void stop(){
         stop = true;
+    }
+
+    private void startAllListeners(){
+        log.info("Start all listeners");
+        for(Listener listener:listeners){
+            listener.start();
+        }
+    }
+
+    private void closeAllListeners(){
+        log.info("Close all listeners");
+        for(Listener listener:listeners){
+            listener.close();
+        }
+        listeners.removeAll(listeners);
+    }
+
+    /**
+     * @Description 判断文件夹是否存在,不存在则创建
+     * @author CZX
+     * @date 2018/11/30 12:24
+     * @param [filename]
+     * @return boolean
+     */
+    private static boolean judeDirExists(String filename) throws Exception{
+        File file = new File(filename);
+        if (file.exists()) {
+            if (file.isDirectory()) {
+                log.warn("dir[{}] exists",file.getName());
+                return true;
+            } else {
+                log.error("the same name file[{}] exists, can not create dir",file.getName());
+                throw new Exception("the same name file exists");
+            }
+        }else{
+            log.info("dir[{}] not exists, create it",file.getName());
+            return file.mkdir();
+        }
+    }
+
+    /**
+     * @Description 根据日期生成视频的文件名
+     * @author CZX
+     * @date 2018/11/30 12:30
+     * @param []
+     * @return java.lang.String
+     */
+    private static String generateFilenameByDate(){
+        SimpleDateFormat sdf=new SimpleDateFormat("yyyy_MM_dd_HH_mm");
+        Date date=new Date();
+        String dateStringParse = sdf.format(date);
+        return dateStringParse;
+    }
+
+    /**
+     * @Description 获取明天的零点时间戳
+     * @author CZX
+     * @date 2018/11/30 14:36
+     * @param []
+     * @return java.lang.Long
+     */
+    private static Long getZeroTimestamp(){
+        Long currentTimestamps=System.currentTimeMillis();
+        Long oneDayTimestamps= Long.valueOf(60*60*24*1000);
+        return currentTimestamps-(currentTimestamps+60*60*8*1000)%oneDayTimestamps+oneDayTimestamps;
     }
 
     /**
@@ -126,21 +252,13 @@ public class RtspVideoAdapter extends VideoAdapter{
         }
     }
 
-    private void startAllListeners(){
-        log.info("Start all listeners");
-        for(Listener listener:listeners){
-            listener.start();
-        }
-    }
-
-    private void closeAllListeners(){
-        log.info("Close all listeners");
-        for(Listener listener:listeners){
-            listener.close();
-        }
-        listeners.removeAll(listeners);
-    }
-
+    /**
+     * @Description 根据名字删除一个listener
+     * @author czx
+     * @date 2018-12-07 14:56
+     * @param [name]
+     * @return void
+     */
     private void removeListener(String name){
         Listener removedListener = null;
         for(Listener listener:listeners){
@@ -152,25 +270,122 @@ public class RtspVideoAdapter extends VideoAdapter{
         listeners.remove(removedListener);
     }
 
-    private void restartRecording(String filename){
-        removeListener("Record Listener");
-        RecordListener recordListener = new RecordListener(filename,getGrabber());
-        addListener(recordListener);
-        recordListener.start();
-
+    /**
+     * @Description 重新开始录制视频
+     * @author czx
+     * @date 2018-12-07 13:58
+     * @param [filename]
+     * @return void
+     */
+    public void restartRecording(String filename){
+        log.info("Restart recording. New filename is [{}]",filename);
+        stopRecording();
+        startRecording(filename);
+    }
+    
+    /**
+     * @Description 开始录制
+     * @author czx
+     * @date 2018-12-07 14:12
+     * @param [filename]
+     * @return void
+     */
+    public void startRecording(String filename){
+        if(isRecording){
+            log.warn("Video recording has already been started.");
+        }else {
+            RecordListener recordListener = new RecordListener(filename, getGrabber());
+            addListener(recordListener);
+            recordListener.start();
+            isRecording = true;
+        }
     }
 
-    public FFmpegFrameGrabber getGrabber() {
-        return grabber;
+    public void startRecording(){
+        if(isRecording){
+            log.warn("Video recording has already been started.");
+        }else {
+            String filePath = videoRootDir+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length())+"/";
+            RecordListener recordListener = new RecordListener(filePath+generateFilenameByDate()+".mp4", getGrabber());
+            addListener(recordListener);
+            recordListener.start();
+            isRecording = true;
+        }
+    }
+    
+    /**
+     * @Description 停止录制
+     * @author czx
+     * @date 2018-12-07 14:13
+     * @param []
+     * @return void
+     */
+    public void stopRecording(){
+        if(!isRecording){
+            log.warn("Can not stop recording cause recording has not been started.");
+        }else {
+            removeListener(RECORD_LISTENER_NAME);
+            isRecording = false;
+        }
+    }
+
+    /**
+     * @Description 开始推流
+     * @author czx
+     * @date 2018-12-07 15:06
+     * @param []
+     * @return void
+     */
+    public void startPushing(){
+        if(isPushing){
+            log.warn("Video pushing has already been started.");
+        }else {
+            PushListener pushListener = new PushListener(rtmpPath,getGrabber());
+            addListener(pushListener);
+            pushListener.start();
+            isPushing = true;
+        }
+    }
+
+    /**
+     * @Description 停止推流
+     * @author czx
+     * @date 2018-12-07 15:05
+     * @param []
+     * @return void
+     */
+    public void stopPushing(){
+        if(!isPushing){
+            log.warn("Can not stop pushing cause pushing has not been started.");
+        }else {
+            removeListener(PUSH_LISTENER_NAME);
+            isPushing = false;
+        }
+    }
+
+    /**
+     * @Description 根据rtmp获取该视频流下的所有录像文件
+     * @author CZX
+     * @date 2018/11/30 18:55
+     * @param [rtmpPath]
+     * @return java.util.List<java.lang.String>
+     */
+    public List<String> getFiles(String rtmpPath){
+        String path = ROOT_DIR+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length());
+        File file = new File(path);
+        File[] files = file.listFiles();
+        List<String> fileList = new ArrayList<>();
+        for (int i = 0; i < files.length; i++) {
+            if (files[i].isFile()) {
+                fileList.add(files[i].getName());
+            }
+        }
+        return fileList;
     }
 
     public static void main(String[] args) {
-        RtspVideoAdapter rtspVideoAdapter = new RtspVideoAdapter("rtsp","rtsp://admin:LITFYL@10.112.239.157:554/h264/ch1/main/av_stream");
-        rtspVideoAdapter.grabberInit();
-        PushListener pushListener = new PushListener("rtmp://10.112.17.185/oflaDemo/haikang1",rtspVideoAdapter.getGrabber());
-        rtspVideoAdapter.addListener(pushListener);
-        RecordListener recordListener = new RecordListener("/Users/czx/Downloads/test.mp4",rtspVideoAdapter.getGrabber());
-        rtspVideoAdapter.addListener(recordListener);
+        RtspVideoAdapter rtspVideoAdapter = new RtspVideoAdapter("rtsp://admin:LITFYL@10.112.239.157:554/h264/ch1/main/av_stream","rtmp://10.112.17.185/oflaDemo/haikang1",true);
+
         try {
             rtspVideoAdapter.start();
             Thread.sleep(1000);

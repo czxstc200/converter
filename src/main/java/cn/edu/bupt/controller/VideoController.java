@@ -1,6 +1,9 @@
 package cn.edu.bupt.controller;
 
 import cn.edu.bupt.hikVision.win.HikUtil;
+import cn.edu.bupt.stream.adapter.RtspVideoAdapter;
+import cn.edu.bupt.stream.adapter.VideoAdapter;
+import cn.edu.bupt.stream.adapter.VideoAdapterManagement;
 import cn.edu.bupt.util.VideoConverter;
 import com.sun.jna.NativeLong;
 import io.swagger.annotations.ApiOperation;
@@ -11,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
-import static cn.edu.bupt.hikVision.win.HikUtil.hCNetSDK;
+import static cn.edu.bupt.hikVision.linux.HikUtil.hCNetSDK;
 
 /**
  * @Description: 视频的controller
@@ -31,61 +34,117 @@ public class VideoController {
     @ResponseBody
     public boolean getStatus(@RequestParam String rtmp) throws Exception{
         try {
-            Future<String> fs = resultMap.get(rtmp);
-            return fs.isDone();
+            return VideoAdapterManagement.getAdapterStatus(rtmp);
         }catch (Exception e){
             throw new Exception("该rtmp地址不存在");
         }
 
     }
 
+//    @ApiOperation("查看推流状态")
+//    @RequestMapping(value = "/status", method = RequestMethod.GET)
+//    @ResponseBody
+//    public boolean getStatus(@RequestParam String rtmp) throws Exception{
+//        try {
+//            Future<String> fs = resultMap.get(rtmp);
+//            return fs.isDone();
+//        }catch (Exception e){
+//            throw new Exception("该rtmp地址不存在");
+//        }
+//
+//    }
+
     @ApiOperation(value = "对视频进行推流")
     @RequestMapping(value = "/convert", method = RequestMethod.GET)
     @ResponseBody
     public String convert(@RequestParam(required = false) String rtsp,
                           @RequestParam(required = false) String rtmp,
-                          @RequestParam(required = false) Integer audio,
                           @RequestParam(required = false) Boolean save ) throws Exception{
 //        String rtspPath = "rtsp://admin:ydslab215@10.112.239.157:554/h264/ch1/main/av_stream";
         String rtmpPath = rtmp==null?"rtmp://10.112.17.185/oflaDemo/haikang1":rtmp;
         String rtspPath = rtsp==null?"rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov":rtsp;
-        int audioRecord = audio==null?1:audio;
         boolean saveVideo = save==null?false:save;
-        if(resultMap.containsKey(rtmpPath)){
-            throw new Exception("该rtmp地址已经存在!");
-        }
-        Future<String> future = executorService.submit(new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                VideoConverter.convert(rtspPath,rtmpPath,audioRecord,saveVideo);
-                return String.valueOf(System.currentTimeMillis());
-            }
-        });
-        resultMap.put(rtmpPath,future);
-        return "{rtsp:'"+rtspPath+"',"+"rtmp:'"+rtmpPath+"',"+"audio:"+String.valueOf(audioRecord)+",saveVideo:"+String.valueOf(saveVideo)+"}";
+        VideoAdapterManagement.startAdapter(new RtspVideoAdapter(rtspPath,rtmpPath,saveVideo));
+        return "{rtsp:'"+rtspPath+"',"+"rtmp:'"+rtmpPath+"',"+",saveVideo:"+saveVideo+"}";
     }
+
+//    @ApiOperation(value = "对视频进行推流")
+//    @RequestMapping(value = "/convert", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String convert(@RequestParam(required = false) String rtsp,
+//                          @RequestParam(required = false) String rtmp,
+//                          @RequestParam(required = false) Integer audio,
+//                          @RequestParam(required = false) Boolean save ) throws Exception{
+////        String rtspPath = "rtsp://admin:ydslab215@10.112.239.157:554/h264/ch1/main/av_stream";
+//        String rtmpPath = rtmp==null?"rtmp://10.112.17.185/oflaDemo/haikang1":rtmp;
+//        String rtspPath = rtsp==null?"rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov":rtsp;
+//        int audioRecord = audio==null?1:audio;
+//        boolean saveVideo = save==null?false:save;
+//        if(resultMap.containsKey(rtmpPath)){
+//            throw new Exception("该rtmp地址已经存在!");
+//        }
+//        Future<String> future = executorService.submit(new Callable<String>() {
+//            @Override
+//            public String call() throws Exception {
+//                VideoConverter.convert(rtspPath,rtmpPath,audioRecord,saveVideo);
+//                return String.valueOf(System.currentTimeMillis());
+//            }
+//        });
+//        resultMap.put(rtmpPath,future);
+//        return "{rtsp:'"+rtspPath+"',"+"rtmp:'"+rtmpPath+"',"+"audio:"+String.valueOf(audioRecord)+",saveVideo:"+String.valueOf(saveVideo)+"}";
+//    }
 
     @ApiOperation("视频录制")
     @RequestMapping(value = "/record", method = RequestMethod.GET)
     @ResponseBody
     public String record(@RequestParam String rtmp) throws Exception{
-        return VideoConverter.record(rtmp);
+        RtspVideoAdapter videoAdapter = (RtspVideoAdapter)VideoAdapterManagement.getVideoAdapter(rtmp);
+        boolean isRecording = videoAdapter.isRecording();
+        if(isRecording){
+            videoAdapter.stopRecording();
+            return "停止录制";
+        }else {
+            videoAdapter.startRecording();
+            return "开始录制";
+        }
     }
+
+//    @ApiOperation("视频录制")
+//    @RequestMapping(value = "/record", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String record(@RequestParam String rtmp) throws Exception{
+//        return VideoConverter.record(rtmp);
+//    }
 
     @ApiOperation("停止视频推流")
     @RequestMapping(value = "/stopConvert", method = RequestMethod.GET)
     @ResponseBody
     public void stopConvert(@RequestParam String rtmp) throws Exception{
-        VideoConverter.stopConvert(rtmp);
-        resultMap.remove(rtmp);
+        VideoAdapterManagement.stopAdapter(VideoAdapterManagement.getVideoAdapter(rtmp));
     }
+
+//    @ApiOperation("停止视频推流")
+//    @RequestMapping(value = "/stopConvert", method = RequestMethod.GET)
+//    @ResponseBody
+//    public void stopConvert(@RequestParam String rtmp) throws Exception{
+//        VideoConverter.stopConvert(rtmp);
+//        resultMap.remove(rtmp);
+//    }
 
     @ApiOperation("获取录像")
     @RequestMapping(value = "/records", method = RequestMethod.GET)
     @ResponseBody
     public List<String> getRecords(@RequestParam String rtmp) throws Exception{
-        return VideoConverter.getFiles(rtmp);
+        RtspVideoAdapter videoAdapter = (RtspVideoAdapter)VideoAdapterManagement.getVideoAdapter(rtmp);
+        return videoAdapter.getFiles(rtmp);
     }
+
+//    @ApiOperation("获取录像")
+//    @RequestMapping(value = "/records", method = RequestMethod.GET)
+//    @ResponseBody
+//    public List<String> getRecords(@RequestParam String rtmp) throws Exception{
+//        return VideoConverter.getFiles(rtmp);
+//    }
 
     //以下是视频控制
 

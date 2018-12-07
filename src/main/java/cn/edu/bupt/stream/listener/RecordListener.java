@@ -10,6 +10,8 @@ import org.bytedeco.javacv.Frame;
 
 import java.util.concurrent.*;
 
+import static cn.edu.bupt.stream.Constants.RECORD_LISTENER_NAME;
+
 /**
  * @Usage: 1.Init进行初始化 2.Start启动监听器 3.Fire listener，开始Record Event
  * @Description: RecordListener,用于视频流的存储
@@ -35,14 +37,14 @@ public class RecordListener implements Listener {
     public RecordListener(){
         this.isStarted = false;
         this.isInit = false;
-        this.executor = new ScheduledThreadPoolExecutor(1,new BasicThreadFactory.Builder().namingPattern("RecordListener-pool-%d").daemon(true).build());
+        this.executor = new ScheduledThreadPoolExecutor(1,new BasicThreadFactory.Builder().namingPattern("Record-pool-%d").daemon(true).build());
         this.queueThreshold = 240;
         this.offerTimeout = 100L;
         this.isSubmitted = false;
     }
 
     public RecordListener(String filename, FFmpegFrameGrabber grabber) {
-        this("Record Listener",filename,grabber);
+        this(RECORD_LISTENER_NAME,filename,grabber);
     }
 
     public RecordListener(String listenerName,String filename, FFmpegFrameGrabber grabber) {

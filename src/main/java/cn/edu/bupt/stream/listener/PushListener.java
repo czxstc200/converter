@@ -12,6 +12,8 @@ import org.bytedeco.javacv.Frame;
 
 import java.util.concurrent.*;
 
+import static cn.edu.bupt.stream.Constants.PUSH_LISTENER_NAME;
+
 /**
  * @Usage: 1.Init进行初始化 2.Start启动监听器 3.Fire listener，开始Push Event
  * @Description: PushListener，用于视频流的推流
@@ -36,7 +38,7 @@ public class PushListener implements Listener {
     public PushListener(){
         this.isStarted = false;
         this.isInit = false;
-        this.executor = new ScheduledThreadPoolExecutor(1,new BasicThreadFactory.Builder().namingPattern("PushListener-pool-%d").daemon(false).build());
+        this.executor = new ScheduledThreadPoolExecutor(1,new BasicThreadFactory.Builder().namingPattern("Push-pool-%d").daemon(false).build());
         this.queueThreshold = 240;
         this.offerTimeout = 100L;
         this.isSubmitted = false;
@@ -50,7 +52,7 @@ public class PushListener implements Listener {
     }
 
     public PushListener(String rtmpPath, FFmpegFrameGrabber grabber) {
-        this("Push Listener",rtmpPath,grabber);
+        this(PUSH_LISTENER_NAME,rtmpPath,grabber);
     }
 
     @Override
@@ -184,7 +186,7 @@ public class PushListener implements Listener {
                                 log.trace("Processing event from queue[size:{}]", queue.size());
                             }
                         }catch (Exception e){
-                            log.warn("Failed to record event");
+                            log.warn("Failed to push event");
                         }
                     }
                     while(!PushListener.this.queue.isEmpty()){
@@ -193,7 +195,7 @@ public class PushListener implements Listener {
                             pushRecorder.record(nextEvent.getFrame());
                             log.trace("Processing event from queue[size:{}]", queue.size());
                         }catch (Exception e){
-                            log.warn("Failed to record event");
+                            log.warn("Failed to push event");
                         }
                     }
                     try {

@@ -22,6 +22,9 @@ public class VideoAdapter {
         this.name = adapterName;
     }
 
+    public VideoAdapter() {
+    }
+
     public String getName() {
         return name;
     }
