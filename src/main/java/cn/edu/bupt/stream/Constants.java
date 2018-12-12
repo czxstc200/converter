@@ -9,6 +9,7 @@ package cn.edu.bupt.stream;
 public class Constants {
 
     public final static String ROOT_DIR = "/home/Video/";
+//    public final static String ROOT_DIR = "/Users/czx/Downloads/";
 
     public final static String RECORD_LISTENER_NAME = "Record Listener";
 

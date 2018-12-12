@@ -88,19 +88,19 @@
 //        });
 
         var now = new Clappr.Player({
-            source: "rtmp://39.104.186.210/oflaDemo/haikang1",
+            source: "rtmp://10.112.17.185/oflaDemo/haikang1",
             parentId: "#player",
             width: 640,
             height: 360,
             plugins: [RTMP],
-            plugins: [MarqueeOverlay,RTMP],
+            // plugins: [MarqueeOverlay,RTMP],
             autoPlay: !0,
             preload: 'auto',
-            marqueePluginConfig:{
-                textContent:"source:'rtmp://localhost/oflaDemo/hello'",
-                duration:10000,
-                direction:'left'
-            },
+            // marqueePluginConfig:{
+            //     textContent:"source:'rtmp://localhost/oflaDemo/hello'",
+            //     duration:10000,
+            //     direction:'left'
+            // },
             rtmpConfig: {
                 scaling:'stretch',
                 playbackType: 'live',
@@ -126,42 +126,42 @@
             }
         });
 
-        var next = new Clappr.Player({
-            source: "rtmp://10.112.17.185/oflaDemo/haikang1",
-            parentId: "#player2",
-            width: 8,
-            height: 8,
-            plugins: [RTMP],
-            autoPlay: !0,
-//            marqueePluginConfig:{
-//                textContent:"source:'rtmp://localhost/oflaDemo/test'",
-//                duration:10000,
-//                direction:'left'
-//            },
-            rtmpConfig: {
-                scaling:'stretch',
-                playbackType: 'live',
-                bufferTime: 1,
-                startLevel: 0,
-                switchRules: {
-                    "SufficientBandwidthRule": {
-                        "bandwidthSafetyMultiple": 1.15,
-                        "minDroppedFps": 2
-                    },
-                    "InsufficientBufferRule": {
-                        "minBufferLength": 2
-                    },
-                    "DroppedFramesRule": {
-                        "downSwitchByOne": 10,
-                        "downSwitchByTwo": 20,
-                        "downSwitchToZero": 24
-                    },
-                    "InsufficientBandwidthRule": {
-                        "bitrateMultiplier": 1.15
-                    }
-                }
-            }
-        });
+//         var next = new Clappr.Player({
+//             source: "rtmp://10.112.17.185/oflaDemo/haikang1",
+//             parentId: "#player2",
+//             width: 8,
+//             height: 8,
+//             plugins: [RTMP],
+//             autoPlay: !0,
+// //            marqueePluginConfig:{
+// //                textContent:"source:'rtmp://localhost/oflaDemo/test'",
+// //                duration:10000,
+// //                direction:'left'
+// //            },
+//             rtmpConfig: {
+//                 scaling:'stretch',
+//                 playbackType: 'live',
+//                 bufferTime: 1,
+//                 startLevel: 0,
+//                 switchRules: {
+//                     "SufficientBandwidthRule": {
+//                         "bandwidthSafetyMultiple": 1.15,
+//                         "minDroppedFps": 2
+//                     },
+//                     "InsufficientBufferRule": {
+//                         "minBufferLength": 2
+//                     },
+//                     "DroppedFramesRule": {
+//                         "downSwitchByOne": 10,
+//                         "downSwitchByTwo": 20,
+//                         "downSwitchToZero": 24
+//                     },
+//                     "InsufficientBandwidthRule": {
+//                         "bitrateMultiplier": 1.15
+//                     }
+//                 }
+//             }
+//         });
 
 //        var array = new Array('rtmp://10.112.17.185/oflaDemo/haikang1','rtmp://10.112.17.185/oflaDemo/haikang1');
 //        var index = 0;

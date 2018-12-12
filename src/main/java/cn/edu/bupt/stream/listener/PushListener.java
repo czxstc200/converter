@@ -136,10 +136,12 @@ public class PushListener implements Listener {
      * @return void
      */
     private void pushRecorderInit(String rtmpPath,FFmpegFrameGrabber grabber){
-        this.pushRecorder = new FFmpegFrameRecorder(rtmpPath,grabber.getImageWidth(),grabber.getImageHeight(),grabber.getAudioChannels());
+        //若选择录制声音，会造成较高的延迟
+        this.pushRecorder = new FFmpegFrameRecorder(rtmpPath,grabber.getImageWidth(),grabber.getImageHeight(),0);
         pushRecorder.setFrameRate(grabber.getFrameRate());
         pushRecorder.setVideoOption("preset", "ultrafast");
         pushRecorder.setFormat("flv");
+//        pushRecorder.setAudioBitrate(1024);
         this.isInit = true;
     }
 
