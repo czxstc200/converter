@@ -5,6 +5,7 @@ import cn.edu.bupt.stream.listener.Listener;
 import cn.edu.bupt.stream.listener.PushListener;
 import cn.edu.bupt.stream.listener.RecordListener;
 import lombok.extern.slf4j.Slf4j;
+import org.bytedeco.javacpp.avutil;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 
@@ -54,6 +55,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         videoRootDir = ROOT_DIR;
         timestamp = getZeroTimestamp();
         save = false;
+        avutil.av_log_set_level(avutil.AV_LOG_ERROR);
     }
 
     public RtspVideoAdapter(String adapterName) {

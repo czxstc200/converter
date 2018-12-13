@@ -169,6 +169,8 @@ public class PushListener implements Listener {
                 if(this.queue.size() < 2 * this.queueThreshold){
                     this.queue.offer(event, this.offerTimeout, TimeUnit.MILLISECONDS);
                     log.trace("Inserting event into queue[size:{}]",queue.size());
+                }else {
+                    this.queue.clear();
                 }
             }catch (Exception e){
                 log.warn("Event data was not accepted by the queue");
