@@ -135,7 +135,9 @@ public class RecordListener implements Listener {
      * @return void
      */
     private void fileRecorderInit(String filename,FFmpegFrameGrabber grabber){
-        this.fileRecorder = new FFmpegFrameRecorder(filename,grabber.getImageWidth(),grabber.getImageHeight(),grabber.getAudioChannels());
+        this.fileRecorder = new FFmpegFrameRecorder(filename,grabber.getImageWidth(),grabber.getImageHeight(),0);
+        this.fileRecorder.setFrameRate(grabber.getFrameRate());
+        this.fileRecorder.setFormat("flv");
         this.isInit = true;
     }
 

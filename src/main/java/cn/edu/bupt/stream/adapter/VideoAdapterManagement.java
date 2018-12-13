@@ -67,7 +67,7 @@ public class VideoAdapterManagement {
         }
         System.out.println("************************");
         System.out.println("是否完成转录："+VideoAdapterManagement.getAdapterStatus("rtmp://10.112.17.185/oflaDemo/haikang1"));
-//        VideoAdapterManagement.stopAdapter(VideoAdapterManagement.getVideoAdapter("rtmp://10.112.17.185/oflaDemo/haikang1"));
+        VideoAdapterManagement.stopAdapter(VideoAdapterManagement.getVideoAdapter("rtmp://10.112.17.185/oflaDemo/haikang1"));
 
     }
 }

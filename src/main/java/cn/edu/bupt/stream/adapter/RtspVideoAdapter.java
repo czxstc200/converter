@@ -138,7 +138,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         String filePath = videoRootDir+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length())+"/";
         judeDirExists(filePath);
         if(save){
-            startRecording(filePath+generateFilenameByDate()+".mp4");
+            startRecording(filePath+generateFilenameByDate()+".flv");
         }
         startPushing();
 
@@ -147,7 +147,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         while(!stop){
             if(isRecording&&timestamp<getZeroTimestamp()){
                 timestamp = getZeroTimestamp();
-                restartRecording(filePath+generateFilenameByDate()+".mp4");
+                restartRecording(filePath+generateFilenameByDate()+".flv");
             }
             count++;
             if(count % 100 == 0){
@@ -308,7 +308,7 @@ public class RtspVideoAdapter extends VideoAdapter{
             log.warn("Video recording has already been started.");
         }else {
             String filePath = videoRootDir+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length())+"/";
-            RecordListener recordListener = new RecordListener(filePath+generateFilenameByDate()+".mp4", getGrabber());
+            RecordListener recordListener = new RecordListener(filePath+generateFilenameByDate()+".flv", getGrabber());
             addListener(recordListener);
             recordListener.start();
             isRecording = true;

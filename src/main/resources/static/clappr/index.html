@@ -86,9 +86,9 @@
 //                }
 //            }
 //        });
-
+// rtmp://192.168.7.96:1935/oflaDemo/(streams)/Avengers2.mp4
         var now = new Clappr.Player({
-            source: "rtmp://10.112.17.185/oflaDemo/haikang1",
+            source: "rtmp://10.112.17.185/oflaDemo/haikang1/2018_12_13_21_11.flv",
             parentId: "#player",
             width: 640,
             height: 360,
@@ -103,7 +103,7 @@
             // },
             rtmpConfig: {
                 scaling:'stretch',
-                playbackType: 'live',
+                playbackType: 'vod',
                 bufferTime: 1,
                 startLevel: 0,
                 switchRules: {
