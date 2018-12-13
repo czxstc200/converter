@@ -1,20 +1,17 @@
 package cn.edu.bupt.controller;
 
-import cn.edu.bupt.hikVision.win.HikUtil;
 import cn.edu.bupt.stream.adapter.RtspVideoAdapter;
-import cn.edu.bupt.stream.adapter.VideoAdapter;
 import cn.edu.bupt.stream.adapter.VideoAdapterManagement;
-import cn.edu.bupt.util.VideoConverter;
 import com.sun.jna.NativeLong;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
 import static cn.edu.bupt.hikVision.linux.HikUtil.hCNetSDK;
+import cn.edu.bupt.hikVision.linux.HikUtil;
 
 /**
  * @Description: 视频的controller

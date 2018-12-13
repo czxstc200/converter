@@ -1,6 +1,6 @@
 package cn.edu.bupt.hikVision.linux;
 
-import cn.edu.bupt.hikVision.linux.HCNetSDK;
+
 import com.sun.jna.NativeLong;
 
 /**
