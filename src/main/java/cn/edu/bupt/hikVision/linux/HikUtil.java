@@ -29,7 +29,7 @@ public class HikUtil {
         }
 
         m_strDeviceInfo = new HCNetSDK.NET_DVR_DEVICEINFO_V30();
-        lUserID = hCNetSDK.NET_DVR_Login_V30("10.112.239.157",(short)8000,"admin","ydslab215",m_strDeviceInfo);
+        lUserID = hCNetSDK.NET_DVR_Login_V30("10.112.239.157",(short)8000,"admin","LITFYL",m_strDeviceInfo);
         if (lUserID.intValue() == -1)
         {
             System.out.println("注册失败");
