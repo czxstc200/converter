@@ -75,19 +75,26 @@
 			<version>3.4.2-1.4.1</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.sun.jna/jna -->
+		<!--<dependency>-->
+			<!--<groupId>com.sun.jna</groupId>-->
+			<!--<artifactId>jna</artifactId>-->
+			<!--<version>3.0.9</version>-->
+		<!--</dependency>-->
+
+		<!--Swagger-->
+		<dependency>
+			<groupId>com.sun.jna</groupId>
+			<artifactId>examples</artifactId>
+			<version>1.0</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/examples.jar</systemPath>
+		</dependency>
 		<dependency>
 			<groupId>com.sun.jna</groupId>
 			<artifactId>jna</artifactId>
 			<version>3.0.9</version>
-		</dependency>
-
-		<!--Swagger-->
-		<dependency>
-			<groupId>cn.edu.bupt</groupId>
-			<artifactId>example</artifactId>
-			<version>1.0</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/examples.jar</systemPath>
+			<systemPath>${project.basedir}/lib/jna-3.0.9.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>io.springfox</groupId>
@@ -115,6 +122,22 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
+		<resources>
+			<!-- <resource>
+			<directory>${project.basedir}/src/main/webapp/WEB-INF/lib</directory>
+			<targetPath>/BOOT-INF/lib/</targetPath>
+			<includes>
+			<include>*/.jar</include>
+			</includes>
+			</resource> -->
+			<resource>
+				<directory>${project.basedir}/lib</directory>
+				<targetPath>BOOT-INF/lib/</targetPath>
+				<includes>
+					<include>*.jar</include>
+				</includes>
+			</resource>
+		</resources>
 	</build>
 
 
