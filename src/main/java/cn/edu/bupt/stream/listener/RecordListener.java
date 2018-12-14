@@ -186,18 +186,11 @@ public class RecordListener implements Listener {
                             log.warn("Failed to record event");
                         }
                     }
-                    while(!RecordListener.this.queue.isEmpty()){
-                        try {
-                            GrabEvent nextEvent = (GrabEvent) RecordListener.this.queue.take();
-                            fileRecorder.record(nextEvent.getFrame());
-                        }catch (Exception e){
-
-                        }
-                    }
                     try {
                         fileRecorder.stop();
                         fileRecorder.release();
                         fileRecorder = null;
+                        queue=null;
                     }catch (Exception e){
 
                     }

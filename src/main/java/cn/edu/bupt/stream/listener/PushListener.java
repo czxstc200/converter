@@ -141,6 +141,8 @@ public class PushListener implements Listener {
         pushRecorder.setFrameRate(grabber.getFrameRate());
         pushRecorder.setVideoOption("preset", "ultrafast");
         pushRecorder.setFormat("flv");
+        pushRecorder.setVideoCodec(grabber.getVideoCodec());
+        pushRecorder.setPixelFormat(grabber.getPixelFormat());
 //        pushRecorder.setAudioBitrate(1024);
         this.isInit = true;
     }
@@ -155,6 +157,7 @@ public class PushListener implements Listener {
      */
     public void pushEvent(Event event){
         if(event instanceof GrabEvent){
+
             //如果queue为空，初始化它
             if(this.queue == null){
                 log.trace("Creating event queue");
@@ -184,7 +187,7 @@ public class PushListener implements Listener {
                 public void run() {
                     while(isStarted){
                         try{
-                            while(!PushListener.this.queue.isEmpty()) {
+                            if(!PushListener.this.queue.isEmpty()) {
                                 GrabEvent nextEvent = (GrabEvent) PushListener.this.queue.take();
                                 pushRecorder.record(nextEvent.getFrame());
                                 log.trace("Processing event from queue[size:{}]", queue.size());
@@ -193,19 +196,11 @@ public class PushListener implements Listener {
                             log.warn("Failed to push event");
                         }
                     }
-                    while(!PushListener.this.queue.isEmpty()){
-                        try {
-                            GrabEvent nextEvent = (GrabEvent) PushListener.this.queue.take();
-                            pushRecorder.record(nextEvent.getFrame());
-                            log.trace("Processing event from queue[size:{}]", queue.size());
-                        }catch (Exception e){
-                            log.warn("Failed to push event");
-                        }
-                    }
                     try {
                         pushRecorder.stop();
                         pushRecorder.release();
                         pushRecorder = null;
+                        queue=null;
                     }catch (Exception e){
 
                     }
