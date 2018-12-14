@@ -141,8 +141,6 @@ public class PushListener implements Listener {
         pushRecorder.setFrameRate(grabber.getFrameRate());
         pushRecorder.setVideoOption("preset", "ultrafast");
         pushRecorder.setFormat("flv");
-        pushRecorder.setVideoCodec(grabber.getVideoCodec());
-        pushRecorder.setPixelFormat(grabber.getPixelFormat());
 //        pushRecorder.setAudioBitrate(1024);
         this.isInit = true;
     }
