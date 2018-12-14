@@ -165,12 +165,13 @@ public class PushListener implements Listener {
             //将event推入queue
             try{
                 if(this.queue.size() > this.queueThreshold) {
-                    log.warn("Queue size is greater than threshold. queue size={} threshold={}", Integer.valueOf(this.queue.size()), Integer.valueOf(this.queueThreshold));
+                    log.warn("Queue size is greater than threshold. queue size={} threshold={} timestamp={}", Integer.valueOf(this.queue.size()), Integer.valueOf(this.queueThreshold),System.currentTimeMillis());
                 }
                 if(this.queue.size() < 2 * this.queueThreshold){
                     this.queue.offer(event, this.offerTimeout, TimeUnit.MILLISECONDS);
                     log.trace("Inserting event into queue[size:{}]",queue.size());
                 }else {
+                    log.warn("clear queue");
                     this.queue.clear();
                 }
             }catch (Exception e){
