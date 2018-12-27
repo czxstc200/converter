@@ -20,6 +20,7 @@ import cn.edu.bupt.hikVision.linux.HikUtil;
  * @Version: 1.0
  */
 @RestController
+@CrossOrigin
 public class VideoController {
 
     private static ExecutorService executorService = Executors.newCachedThreadPool();

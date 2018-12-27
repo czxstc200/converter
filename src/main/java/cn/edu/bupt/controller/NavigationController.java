@@ -1,6 +1,7 @@
 package cn.edu.bupt.controller;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
@@ -10,7 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @Version: 1.0
  */
 @Controller
+@CrossOrigin
 public class NavigationController {
+
 
     @RequestMapping("/home")
     public String  index() {
