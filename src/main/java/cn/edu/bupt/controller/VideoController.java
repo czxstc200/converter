@@ -4,6 +4,7 @@ import cn.edu.bupt.stream.adapter.RtspVideoAdapter;
 import cn.edu.bupt.stream.adapter.VideoAdapterManagement;
 import com.sun.jna.NativeLong;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,6 +13,8 @@ import java.util.concurrent.*;
 
 import static cn.edu.bupt.hikVision.linux.HikUtil.hCNetSDK;
 import cn.edu.bupt.hikVision.linux.HikUtil;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @Description: 视频的controller
@@ -27,11 +30,15 @@ public class VideoController {
 
     private static Map<String,Future<String>> resultMap = new ConcurrentHashMap<>();
 
+    @Autowired
+    private HttpServletResponse response;
+
     @ApiOperation("查看推流状态")
     @RequestMapping(value = "/status", method = RequestMethod.GET)
     @ResponseBody
     public boolean getStatus(@RequestParam String rtmp) throws Exception{
         try {
+            setHeader(response);
             return VideoAdapterManagement.getAdapterStatus(rtmp);
         }catch (Exception e){
             throw new Exception("该rtmp地址不存在");
@@ -63,6 +70,7 @@ public class VideoController {
         String rtspPath = rtsp==null?"rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov":rtsp;
         boolean saveVideo = save==null?false:save;
         VideoAdapterManagement.startAdapter(new RtspVideoAdapter(rtspPath,rtmpPath,saveVideo));
+        setHeader(response);
         return "{rtsp:'"+rtspPath+"',"+"rtmp:'"+rtmpPath+"',"+",saveVideo:"+saveVideo+"}";
     }
 
@@ -98,6 +106,7 @@ public class VideoController {
     public String record(@RequestParam String rtmp) throws Exception{
         RtspVideoAdapter videoAdapter = (RtspVideoAdapter)VideoAdapterManagement.getVideoAdapter(rtmp);
         boolean isRecording = videoAdapter.isRecording();
+        setHeader(response);
         if(isRecording){
             videoAdapter.stopRecording();
             return "停止录制";
@@ -118,6 +127,7 @@ public class VideoController {
     @RequestMapping(value = "/stopConvert", method = RequestMethod.GET)
     @ResponseBody
     public void stopConvert(@RequestParam String rtmp){
+        setHeader(response);
         VideoAdapterManagement.stopAdapter(VideoAdapterManagement.getVideoAdapter(rtmp));
     }
 
@@ -133,6 +143,7 @@ public class VideoController {
     @RequestMapping(value = "/records", method = RequestMethod.GET)
     @ResponseBody
     public List<String> getRecords(@RequestParam String rtmp) throws Exception{
+        setHeader(response);
         RtspVideoAdapter videoAdapter = (RtspVideoAdapter)VideoAdapterManagement.getVideoAdapter(rtmp);
         return videoAdapter.getFiles(rtmp);
     }
@@ -149,12 +160,14 @@ public class VideoController {
     @RequestMapping(value = "/subscribe", method = RequestMethod.GET)
     @ResponseBody
     public boolean subscribe() throws Exception{
+        setHeader(response);
         return HikUtil.subscribe();
     }
 
     @RequestMapping(value = "/logout", method = RequestMethod.GET)
     @ResponseBody
     public void logout() throws Exception{
+        setHeader(response);
         hCNetSDK.NET_DVR_Logout(HikUtil.lUserID);
         hCNetSDK.NET_DVR_Cleanup();
     }
@@ -187,6 +200,12 @@ public class VideoController {
         hCNetSDK.NET_DVR_PTZControl_Other(HikUtil.lUserID,nativeLong,command,0);
         Thread.sleep(2000);
         hCNetSDK.NET_DVR_PTZControl_Other(HikUtil.lUserID,nativeLong,command,1);
+        setHeader(response);
         return true;
+    }
+
+    public void setHeader(HttpServletResponse response){
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Method", "POST,GET");
     }
 }
