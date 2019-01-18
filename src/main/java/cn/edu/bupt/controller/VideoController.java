@@ -115,10 +115,10 @@ public class VideoController {
     public List<String> getFeedbacks(){
         setHeader(response);
         List<String> list = new ArrayList<>();
-        for(int i = 0;i<10;i++){
-            String temp = "rtmp://10.112.17.185/oflaDemo/haikang"+String.valueOf(i);
-            list.add(temp);
-        }
+        list.add("rtmp://10.112.17.185/oflaDemo/haikang1/2019_01_18_17_08.flv");
+        list.add("rtmp://10.112.17.185/oflaDemo/haikang1/2019_01_18_17_06.flv");
+        list.add("rtmp://10.112.17.185/oflaDemo/haikang1/BladeRunner2049.flv");
+        list.add("rtmp://10.112.17.185/oflaDemo/haikang1/guardians2.mp4");
         return list;
     }
 
