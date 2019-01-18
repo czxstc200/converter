@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -74,31 +75,6 @@ public class VideoController {
         return "{rtsp:'"+rtspPath+"',"+"rtmp:'"+rtmpPath+"',"+",saveVideo:"+saveVideo+"}";
     }
 
-//    @ApiOperation(value = "对视频进行推流")
-//    @RequestMapping(value = "/convert", method = RequestMethod.GET)
-//    @ResponseBody
-//    public String convert(@RequestParam(required = false) String rtsp,
-//                          @RequestParam(required = false) String rtmp,
-//                          @RequestParam(required = false) Integer audio,
-//                          @RequestParam(required = false) Boolean save ) throws Exception{
-////        String rtspPath = "rtsp://admin:ydslab215@10.112.239.157:554/h264/ch1/main/av_stream";
-//        String rtmpPath = rtmp==null?"rtmp://10.112.17.185/oflaDemo/haikang1":rtmp;
-//        String rtspPath = rtsp==null?"rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov":rtsp;
-//        int audioRecord = audio==null?1:audio;
-//        boolean saveVideo = save==null?false:save;
-//        if(resultMap.containsKey(rtmpPath)){
-//            throw new Exception("该rtmp地址已经存在!");
-//        }
-//        Future<String> future = executorService.submit(new Callable<String>() {
-//            @Override
-//            public String call() throws Exception {
-//                VideoConverter.convert(rtspPath,rtmpPath,audioRecord,saveVideo);
-//                return String.valueOf(System.currentTimeMillis());
-//            }
-//        });
-//        resultMap.put(rtmpPath,future);
-//        return "{rtsp:'"+rtspPath+"',"+"rtmp:'"+rtmpPath+"',"+"audio:"+String.valueOf(audioRecord)+",saveVideo:"+String.valueOf(saveVideo)+"}";
-//    }
 
     @ApiOperation("视频录制")
     @RequestMapping(value = "/record", method = RequestMethod.GET)
@@ -116,13 +92,6 @@ public class VideoController {
         }
     }
 
-//    @ApiOperation("视频录制")
-//    @RequestMapping(value = "/record", method = RequestMethod.GET)
-//    @ResponseBody
-//    public String record(@RequestParam String rtmp) throws Exception{
-//        return VideoConverter.record(rtmp);
-//    }
-
     @ApiOperation("停止视频推流")
     @RequestMapping(value = "/stopConvert", method = RequestMethod.GET)
     @ResponseBody
@@ -130,14 +99,6 @@ public class VideoController {
         setHeader(response);
         VideoAdapterManagement.stopAdapter(VideoAdapterManagement.getVideoAdapter(rtmp));
     }
-
-//    @ApiOperation("停止视频推流")
-//    @RequestMapping(value = "/stopConvert", method = RequestMethod.GET)
-//    @ResponseBody
-//    public void stopConvert(@RequestParam String rtmp) throws Exception{
-//        VideoConverter.stopConvert(rtmp);
-//        resultMap.remove(rtmp);
-//    }
 
     @ApiOperation("获取录像")
     @RequestMapping(value = "/records", method = RequestMethod.GET)
@@ -148,12 +109,18 @@ public class VideoController {
         return videoAdapter.getFiles(rtmp);
     }
 
-//    @ApiOperation("获取录像")
-//    @RequestMapping(value = "/records", method = RequestMethod.GET)
-//    @ResponseBody
-//    public List<String> getRecords(@RequestParam String rtmp) throws Exception{
-//        return VideoConverter.getFiles(rtmp);
-//    }
+    @ApiOperation("获取所有视频源")
+    @RequestMapping(value = "/feedback", method = RequestMethod.GET)
+    @ResponseBody
+    public List<String> getFeedbacks(){
+        setHeader(response);
+        List<String> list = new ArrayList<>();
+        for(int i = 0;i<10;i++){
+            String temp = "rtmp://10.112.17.185/oflaDemo/haikang"+String.valueOf(i);
+            list.add(temp);
+        }
+        return list;
+    }
 
     //以下是视频控制
 
@@ -176,6 +143,7 @@ public class VideoController {
     @ResponseBody
     public boolean control(@RequestParam String cmd,
                            @RequestParam int status) throws Exception{
+        setHeader(response);
         int command = 0;
         switch(cmd){
             case "up":
