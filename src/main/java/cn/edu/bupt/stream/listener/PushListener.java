@@ -38,7 +38,7 @@ public class PushListener implements Listener {
     public PushListener(){
         this.isStarted = false;
         this.isInit = false;
-        this.executor = new ScheduledThreadPoolExecutor(1,new BasicThreadFactory.Builder().namingPattern("Push-pool-%d").daemon(false).build());
+        this.executor = new ScheduledThreadPoolExecutor(4,new BasicThreadFactory.Builder().namingPattern("Push-pool-%d").daemon(false).build());
         this.queueThreshold = 240;
         this.offerTimeout = 100L;
         this.isSubmitted = false;
@@ -121,11 +121,16 @@ public class PushListener implements Listener {
      */
     @Override
     public void fireAfterEventInvoked(Event event) {
-        if(isStarted){
-            pushEvent(event);
-        }else {
-            log.warn("Failed to fire the listener.You should start this Push recorder before you start pushing");
+        try {
+            pushRecorder.record(((GrabEvent) event).getFrame());
+        }catch (Exception e){
+
         }
+//        if(isStarted){
+//            pushEvent(event);
+//        }else {
+//            log.warn("Failed to fire the listener.You should start this Push recorder before you start pushing");
+//        }
     }
 
     /**
@@ -186,11 +191,14 @@ public class PushListener implements Listener {
                 public void run() {
                     while(isStarted){
                         try{
-                            if(!PushListener.this.queue.isEmpty()) {
-                                GrabEvent nextEvent = (GrabEvent) PushListener.this.queue.take();
-                                pushRecorder.record(nextEvent.getFrame());
+//                            if(!PushListener.this.queue.isEmpty()) {
+                                GrabEvent nextEvent = (GrabEvent) PushListener.this.queue.poll(1,TimeUnit.MILLISECONDS);
+                                if(nextEvent!=null) {
+//                                    pushRecorder.setTimestamp(nextEvent.getTimestamp());
+                                    pushRecorder.record(nextEvent.getFrame());
+                                }
                                 log.trace("Processing event from queue[size:{}]", queue.size());
-                            }
+//                            }
                         }catch (Exception e){
                             log.warn("Failed to push event");
                         }

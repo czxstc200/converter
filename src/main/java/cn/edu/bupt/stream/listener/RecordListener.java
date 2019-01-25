@@ -37,7 +37,7 @@ public class RecordListener implements Listener {
     public RecordListener(){
         this.isStarted = false;
         this.isInit = false;
-        this.executor = new ScheduledThreadPoolExecutor(1,new BasicThreadFactory.Builder().namingPattern("Record-pool-%d").daemon(true).build());
+        this.executor = new ScheduledThreadPoolExecutor(4,new BasicThreadFactory.Builder().namingPattern("Record-pool-%d").daemon(true).build());
         this.queueThreshold = 240;
         this.offerTimeout = 100L;
         this.isSubmitted = false;
@@ -120,11 +120,16 @@ public class RecordListener implements Listener {
      */
     @Override
     public void fireAfterEventInvoked(Event event) {
-        if(isStarted){
-            pushEvent(event);
-        }else {
-            log.warn("Failed to fire the listener.You should start this file recorder before you start recording");
+        try {
+            fileRecorder.record(((GrabEvent) event).getFrame());
+        }catch (Exception e){
+
         }
+//        if(isStarted){
+//            pushEvent(event);
+//        }else {
+//            log.warn("Failed to fire the listener.You should start this file recorder before you start recording");
+//        }
     }
 
     /**
@@ -177,11 +182,15 @@ public class RecordListener implements Listener {
                 public void run() {
                     while(isStarted){
                         try{
-                            if(!RecordListener.this.queue.isEmpty()) {
-                                GrabEvent nextEvent = (GrabEvent) RecordListener.this.queue.take();
-                                fileRecorder.record(nextEvent.getFrame());
+//                            if(!RecordListener.this.queue.isEmpty()) {
+                                GrabEvent nextEvent = (GrabEvent) RecordListener.this.queue.poll(1,TimeUnit.MILLISECONDS);
+                                if(nextEvent!=null) {
+//                                    fileRecorder.setTimestamp(nextEvent.getTimestamp());
+//                                    fileRecorder.setTimestamp(nextEvent.getFrame().timestamp);
+                                    fileRecorder.record(nextEvent.getFrame());
+                                }
                                 log.trace("Processing event from queue[size:{}]", queue.size());
-                            }
+//                            }
                         }catch (Exception e){
                             log.warn("Failed to record event");
                         }
