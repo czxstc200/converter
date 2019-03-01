@@ -37,4 +37,22 @@ public class HikUtil {
         }
         return true;
     }
+
+    public static boolean subscribe(String ip, int port){
+        boolean initSuc = hCNetSDK.NET_DVR_Init();
+        if (initSuc != true)
+        {
+            System.out.println("初始化失败");
+            return false;
+        }
+
+        m_strDeviceInfo = new HCNetSDK.NET_DVR_DEVICEINFO_V30();
+        lUserID = hCNetSDK.NET_DVR_Login_V30(ip,(short)port,"admin","LITFYL",m_strDeviceInfo);
+        if (lUserID.intValue() == -1)
+        {
+            System.out.println("注册失败");
+            return false;
+        }
+        return true;
+    }
 }

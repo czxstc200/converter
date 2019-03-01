@@ -25,6 +25,7 @@ import static cn.edu.bupt.stream.Constants.PUSH_LISTENER_NAME;
 public class PushListener implements Listener {
 
     private String name;
+    private FFmpegFrameGrabber grabber;
     private ExecutorService executor;
     private FFmpegFrameRecorder pushRecorder;
     private int queueThreshold;
@@ -47,6 +48,7 @@ public class PushListener implements Listener {
     public PushListener(String listenerName,String rtmpPath,FFmpegFrameGrabber grabber){
         this();
         this.rtmpPath = rtmpPath;
+        this.grabber = grabber;
         pushRecorderInit(rtmpPath,grabber);
         this.name = listenerName;
     }
@@ -192,9 +194,9 @@ public class PushListener implements Listener {
                     while(isStarted){
                         try{
 //                            if(!PushListener.this.queue.isEmpty()) {
-                                GrabEvent nextEvent = (GrabEvent) PushListener.this.queue.poll(1,TimeUnit.MILLISECONDS);
+                                GrabEvent nextEvent = (GrabEvent) PushListener.this.queue.take();
                                 if(nextEvent!=null) {
-//                                    pushRecorder.setTimestamp(nextEvent.getTimestamp());
+                                    pushRecorder.setTimestamp(grabber.getTimestamp());
                                     pushRecorder.record(nextEvent.getFrame());
                                 }
                                 log.trace("Processing event from queue[size:{}]", queue.size());

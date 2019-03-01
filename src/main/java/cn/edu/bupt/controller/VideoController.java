@@ -115,10 +115,10 @@ public class VideoController {
     public List<String> getFeedbacks(){
         setHeader(response);
         List<String> list = new ArrayList<>();
-        list.add("rtmp://10.112.17.185/oflaDemo/haikang1/2019_01_18_17_08.flv");
-        list.add("rtmp://10.112.17.185/oflaDemo/haikang1/2019_01_18_17_06.flv");
-        list.add("rtmp://10.112.17.185/oflaDemo/haikang1/BladeRunner2049.flv");
-        list.add("rtmp://10.112.17.185/oflaDemo/haikang1/guardians2.mp4");
+        list.add("rtmp://39.104.186.210/oflaDemo/haikang1/2019_01_18_17_08.flv");
+        list.add("rtmp://39.104.186.210/oflaDemo/haikang1/2019_01_18_17_06.flv");
+        list.add("rtmp://39.104.186.210/oflaDemo/haikang1/BladeRunner2049.flv");
+        list.add("rtmp://39.104.186.210/oflaDemo/haikang1/guardians2.mp4");
         return list;
     }
 
@@ -126,9 +126,14 @@ public class VideoController {
 
     @RequestMapping(value = "/subscribe", method = RequestMethod.GET)
     @ResponseBody
-    public boolean subscribe() throws Exception{
+    public boolean subscribe(@RequestParam(required = false) String ip,
+                             @RequestParam(required = false) String port) throws Exception{
         setHeader(response);
-        return HikUtil.subscribe();
+        if(ip==null||port==null) {
+            return HikUtil.subscribe();
+        }else{
+            return HikUtil.subscribe(ip,Integer.valueOf(port));
+        }
     }
 
     @RequestMapping(value = "/logout", method = RequestMethod.GET)
