@@ -4,11 +4,9 @@ import cn.edu.bupt.stream.event.Event;
 import cn.edu.bupt.stream.event.GrabEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
-import org.bytedeco.javacpp.avcodec;
-import org.bytedeco.javacpp.avutil;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
-import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.FrameRecorder;
 
 import java.util.concurrent.*;
 
@@ -26,7 +24,7 @@ public class PushListener implements Listener {
 
     private String name;
     private FFmpegFrameGrabber grabber;
-    private ExecutorService executor;
+    private static ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Push-pool-%d").daemon(false).build());
     private FFmpegFrameRecorder pushRecorder;
     private int queueThreshold;
     private String rtmpPath;
@@ -39,7 +37,6 @@ public class PushListener implements Listener {
     public PushListener(){
         this.isStarted = false;
         this.isInit = false;
-        this.executor = new ScheduledThreadPoolExecutor(4,new BasicThreadFactory.Builder().namingPattern("Push-pool-%d").daemon(false).build());
         this.queueThreshold = 240;
         this.offerTimeout = 100L;
         this.isSubmitted = false;
@@ -125,9 +122,25 @@ public class PushListener implements Listener {
     public void fireAfterEventInvoked(Event event) {
         try {
             pushRecorder.record(((GrabEvent) event).getFrame());
-        }catch (Exception e){
-
+        }catch (FrameRecorder.Exception e){
+            log.warn("Push event failed for pushRecorder {}",getName());
         }
+//        this.executor.submit(new Runnable() {
+//            @Override
+//            public void run() {
+//                try {
+//                    pushRecorder.setTimestamp(System.currentTimeMillis());
+//                    pushRecorder.record(((GrabEvent) event).getFrame());
+//                }catch (FrameRecorder.Exception e){
+//                    log.warn("Push event failed for pushRecorder {}",getName());
+//                }
+//            }
+//        });
+//        try {
+//            pushRecorder.record(((GrabEvent) event).getFrame());
+//        }catch (Exception e){
+//
+//        }
 //        if(isStarted){
 //            pushEvent(event);
 //        }else {

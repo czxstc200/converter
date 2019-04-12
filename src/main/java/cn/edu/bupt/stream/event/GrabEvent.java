@@ -10,11 +10,14 @@ import org.bytedeco.javacv.Frame;
  */
 public class GrabEvent extends Event {
 
+    private long timestamp;
+
     private Frame frame;
 
-    public GrabEvent(Object source,Frame frame) {
+    public GrabEvent(Object source,Frame frame,long timestamp) {
         super(source);
         this.frame = frame;
+        this.timestamp = timestamp;
     }
 
     public Frame getFrame() {
@@ -23,5 +26,13 @@ public class GrabEvent extends Event {
 
     public void setFrame(Frame frame) {
         this.frame = frame;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 }

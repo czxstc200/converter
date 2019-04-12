@@ -153,9 +153,19 @@ public class RtspVideoAdapter extends VideoAdapter{
             if(count % 100 == 0){
                 log.debug("Video[{}] counts={}",rtspPath,count);
             }
-            Frame frame = grabber.grabImage();
+            Frame frame = null;
+            try {
+                frame = grabber.grabImage();
+            }catch (Exception e){
+                log.warn("Grab Image Exception!");
+            }
+            if(frame==null){
+                stop();
+                log.info("Video[{}] stopped!",rtspPath);
+            }
+            GrabEvent grabEvent = new GrabEvent(this,frame,grabber.getTimestamp());
             for(Listener listener:listeners){
-                listener.fireAfterEventInvoked(new GrabEvent(this,frame));
+                listener.fireAfterEventInvoked(grabEvent);
             }
         }
         log.info("Grabber ends for video rtsp:{}",rtspPath);
