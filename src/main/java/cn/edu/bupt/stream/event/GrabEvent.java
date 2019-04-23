@@ -3,7 +3,7 @@ package cn.edu.bupt.stream.event;
 import org.bytedeco.javacv.Frame;
 
 /**
- * @Description: GrabEvent
+ * @Description: GrabEvent，存储Frame
  * @Author: czx
  * @CreateDate: 2018-12-02 15:57
  * @Version: 1.0

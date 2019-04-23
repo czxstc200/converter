@@ -2,8 +2,11 @@ package cn.edu.bupt.stream.listener;
 
 import cn.edu.bupt.stream.event.Event;
 import cn.edu.bupt.stream.event.GrabEvent;
+import cn.edu.bupt.stream.event.PacketEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
+import org.bytedeco.javacpp.avcodec;
+import org.bytedeco.javacpp.avformat;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
 import org.bytedeco.javacv.Frame;
@@ -34,10 +37,12 @@ public class PushListener implements Listener {
     private BlockingQueue<Event> queue;
     private long offerTimeout;
     private boolean isSubmitted;
+    avformat.AVFormatContext fc;
 
     public PushListener(){
         this.isStarted = false;
         this.isInit = false;
+        //以下配置暂时无用
         this.queueThreshold = 240;
         this.offerTimeout = 100L;
         this.isSubmitted = false;
@@ -47,8 +52,8 @@ public class PushListener implements Listener {
         this();
         this.rtmpPath = rtmpPath;
         this.grabber = grabber;
-        pushRecorderInit(rtmpPath,grabber);
         this.name = listenerName;
+        pushRecorderInit(rtmpPath,grabber);
     }
 
     public PushListener(String rtmpPath, FFmpegFrameGrabber grabber) {
@@ -79,7 +84,7 @@ public class PushListener implements Listener {
     public void start(){
         try {
             if(isInit) {
-                pushRecorder.start();
+                pushRecorder.start(fc);
                 isStarted = true;
                 log.info("Push recorder started");
             }else {
@@ -101,10 +106,11 @@ public class PushListener implements Listener {
     @Override
     public void close(){
         try {
-            isStarted = false;
             if(executor!=null){
                 executor.shutdown();
             }
+            pushRecorder.stop();
+            isStarted = false;
             log.info("Push recorder stopped");
         }catch (Exception e){
             log.error("Push recorder failed to close");
@@ -112,7 +118,6 @@ public class PushListener implements Listener {
         }
     }
 
-    boolean first = true;
     /**
      * @Description 当发生事件时调用该函数
      * @author czx
@@ -122,55 +127,21 @@ public class PushListener implements Listener {
      */
     @Override
     public void fireAfterEventInvoked(Event event) {
-
-        try {
-            Frame frame = ((GrabEvent) event).getFrame();
-            pushRecorder.record(((GrabEvent) event).getFrame());
-        }catch (FrameRecorder.Exception e){
-            log.warn("Push event failed for pushRecorder {}",getName());
+        if(isStarted) {
+            boolean success = false;
+            avcodec.AVPacket pkt = ((PacketEvent) event).getFrame();
+            try {
+                success = pushRecorder.recordPacket(pkt);
+            } catch (FrameRecorder.Exception e) {
+                log.warn("Push event failed for pushRecorder {}", getName());
+            } finally {
+                if (!success) {
+                    avcodec.av_packet_unref(pkt);
+                }
+            }
+        }else{
+            log.warn("Failed to fire the listener.You should start this push recorder before you start pushing");
         }
-
-//        this.executor.submit(new Runnable() {
-//            @Override
-//            public void run() {
-//                try {
-////                    long videoTS = ((GrabEvent) event).getTimestamp();
-////                    if (first) {
-////                    //告诉录制器写入这个timestamp
-////                        pushRecorder.setTimestamp(0);
-////                        first = !first;
-////                    }else{
-////                        pushRecorder.setTimestamp(videoTS);
-////                    }
-//////                    Frame frame = ((GrabEvent) event).getFrame();
-//////                    System.out.println(frame.timestamp);
-//////                    System.out.println(frame.timestamp);
-//////                    System.out.println(((GrabEvent) event).getTimestamp());
-//////                    System.out.println(pushRecorder.getTimestamp());
-//////                    System.out.println("-------------");
-////                    pushRecorder.record(((GrabEvent) event).getFrame());
-//                    long videoTS = ((GrabEvent) event).getTimestamp();
-//                    //告诉录制器写入这个timestamp
-//                    pushRecorder.setTimestamp(videoTS);
-//                    Frame frame = ((GrabEvent) event).getFrame();
-//                    pushRecorder.record(frame);
-//                }catch (Exception e){
-//                    log.warn("Push event failed for pushRecorder {}",getName());
-//                }
-//            }
-//        });
-
-
-//        try {
-//            pushRecorder.record(((GrabEvent) event).getFrame());
-//        }catch (Exception e){
-//
-//        }
-//        if(isStarted){
-//            pushEvent(event);
-//        }else {
-//            log.warn("Failed to fire the listener.You should start this Push recorder before you start pushing");
-//        }
     }
 
     /**
@@ -186,12 +157,13 @@ public class PushListener implements Listener {
         pushRecorder.setFrameRate(grabber.getFrameRate());
         pushRecorder.setVideoOption("preset", "ultrafast");
         pushRecorder.setFormat("flv");
+        fc = grabber.getFormatContext();
         this.isInit = true;
     }
 
 
     /**
-     * @Description 将event推入队列中，通过新线程进行处理
+     * @Description 将event推入队列中，通过新线程进行处理,目前暂时无用
      * @author czx
      * @date 2018-12-04 13:13
      * @param [event]

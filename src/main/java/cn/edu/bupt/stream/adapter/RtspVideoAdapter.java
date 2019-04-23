@@ -1,11 +1,13 @@
 package cn.edu.bupt.stream.adapter;
 
 import cn.edu.bupt.stream.event.GrabEvent;
+import cn.edu.bupt.stream.event.PacketEvent;
 import cn.edu.bupt.stream.listener.Listener;
 import cn.edu.bupt.stream.listener.PushListener;
 import cn.edu.bupt.stream.listener.RecordListener;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
+import org.bytedeco.javacpp.avcodec;
 import org.bytedeco.javacpp.avutil;
 import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacpp.opencv_imgcodecs;
@@ -57,9 +59,6 @@ public class RtspVideoAdapter extends VideoAdapter{
     private boolean capture;
 
     OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
-
-    private static ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Capture-pool-%d").daemon(false).build());
-
 
     public RtspVideoAdapter(){
         listeners = new ArrayList<>();
@@ -136,10 +135,6 @@ public class RtspVideoAdapter extends VideoAdapter{
         return listeners.remove(listener);
     }
 
-    public void capture(){
-        capture = true;
-    }
-
     /**
      * @Description adapter启动，根据需要可以添加listener实现相应功能
      * @author czx
@@ -154,80 +149,106 @@ public class RtspVideoAdapter extends VideoAdapter{
         grabberInit();
         log.info("Grabber starts for video rtsp:{}",rtspPath);
         startAllListeners();
+
         String filePath = videoRootDir+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length())+"/";
         String capturesPath = filePath+"captures/";
         String videoPath = filePath+"videos/";
+
         judeDirExists(filePath);
+
         if(save){
             judeDirExists(videoPath);
             startRecording(videoPath+generateFilenameByDate()+".flv");
         }
+
         startPushing();
 
 
         int count = 0;
-        long startTime = 0L;
         while(!stop){
+
             if(isRecording&&timestamp<getZeroTimestamp()){
                 timestamp = getZeroTimestamp();
                 restartRecording(filePath+generateFilenameByDate()+".flv");
             }
+
             count++;
             if(count % 100 == 0){
                 log.debug("Video[{}] counts={}",rtspPath,count);
             }
-            Frame frame = null;
-            try {
-                frame = grabber.grabImage();
-            }catch (Exception e){
-                log.warn("Grab Image Exception!");
-            }
-            if(frame==null){
+
+//            if(capture){
+//                if(judeDirExists(capturesPath)){
+//                    opencv_core.Mat mat = converter.convertToMat(frame);
+//                    pkt
+//                    executor.submit(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            try{
+//                                long time = System.currentTimeMillis();
+//                                opencv_imgcodecs.imwrite(capturesPath + time + ".png", mat);
+//                                log.info("captured at timestamp {}", time);
+//                            }catch (Exception e){
+//
+//                            }
+//                        }
+//                    });
+//                }else{
+//
+//                }
+//                capture = !capture;
+//            }
+
+            avcodec.AVPacket pkt=null;
+            pkt = grabber.grabPacket();
+            if(pkt==null){
                 stop();
                 log.info("Video[{}] stopped!",rtspPath);
                 break;
             }
 
-            if (startTime == 0) {
-                startTime = frame.timestamp;
-            }
-            if(capture){
-                if(judeDirExists(capturesPath)){
-                    opencv_core.Mat mat = converter.convertToMat(frame);
-                    executor.submit(new Runnable() {
-                        @Override
-                        public void run() {
-                            try{
-                                long time = System.currentTimeMillis();
-                                opencv_imgcodecs.imwrite(capturesPath + time + ".png", mat);
-                                log.info("captured at timestamp {}", time);
-                            }catch (Exception e){
-
-                            }
-                        }
-                    });
-                }else{
-
-                }
-                capture = !capture;
-            }
-            // 创建一个 timestamp用来写入帧中
-            long videoTS = frame.timestamp;
-            GrabEvent grabEvent = new GrabEvent(this,frame,videoTS);
             for(Listener listener:listeners){
+                avcodec.AVPacket newPkt = avcodec.av_packet_alloc();
+                avcodec.av_packet_ref(newPkt,pkt);
+                PacketEvent grabEvent = new PacketEvent(this,newPkt,grabber.getTimestamp());
                 listener.fireAfterEventInvoked(grabEvent);
             }
+            avcodec.av_packet_unref(pkt);
         }
         log.info("Grabber ends for video rtsp:{}",rtspPath);
         closeAllListeners();
-
     }
 
+    /**
+     * @Description 结束推流
+     * @author czx
+     * @date 2019-04-23 23:50
+     * @param []
+     * @return void
+     */
     @Override
     public void stop(){
         stop = true;
     }
 
+    /**
+     * @Description 进行抓拍
+     * @author czx
+     * @date 2019-04-23 23:50
+     * @param []
+     * @return void
+     */
+    public void capture(){
+        capture = true;
+    }
+
+    /**
+     * @Description 启动所有的listener
+     * @author czx
+     * @date 2019-04-23 23:49
+     * @param []
+     * @return void
+     */
     private void startAllListeners(){
         log.info("Start all listeners");
         for(Listener listener:listeners){
@@ -235,6 +256,13 @@ public class RtspVideoAdapter extends VideoAdapter{
         }
     }
 
+    /**
+     * @Description 关闭所有listener
+     * @author czx
+     * @date 2019-04-23 23:49
+     * @param []
+     * @return void
+     */
     private void closeAllListeners(){
         log.info("Close all listeners");
         for(Listener listener:listeners){
@@ -274,7 +302,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @return java.lang.String
      */
     private static String generateFilenameByDate(){
-        SimpleDateFormat sdf=new SimpleDateFormat("yyyy_MM_dd_HH_mm");
+        SimpleDateFormat sdf=new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
         Date date=new Date();
         String dateStringParse = sdf.format(date);
         return dateStringParse;

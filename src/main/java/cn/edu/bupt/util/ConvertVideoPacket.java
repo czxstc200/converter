@@ -1,4 +1,4 @@
-package cn.edu.bupt.stream;
+package cn.edu.bupt.util;
 
 /**
  * @Description: ConvertVideoPacket

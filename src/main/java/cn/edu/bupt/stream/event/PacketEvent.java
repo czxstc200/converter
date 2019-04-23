@@ -5,7 +5,7 @@ import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacpp.avcodec.AVPacket;
 
 /**
- * @Description: PacketEvent
+ * @Description: PacketEvent，存储AVPacket
  * @Author: czx
  * @CreateDate: 2019-04-23 16:53
  * @Version: 1.0
