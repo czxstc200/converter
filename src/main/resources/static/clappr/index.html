@@ -87,20 +87,15 @@
 //            }
 //        });
 // rtmp://192.168.7.96:1935/oflaDemo/(streams)/Avengers2.mp4
-        var now = new Clappr.Player({
-            source: "rtmp://localhost/oflaDemo/haikang7",
-            parentId: "#player",
+        var now2 = new Clappr.Player({
+            source: "rtmp://10.112.217.199/live360p/test1",
+            parentId: "#player2",
             width: 640,
             height: 360,
             // plugins: [RTMP],
-            plugins: [MarqueeOverlay,RTMP],
+            plugins: [RTMP],
             autoPlay: !0,
             preload: 'auto',
-            marqueePluginConfig:{
-                textContent:"source:'rtmp://localhost/oflaDemo/hello'",
-                duration:10000,
-                direction:'left'
-            },
             rtmpConfig: {
                 scaling:'stretch',
                 playbackType: 'live',
@@ -126,6 +121,242 @@
             }
         });
 
+    var now3 = new Clappr.Player({
+        source: "rtmp://10.112.217.199/live360p/test2",
+        parentId: "#player3",
+        width: 640,
+        height: 360,
+        // plugins: [RTMP],
+        plugins: [RTMP],
+        autoPlay: !0,
+        preload: 'auto',
+        rtmpConfig: {
+            scaling:'stretch',
+            playbackType: 'live',
+            bufferTime: 1,
+            startLevel: 0,
+            switchRules: {
+                "SufficientBandwidthRule": {
+                    "bandwidthSafetyMultiple": 1.15,
+                    "minDroppedFps": 2
+                },
+                "InsufficientBufferRule": {
+                    "minBufferLength": 2
+                },
+                "DroppedFramesRule": {
+                    "downSwitchByOne": 10,
+                    "downSwitchByTwo": 20,
+                    "downSwitchToZero": 24
+                },
+                "InsufficientBandwidthRule": {
+                    "bitrateMultiplier": 1.15
+                }
+            }
+        }
+    });
+    var now4 = new Clappr.Player({
+        source: "rtmp://10.112.217.199/live360p/test3",
+        parentId: "#player4",
+        width: 640,
+        height: 360,
+        // plugins: [RTMP],
+        plugins: [RTMP],
+        autoPlay: !0,
+        preload: 'auto',
+        rtmpConfig: {
+            scaling:'stretch',
+            playbackType: 'live',
+            bufferTime: 1,
+            startLevel: 0,
+            switchRules: {
+                "SufficientBandwidthRule": {
+                    "bandwidthSafetyMultiple": 1.15,
+                    "minDroppedFps": 2
+                },
+                "InsufficientBufferRule": {
+                    "minBufferLength": 2
+                },
+                "DroppedFramesRule": {
+                    "downSwitchByOne": 10,
+                    "downSwitchByTwo": 20,
+                    "downSwitchToZero": 24
+                },
+                "InsufficientBandwidthRule": {
+                    "bitrateMultiplier": 1.15
+                }
+            }
+        }
+    });
+
+    var now5 = new Clappr.Player({
+        source: "rtmp://10.112.217.199/live360p/test4",
+        parentId: "#player5",
+        width: 640,
+        height: 360,
+        // plugins: [RTMP],
+        plugins: [RTMP],
+        autoPlay: !0,
+        preload: 'auto',
+        rtmpConfig: {
+            scaling:'stretch',
+            playbackType: 'live',
+            bufferTime: 1,
+            startLevel: 0,
+            switchRules: {
+                "SufficientBandwidthRule": {
+                    "bandwidthSafetyMultiple": 1.15,
+                    "minDroppedFps": 2
+                },
+                "InsufficientBufferRule": {
+                    "minBufferLength": 2
+                },
+                "DroppedFramesRule": {
+                    "downSwitchByOne": 10,
+                    "downSwitchByTwo": 20,
+                    "downSwitchToZero": 24
+                },
+                "InsufficientBandwidthRule": {
+                    "bitrateMultiplier": 1.15
+                }
+            }
+        }
+    });
+
+var now5 = new Clappr.Player({
+    source: "rtmp://10.112.217.199/live360p/test5",
+    parentId: "#player2",
+    width: 640,
+    height: 360,
+    // plugins: [RTMP],
+    plugins: [RTMP],
+    autoPlay: !0,
+    preload: 'auto',
+    rtmpConfig: {
+        scaling:'stretch',
+        playbackType: 'live',
+        bufferTime: 1,
+        startLevel: 0,
+        switchRules: {
+            "SufficientBandwidthRule": {
+                "bandwidthSafetyMultiple": 1.15,
+                "minDroppedFps": 2
+            },
+            "InsufficientBufferRule": {
+                "minBufferLength": 2
+            },
+            "DroppedFramesRule": {
+                "downSwitchByOne": 10,
+                "downSwitchByTwo": 20,
+                "downSwitchToZero": 24
+            },
+            "InsufficientBandwidthRule": {
+                "bitrateMultiplier": 1.15
+            }
+        }
+    }
+});
+
+var now6 = new Clappr.Player({
+    source: "rtmp://10.112.217.199/live360p/test6",
+    parentId: "#player2",
+    width: 640,
+    height: 360,
+    // plugins: [RTMP],
+    plugins: [RTMP],
+    autoPlay: !0,
+    preload: 'auto',
+    rtmpConfig: {
+        scaling:'stretch',
+        playbackType: 'live',
+        bufferTime: 1,
+        startLevel: 0,
+        switchRules: {
+            "SufficientBandwidthRule": {
+                "bandwidthSafetyMultiple": 1.15,
+                "minDroppedFps": 2
+            },
+            "InsufficientBufferRule": {
+                "minBufferLength": 2
+            },
+            "DroppedFramesRule": {
+                "downSwitchByOne": 10,
+                "downSwitchByTwo": 20,
+                "downSwitchToZero": 24
+            },
+            "InsufficientBandwidthRule": {
+                "bitrateMultiplier": 1.15
+            }
+        }
+    }
+});
+
+var now7 = new Clappr.Player({
+    source: "rtmp://10.112.217.199/live360p/test7",
+    parentId: "#player2",
+    width: 640,
+    height: 360,
+    // plugins: [RTMP],
+    plugins: [RTMP],
+    autoPlay: !0,
+    preload: 'auto',
+    rtmpConfig: {
+        scaling:'stretch',
+        playbackType: 'live',
+        bufferTime: 1,
+        startLevel: 0,
+        switchRules: {
+            "SufficientBandwidthRule": {
+                "bandwidthSafetyMultiple": 1.15,
+                "minDroppedFps": 2
+            },
+            "InsufficientBufferRule": {
+                "minBufferLength": 2
+            },
+            "DroppedFramesRule": {
+                "downSwitchByOne": 10,
+                "downSwitchByTwo": 20,
+                "downSwitchToZero": 24
+            },
+            "InsufficientBandwidthRule": {
+                "bitrateMultiplier": 1.15
+            }
+        }
+    }
+});
+
+var now8 = new Clappr.Player({
+    source: "rtmp://10.112.217.199/live360p/test8",
+    parentId: "#player2",
+    width: 640,
+    height: 360,
+    // plugins: [RTMP],
+    plugins: [RTMP],
+    autoPlay: !0,
+    preload: 'auto',
+    rtmpConfig: {
+        scaling:'stretch',
+        playbackType: 'live',
+        bufferTime: 1,
+        startLevel: 0,
+        switchRules: {
+            "SufficientBandwidthRule": {
+                "bandwidthSafetyMultiple": 1.15,
+                "minDroppedFps": 2
+            },
+            "InsufficientBufferRule": {
+                "minBufferLength": 2
+            },
+            "DroppedFramesRule": {
+                "downSwitchByOne": 10,
+                "downSwitchByTwo": 20,
+                "downSwitchToZero": 24
+            },
+            "InsufficientBandwidthRule": {
+                "bitrateMultiplier": 1.15
+            }
+        }
+    }
+});
 //         var next = new Clappr.Player({
 //             source: "rtmp://10.112.17.185/oflaDemo/haikang1",
 //             parentId: "#player2",

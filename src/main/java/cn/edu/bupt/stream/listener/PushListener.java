@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
+import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.FrameRecorder;
 
 import java.util.concurrent.*;
@@ -24,7 +25,7 @@ public class PushListener implements Listener {
 
     private String name;
     private FFmpegFrameGrabber grabber;
-    private static ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Push-pool-%d").daemon(false).build());
+    private static ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Push-pool-%d").daemon(true).build());
     private FFmpegFrameRecorder pushRecorder;
     private int queueThreshold;
     private String rtmpPath;
@@ -104,13 +105,14 @@ public class PushListener implements Listener {
             if(executor!=null){
                 executor.shutdown();
             }
-            log.info("File recorder stopped");
+            log.info("Push recorder stopped");
         }catch (Exception e){
             log.error("Push recorder failed to close");
             e.printStackTrace();
         }
     }
 
+    boolean first = true;
     /**
      * @Description 当发生事件时调用该函数
      * @author czx
@@ -120,22 +122,45 @@ public class PushListener implements Listener {
      */
     @Override
     public void fireAfterEventInvoked(Event event) {
+
         try {
+            Frame frame = ((GrabEvent) event).getFrame();
             pushRecorder.record(((GrabEvent) event).getFrame());
         }catch (FrameRecorder.Exception e){
             log.warn("Push event failed for pushRecorder {}",getName());
         }
+
 //        this.executor.submit(new Runnable() {
 //            @Override
 //            public void run() {
 //                try {
-//                    pushRecorder.setTimestamp(System.currentTimeMillis());
-//                    pushRecorder.record(((GrabEvent) event).getFrame());
-//                }catch (FrameRecorder.Exception e){
+////                    long videoTS = ((GrabEvent) event).getTimestamp();
+////                    if (first) {
+////                    //告诉录制器写入这个timestamp
+////                        pushRecorder.setTimestamp(0);
+////                        first = !first;
+////                    }else{
+////                        pushRecorder.setTimestamp(videoTS);
+////                    }
+//////                    Frame frame = ((GrabEvent) event).getFrame();
+//////                    System.out.println(frame.timestamp);
+//////                    System.out.println(frame.timestamp);
+//////                    System.out.println(((GrabEvent) event).getTimestamp());
+//////                    System.out.println(pushRecorder.getTimestamp());
+//////                    System.out.println("-------------");
+////                    pushRecorder.record(((GrabEvent) event).getFrame());
+//                    long videoTS = ((GrabEvent) event).getTimestamp();
+//                    //告诉录制器写入这个timestamp
+//                    pushRecorder.setTimestamp(videoTS);
+//                    Frame frame = ((GrabEvent) event).getFrame();
+//                    pushRecorder.record(frame);
+//                }catch (Exception e){
 //                    log.warn("Push event failed for pushRecorder {}",getName());
 //                }
 //            }
 //        });
+
+
 //        try {
 //            pushRecorder.record(((GrabEvent) event).getFrame());
 //        }catch (Exception e){
@@ -161,7 +186,6 @@ public class PushListener implements Listener {
         pushRecorder.setFrameRate(grabber.getFrameRate());
         pushRecorder.setVideoOption("preset", "ultrafast");
         pushRecorder.setFormat("flv");
-//        pushRecorder.setAudioBitrate(1024);
         this.isInit = true;
     }
 

@@ -5,15 +5,21 @@ import cn.edu.bupt.stream.listener.Listener;
 import cn.edu.bupt.stream.listener.PushListener;
 import cn.edu.bupt.stream.listener.RecordListener;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.bytedeco.javacpp.avutil;
+import org.bytedeco.javacpp.opencv_core;
+import org.bytedeco.javacpp.opencv_imgcodecs;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.OpenCVFrameConverter;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static cn.edu.bupt.stream.Constants.*;
 
@@ -48,6 +54,13 @@ public class RtspVideoAdapter extends VideoAdapter{
 
     private boolean save;
 
+    private boolean capture;
+
+    OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
+
+    private static ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Capture-pool-%d").daemon(false).build());
+
+
     public RtspVideoAdapter(){
         listeners = new ArrayList<>();
         isRecording = false;
@@ -55,6 +68,8 @@ public class RtspVideoAdapter extends VideoAdapter{
         videoRootDir = ROOT_DIR;
         timestamp = getZeroTimestamp();
         save = false;
+        capture = false;
+        // 设置日志打印等级
         avutil.av_log_set_level(avutil.AV_LOG_ERROR);
     }
 
@@ -121,6 +136,10 @@ public class RtspVideoAdapter extends VideoAdapter{
         return listeners.remove(listener);
     }
 
+    public void capture(){
+        capture = true;
+    }
+
     /**
      * @Description adapter启动，根据需要可以添加listener实现相应功能
      * @author czx
@@ -136,14 +155,18 @@ public class RtspVideoAdapter extends VideoAdapter{
         log.info("Grabber starts for video rtsp:{}",rtspPath);
         startAllListeners();
         String filePath = videoRootDir+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length())+"/";
+        String capturesPath = filePath+"captures/";
+        String videoPath = filePath+"videos/";
         judeDirExists(filePath);
         if(save){
-            startRecording(filePath+generateFilenameByDate()+".flv");
+            judeDirExists(videoPath);
+            startRecording(videoPath+generateFilenameByDate()+".flv");
         }
         startPushing();
 
 
         int count = 0;
+        long startTime = 0L;
         while(!stop){
             if(isRecording&&timestamp<getZeroTimestamp()){
                 timestamp = getZeroTimestamp();
@@ -162,8 +185,35 @@ public class RtspVideoAdapter extends VideoAdapter{
             if(frame==null){
                 stop();
                 log.info("Video[{}] stopped!",rtspPath);
+                break;
             }
-            GrabEvent grabEvent = new GrabEvent(this,frame,grabber.getTimestamp());
+
+            if (startTime == 0) {
+                startTime = frame.timestamp;
+            }
+            if(capture){
+                if(judeDirExists(capturesPath)){
+                    opencv_core.Mat mat = converter.convertToMat(frame);
+                    executor.submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            try{
+                                long time = System.currentTimeMillis();
+                                opencv_imgcodecs.imwrite(capturesPath + time + ".png", mat);
+                                log.info("captured at timestamp {}", time);
+                            }catch (Exception e){
+
+                            }
+                        }
+                    });
+                }else{
+
+                }
+                capture = !capture;
+            }
+            // 创建一个 timestamp用来写入帧中
+            long videoTS = frame.timestamp;
+            GrabEvent grabEvent = new GrabEvent(this,frame,videoTS);
             for(Listener listener:listeners){
                 listener.fireAfterEventInvoked(grabEvent);
             }
@@ -318,9 +368,10 @@ public class RtspVideoAdapter extends VideoAdapter{
             log.warn("Video recording has already been started.");
         }else {
             String filePath = videoRootDir+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length())+"/";
-            RecordListener recordListener = new RecordListener(filePath+generateFilenameByDate()+".flv", getGrabber());
-            addListener(recordListener);
+            String videoPath = filePath+"videos/";
+            RecordListener recordListener = new RecordListener(videoPath+generateFilenameByDate()+".flv", getGrabber());
             recordListener.start();
+            addListener(recordListener);
             isRecording = true;
         }
     }
@@ -383,7 +434,25 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @return java.util.List<java.lang.String>
      */
     public List<String> getFiles(String rtmpPath){
-        String path = ROOT_DIR+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length());
+        String path = ROOT_DIR+"videos/"+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length());
+        File file = new File(path);
+        File[] files = file.listFiles();
+        List<String> fileList = new ArrayList<>();
+        for (int i = 0; i < files.length; i++) {
+            if (files[i].isFile()) {
+                fileList.add(files[i].getName());
+            }
+        }
+        return fileList;
+    }
+
+    /**
+     * 获取抓拍文件
+     * @param rtmpPath
+     * @return
+     */
+    public List<String> getCaptures(String rtmpPath){
+        String path = ROOT_DIR+"captures/"+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length());
         File file = new File(path);
         File[] files = file.listFiles();
         List<String> fileList = new ArrayList<>();
@@ -396,11 +465,10 @@ public class RtspVideoAdapter extends VideoAdapter{
     }
 
     public static void main(String[] args) {
-        RtspVideoAdapter rtspVideoAdapter = new RtspVideoAdapter("rtsp://admin:LITFYL@10.112.239.157:554/h264/ch1/main/av_stream","rtmp://10.112.17.185/oflaDemo/haikang1",true);
+        RtspVideoAdapter rtspVideoAdapter = new RtspVideoAdapter("rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov","rtmp://10.112.217.199/live360p/test2",false);
 
         try {
             rtspVideoAdapter.start();
-            Thread.sleep(1000);
         }catch (Exception e){
 
         }

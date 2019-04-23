@@ -9,8 +9,8 @@ package cn.edu.bupt.stream;
 public class Constants {
 
 //    public final static String ROOT_DIR = "/home/roo/video/workspace/red5-server/webapps/oflaDemo/streams/";
-//    public final static String ROOT_DIR = "/Users/czx/Downloads/";
-    public final static String ROOT_DIR = "/usr/share/red5/red5-server/webapps/oflaDemo/streams/";
+    public final static String ROOT_DIR = "/Users/czx/Downloads/";
+//    public final static String ROOT_DIR = "/usr/share/red5/red5-server/webapps/oflaDemo/streams/";
 
     public final static String RECORD_LISTENER_NAME = "Record Listener";
 

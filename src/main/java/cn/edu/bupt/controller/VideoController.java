@@ -75,6 +75,32 @@ public class VideoController {
         return "{rtsp:'"+rtspPath+"',"+"rtmp:'"+rtmpPath+"',"+",saveVideo:"+saveVideo+"}";
     }
 
+    @ApiOperation(value = "TEST 对视频进行推流")
+    @RequestMapping(value = "/convertAll", method = RequestMethod.GET)
+    @ResponseBody
+    public void converttest(@RequestParam(required = false) Boolean save) throws Exception{
+//        String rtspPath = "rtsp://admin:ydslab215@10.112.239.157:554/h264/ch1/main/av_stream";
+        boolean b = false;
+        if(save!=null&&save==true){
+            b = true;
+        }
+        for(int i = 1;i<=4;i++){
+            convert("rtsp://admin:LITFYL@10.112.239.157:554/h264/ch1/main/av_stream","rtmp://10.112.217.199/live360p/test"+i,b);
+        }
+        for(int i = 5;i<=8;i++){
+            convert("rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov","rtmp://10.112.217.199/live360p/test"+i,b);
+        }
+    }
+
+    @ApiOperation(value = "画面抓拍")
+    @RequestMapping(value = "/capture", method = RequestMethod.GET)
+    @ResponseBody
+    public String capture(@RequestParam String rtmp) {
+        RtspVideoAdapter videoAdapter = (RtspVideoAdapter)VideoAdapterManagement.getVideoAdapter(rtmp);
+        videoAdapter.capture();
+        return "抓拍画面";
+    }
+
 
     @ApiOperation("视频录制")
     @RequestMapping(value = "/record", method = RequestMethod.GET)
@@ -107,6 +133,15 @@ public class VideoController {
         setHeader(response);
         RtspVideoAdapter videoAdapter = (RtspVideoAdapter)VideoAdapterManagement.getVideoAdapter(rtmp);
         return videoAdapter.getFiles(rtmp);
+    }
+
+    @ApiOperation("获取抓拍")
+    @RequestMapping(value = "/captures", method = RequestMethod.GET)
+    @ResponseBody
+    public List<String> getCaptures(@RequestParam String rtmp) throws Exception{
+        setHeader(response);
+        RtspVideoAdapter videoAdapter = (RtspVideoAdapter)VideoAdapterManagement.getVideoAdapter(rtmp);
+        return videoAdapter.getCaptures(rtmp);
     }
 
     @ApiOperation("获取所有视频源")
