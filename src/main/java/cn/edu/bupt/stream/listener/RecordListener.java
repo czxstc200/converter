@@ -27,12 +27,13 @@ import static cn.edu.bupt.stream.Constants.RECORD_LISTENER_NAME;
 public class RecordListener implements Listener {
 
     private String name;
-    private ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Record-pool-%d").daemon(false).build());
+    private ScheduledExecutorService executor = Executors.newScheduledThreadPool(1,new BasicThreadFactory.Builder().namingPattern("Record-pool-%d").daemon(false).build());
     FFmpegFrameRecorder fileRecorder;
     private int queueThreshold;
     String fileName;
     boolean isInit;
     boolean isStarted;
+    boolean isStopped;
     private BlockingQueue<Event> queue;
     private long offerTimeout;
     private long startTimestamp = -1;
@@ -43,6 +44,7 @@ public class RecordListener implements Listener {
         this.isStarted = false;
         this.isInit = false;
         this.usePacket = false;
+        this.isStopped = false;
         // 以下配置暂时无用
         this.queueThreshold = 1024;
         this.offerTimeout = 100L;
@@ -86,6 +88,10 @@ public class RecordListener implements Listener {
         return usePacket;
     }
 
+    public boolean isStopped() {
+        return isStopped;
+    }
+
     /**
      * @Description recorder在初始化之后还需要进行启动，启动调用该方法
      * @author czx
@@ -98,6 +104,12 @@ public class RecordListener implements Listener {
         try {
             if(isInit) {
                 fileRecorder.start(fc);
+                executor.scheduleAtFixedRate(new Runnable() {
+                    @Override
+                    public void run() {
+                        executorTask();
+                    }
+                },1,5,TimeUnit.SECONDS);
                 isStarted = true;
                 log.info("File recorder started");
             }else {
@@ -121,18 +133,44 @@ public class RecordListener implements Listener {
             log.warn("Queue is null");
         }else{
             while(!queue.isEmpty()){
-                PacketEvent event = (PacketEvent)queue.poll();
-//                long timestamp = event.getTimestamp();
-//                if(startTimestamp==-1){
-//                    startTimestamp = timestamp;
-//                    timestamp = 0;
-//                }else{
-//                    timestamp -= startTimestamp;
-//                }
-                try {
-                    fileRecorder.recordPacket(((PacketEvent) event).getFrame());
+                Event event = queue.poll();
+                if(event instanceof GrabEvent) {
+                    long timestamp = ((GrabEvent)event).getTimestamp();
+                    if (startTimestamp == -1) {
+                        startTimestamp = timestamp;
+                        timestamp = 0;
+                    } else {
+                        timestamp -= startTimestamp;
+                    }
+                    if(timestamp<fileRecorder.getTimestamp()){
+                        fileRecorder.setTimestamp(timestamp);
+                    }
+                    try {
+                        fileRecorder.record(((GrabEvent) event).getFrame());
+                    } catch (Exception e) {
+                        log.warn("Record event failed for Recorder {}", getName());
+                    }
+                }else if(event instanceof PacketEvent){
+                    boolean success = false;
+                    try {
+                        fileRecorder.recordPacket(((PacketEvent) event).getFrame());
+                        success = true;
+                    }catch (Exception e){
+                        log.warn("Record event failed for Recorder : {}", getName());
+                    }finally {
+                        if(!success){
+                            avcodec.av_packet_unref(((PacketEvent) event).getFrame());
+                        }
+                    }
+                }else{
+                    log.warn("Unknow event type!");
+                }
+            }
+            if(isStopped&&queue.isEmpty()){
+                try{
+                    fileRecorder.stop();
                 }catch (Exception e){
-                    log.warn("Record event failed for Recorder {}",getName());
+
                 }
             }
         }
@@ -148,12 +186,11 @@ public class RecordListener implements Listener {
     @Override
     public void close(){
         try {
-            startTimestamp = -1;
+            isStarted = false;
+            isStopped = true;
             if(executor!=null){
                 executor.shutdown();
             }
-            fileRecorder.stop();
-            isStarted = false;
             log.info("File recorder stopped");
         }catch (Exception e){
             log.error("File recorder failed to close");
@@ -171,71 +208,14 @@ public class RecordListener implements Listener {
     @Override
     public void fireAfterEventInvoked(Event event) {
         if(isStarted) {
-            if(event instanceof PacketEvent) {
-                this.executor.submit(new Runnable() {
-
-                    boolean success = false;
-
-                    @Override
-                    public void run() {
-                        try {
-                            fileRecorder.recordPacket(((PacketEvent) event).getFrame());
-                            success = true;
-                        } catch (Exception e) {
-                            log.warn("Record event failed for Recorder : {}", getName());
-                        } finally {
-                            if (!success) {
-                                avcodec.av_packet_unref(((PacketEvent) event).getFrame());
-                            }
-                        }
-                    }
-                });
-            }else if(event instanceof GrabEvent){
-                try {
-                    Frame frame = ((GrabEvent) event).getFrame();
-                    fileRecorder.record(frame);
-                } catch (FrameRecorder.Exception e) {
-                    log.warn("Record event failed for Recorder : {}", getName());
-                }
-//                this.executor.submit(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        try {
-//                            long timestamp = ((GrabEvent) event).getTimestamp();
-//                            if (startTimestamp == -1) {
-//                                startTimestamp = timestamp;
-//                                timestamp = 0;
-//                            } else {
-//                                timestamp -= startTimestamp;
-//                            }
-//                            fileRecorder.setTimestamp(timestamp);
-//                            Frame frame = ((GrabEvent) event).getFrame();
-//                            fileRecorder.record(frame);
-//                        } catch (FrameRecorder.Exception e) {
-//                            log.warn("Record event failed for Recorder : {}", getName());
-//                        }
-//                    }
-//                });
-            }else{
-                log.warn("Unknow event type!");
-            }
+            pushEvent(event);
         }else{
             log.warn("Failed to fire the listener.You should start this file recorder before you start recording");
         }
-
-//        if(isStarted){
-//            try {
-//                pushEvent(event);
-//            }catch (Exception e){
-//                log.warn("Record event failed for Recorder {}",getName());
-//            }
-//        }else {
-//            log.warn("Failed to fire the listener.You should start this file recorder before you start recording");
-//        }
     }
 
     /**
-     * @Description FileRecord 进行初始化
+     * @Description FileRecorder 进行初始化
      * @author czx
      * @date 2018-12-02 16:34
      * @param [filename, grabber]
@@ -254,32 +234,30 @@ public class RecordListener implements Listener {
     }
 
     /**
-     * @Description 将event推入队列中,目前暂时无用
+     * @Description 将event推入队列中
      * @author czx
      * @date 2018-12-04 13:13
      * @param [event]
      * @return void
      */
     public void pushEvent(Event event){
-        if(event instanceof GrabEvent){
-            //如果queue为空，初始化它
-            if(this.queue == null){
-                log.trace("Creating event queue");
-                this.queue = new LinkedBlockingQueue<>();
-            }
+        //如果queue为null，初始化queue
+        if(this.queue == null){
+            log.trace("Creating event queue");
+            this.queue = new LinkedBlockingQueue<>();
+        }
 
-            //将event推入queue
-            try{
-                if(this.queue.size() > this.queueThreshold) {
-                    log.warn("Queue size is greater than threshold. queue size={} threshold={}", Integer.valueOf(this.queue.size()), Integer.valueOf(this.queueThreshold));
-                }
-                if(this.queue.size() < 2 * this.queueThreshold){
-                    this.queue.offer(event, this.offerTimeout, TimeUnit.MILLISECONDS);
-                    log.trace("Inserting event into queue[size:{}]",queue.size());
-                }
-            }catch (Exception e){
-                log.warn("Event data was not accepted by the queue");
+        //将event推入queue
+        try{
+            if(this.queue.size() > this.queueThreshold) {
+                log.warn("Queue size is greater than threshold. queue size={} threshold={}", Integer.valueOf(this.queue.size()), Integer.valueOf(this.queueThreshold));
             }
+            if(this.queue.size() < 2 * this.queueThreshold){
+                this.queue.offer(event, this.offerTimeout, TimeUnit.MILLISECONDS);
+                log.trace("Inserting event into queue[size:{}]",queue.size());
+            }
+        }catch (Exception e) {
+            log.warn("Event data was not accepted by the queue");
         }
     }
 }

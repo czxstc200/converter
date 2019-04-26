@@ -249,7 +249,7 @@ public class RtspVideoAdapter extends VideoAdapter{
                         break;
                     }
                 }
-                GrabEvent grabEvent = new GrabEvent(this,frame,grabber.getTimestamp());
+
                 //进行抓拍操作
                 if(capture.get()&&judeDirExists(capturesPath)&&frame!=null){
                     Frame frame1 = frame.clone();
@@ -259,6 +259,7 @@ public class RtspVideoAdapter extends VideoAdapter{
                     capture.set(false);
                 }
 
+                GrabEvent grabEvent = new GrabEvent(this,frame.clone(),grabber.getTimestamp());
                 for(Listener listener:listeners){
                     listener.fireAfterEventInvoked(grabEvent);
                 }
@@ -414,11 +415,11 @@ public class RtspVideoAdapter extends VideoAdapter{
         Listener removedListener = null;
         for(Listener listener:listeners){
             if(listener.getName().equals(name)){
-                listener.close();
                 removedListener = listener;
             }
         }
         listeners.remove(removedListener);
+        removedListener.close();
     }
 
     /**
