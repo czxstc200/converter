@@ -15,7 +15,7 @@ import java.util.concurrent.*;
 @Component
 public class VideoAdapterManagement {
 
-    private static Map<String,VideoAdapter> map = new ConcurrentHashMap<>();
+    public static Map<String,VideoAdapter> map = new ConcurrentHashMap<>();
 
     private static Map<String,Future<String>> futures = new ConcurrentHashMap<>();
 

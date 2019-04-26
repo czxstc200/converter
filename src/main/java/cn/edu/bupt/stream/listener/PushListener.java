@@ -37,27 +37,38 @@ public class PushListener implements Listener {
     private BlockingQueue<Event> queue;
     private long offerTimeout;
     private boolean isSubmitted;
-    avformat.AVFormatContext fc;
+    private boolean usePacket;
+    private avformat.AVFormatContext fc;
 
-    public PushListener(){
+    private PushListener(){
         this.isStarted = false;
         this.isInit = false;
+        this.usePacket = false;
         //以下配置暂时无用
         this.queueThreshold = 240;
         this.offerTimeout = 100L;
         this.isSubmitted = false;
     }
 
-    public PushListener(String listenerName,String rtmpPath,FFmpegFrameGrabber grabber){
+    public PushListener(String listenerName,String rtmpPath,FFmpegFrameGrabber grabber,boolean usePacket){
         this();
         this.rtmpPath = rtmpPath;
         this.grabber = grabber;
         this.name = listenerName;
+        this.usePacket = usePacket;
         pushRecorderInit(rtmpPath,grabber);
     }
 
+    public PushListener(String listenerName,String rtmpPath,FFmpegFrameGrabber grabber){
+        this(listenerName,rtmpPath,grabber,false);
+    }
+
     public PushListener(String rtmpPath, FFmpegFrameGrabber grabber) {
-        this(PUSH_LISTENER_NAME,rtmpPath,grabber);
+        this(PUSH_LISTENER_NAME,rtmpPath,grabber,false);
+    }
+
+    public PushListener(String rtmpPath, FFmpegFrameGrabber grabber,boolean usePacket) {
+        this(PUSH_LISTENER_NAME,rtmpPath,grabber,usePacket);
     }
 
     @Override
@@ -71,6 +82,10 @@ public class PushListener implements Listener {
 
     public String getRtmpPath() {
         return rtmpPath;
+    }
+
+    public boolean isUsePacket() {
+        return usePacket;
     }
 
     /**
@@ -128,18 +143,29 @@ public class PushListener implements Listener {
     @Override
     public void fireAfterEventInvoked(Event event) {
         if(isStarted) {
-            boolean success = false;
-            avcodec.AVPacket pkt = ((PacketEvent) event).getFrame();
-            try {
-                success = pushRecorder.recordPacket(pkt);
-            } catch (FrameRecorder.Exception e) {
-                log.warn("Push event failed for pushRecorder {}", getName());
-            } finally {
-                if (!success) {
-                    avcodec.av_packet_unref(pkt);
+            if (event instanceof PacketEvent) {
+                boolean success = false;
+                avcodec.AVPacket pkt = ((PacketEvent) event).getFrame();
+                try {
+                    success = pushRecorder.recordPacket(pkt);
+                } catch (FrameRecorder.Exception e) {
+                    log.warn("Push event failed for pushRecorder {}", getName());
+                } finally {
+                    if (!success) {
+                        avcodec.av_packet_unref(pkt);
+                    }
                 }
+            } else if (event instanceof GrabEvent) {
+                try {
+                    Frame frame = ((GrabEvent) event).getFrame();
+                    pushRecorder.record(((GrabEvent) event).getFrame());
+                } catch (FrameRecorder.Exception e) {
+                    log.warn("Push event failed for pushRecorder {}", getName());
+                }
+            }else{
+                log.warn("Unknow event type!");
             }
-        }else{
+        }else {
             log.warn("Failed to fire the listener.You should start this push recorder before you start pushing");
         }
     }
@@ -157,7 +183,11 @@ public class PushListener implements Listener {
         pushRecorder.setFrameRate(grabber.getFrameRate());
         pushRecorder.setVideoOption("preset", "ultrafast");
         pushRecorder.setFormat("flv");
-        fc = grabber.getFormatContext();
+        if(usePacket){
+            fc = grabber.getFormatContext();
+        }else{
+            fc = null;
+        }
         this.isInit = true;
     }
 

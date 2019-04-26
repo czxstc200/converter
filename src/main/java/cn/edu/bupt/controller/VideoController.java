@@ -1,6 +1,7 @@
 package cn.edu.bupt.controller;
 
 import cn.edu.bupt.stream.adapter.RtspVideoAdapter;
+import cn.edu.bupt.stream.adapter.VideoAdapter;
 import cn.edu.bupt.stream.adapter.VideoAdapterManagement;
 import com.sun.jna.NativeLong;
 import io.swagger.annotations.ApiOperation;
@@ -65,14 +66,16 @@ public class VideoController {
     @ResponseBody
     public String convert(@RequestParam(required = false) String rtsp,
                           @RequestParam(required = false) String rtmp,
-                          @RequestParam(required = false) Boolean save ) throws Exception{
+                          @RequestParam(required = false) Boolean save,
+                          @RequestParam(required = false) Boolean usePacket ) throws Exception{
 //        String rtspPath = "rtsp://admin:ydslab215@10.112.239.157:554/h264/ch1/main/av_stream";
         String rtmpPath = rtmp==null?"rtmp://localhost/oflaDemo/haikang1":rtmp;
         String rtspPath = rtsp==null?"rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov":rtsp;
         boolean saveVideo = save==null?false:save;
-        VideoAdapterManagement.startAdapter(new RtspVideoAdapter(rtspPath,rtmpPath,saveVideo));
+        boolean isUsePacket = usePacket==null?false:usePacket;
+        VideoAdapterManagement.startAdapter(new RtspVideoAdapter(rtspPath,rtmpPath,saveVideo,isUsePacket));
         setHeader(response);
-        return "{rtsp:'"+rtspPath+"',"+"rtmp:'"+rtmpPath+"',"+",saveVideo:"+saveVideo+"}";
+        return "{rtsp:'"+rtspPath+"',"+"rtmp:'"+rtmpPath+"',"+"saveVideo:"+saveVideo+",usePacket:"+isUsePacket+"}";
     }
 
     @ApiOperation(value = "TEST 对视频进行推流")
@@ -84,21 +87,38 @@ public class VideoController {
         if(save!=null&&save==true){
             b = true;
         }
+        boolean usePacket = false;
         for(int i = 1;i<=4;i++){
-            convert("rtsp://admin:LITFYL@10.112.239.157:554/h264/ch1/main/av_stream","rtmp://10.112.217.199/live360p/test"+i,b);
+            convert("rtsp://admin:LITFYL@10.112.239.157:554/h264/ch1/main/av_stream","rtmp://10.112.217.199/live360p/test"+i,b,usePacket);
         }
         for(int i = 5;i<=8;i++){
-            convert("rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov","rtmp://10.112.217.199/live360p/test"+i,b);
+            convert("rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov","rtmp://10.112.217.199/live360p/test"+i,b,usePacket);
         }
     }
+
+    @ApiOperation(value = "TEST 对视频停止推流")
+    @RequestMapping(value = "/stopAll", method = RequestMethod.GET)
+    @ResponseBody
+    public void stopAll() {
+//        String rtspPath = "rtsp://admin:ydslab215@10.112.239.157:554/h264/ch1/main/av_stream";
+        for(VideoAdapter videoAdapter : VideoAdapterManagement.map.values()){
+            videoAdapter.stop();
+        }
+        VideoAdapterManagement.map = new ConcurrentHashMap<>();
+    }
+
+
 
     @ApiOperation(value = "画面抓拍")
     @RequestMapping(value = "/capture", method = RequestMethod.GET)
     @ResponseBody
     public String capture(@RequestParam String rtmp) {
         RtspVideoAdapter videoAdapter = (RtspVideoAdapter)VideoAdapterManagement.getVideoAdapter(rtmp);
-        videoAdapter.capture();
-        return "抓拍画面";
+        if(videoAdapter.capture()){
+            return "抓拍成功";
+        }else{
+            return "抓拍失败";
+        }
     }
 
 

@@ -12,14 +12,11 @@ import org.bytedeco.javacpp.avcodec.AVPacket;
  */
 public class PacketEvent extends Event{
 
-    private long timestamp;
-
     private AVPacket frame;
 
-    public PacketEvent(Object source, AVPacket frame, long timestamp) {
+    public PacketEvent(Object source, AVPacket frame) {
         super(source);
         this.frame = frame;
-        this.timestamp = timestamp;
     }
 
     public AVPacket getFrame() {
@@ -30,11 +27,4 @@ public class PacketEvent extends Event{
         this.frame = frame;
     }
 
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
 }
