@@ -35,6 +35,7 @@ public class HikUtil {
             System.out.println("注册失败");
             return false;
         }
+        System.out.println(lUserID.intValue());
         return true;
     }
 
@@ -54,5 +55,9 @@ public class HikUtil {
             return false;
         }
         return true;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(HikUtil.subscribe());
     }
 }
