@@ -27,10 +27,10 @@ import static cn.edu.bupt.stream.Constants.RECORD_LISTENER_NAME;
 public class RecordListener implements Listener {
 
     private String name;
-    private ScheduledExecutorService executor = Executors.newScheduledThreadPool(1,new BasicThreadFactory.Builder().namingPattern("Record-pool-%d").daemon(false).build());
-    FFmpegFrameRecorder fileRecorder;
+    private ScheduledExecutorService executor;
+    private FFmpegFrameRecorder fileRecorder;
     private int queueThreshold;
-    String fileName;
+    private String fileName;
     boolean isInit;
     boolean isStarted;
     boolean isStopped;
@@ -40,12 +40,13 @@ public class RecordListener implements Listener {
     private boolean usePacket;
     private avformat.AVFormatContext fc;
 
-    public RecordListener(){
+    public RecordListener(String listenerName){
+        this.executor = Executors.newScheduledThreadPool(1,new BasicThreadFactory.Builder().namingPattern(listenerName+"-Rec").daemon(false).build());
         this.isStarted = false;
         this.isInit = false;
         this.usePacket = false;
         this.isStopped = false;
-        // 以下配置暂时无用
+        this.name = listenerName;
         this.queueThreshold = 1024;
         this.offerTimeout = 100L;
         this.queue = new LinkedBlockingQueue<>();
@@ -60,9 +61,8 @@ public class RecordListener implements Listener {
     }
 
     public RecordListener(String listenerName,String filename, FFmpegFrameGrabber grabber,boolean usePacket) {
-        this();
+        this(listenerName);
         this.fileName = filename;
-        this.name = listenerName;
         this.usePacket = usePacket;
         fileRecorderInit(filename,grabber);
     }
@@ -122,7 +122,7 @@ public class RecordListener implements Listener {
     }
 
     /**
-     * @Description 用于scheduled线程池的任务，目前暂时无用
+     * @Description 用于scheduled线程池的任务
      * @author czx
      * @date 2019-04-23 23:33
      * @param []
@@ -142,7 +142,8 @@ public class RecordListener implements Listener {
                     } else {
                         timestamp -= startTimestamp;
                     }
-                    if(timestamp<fileRecorder.getTimestamp()){
+                    fileRecorder.setTimestamp(timestamp);
+                    if(timestamp>fileRecorder.getTimestamp()){
                         fileRecorder.setTimestamp(timestamp);
                     }
                     try {
@@ -166,13 +167,6 @@ public class RecordListener implements Listener {
                     log.warn("Unknow event type!");
                 }
             }
-            if(isStopped&&queue.isEmpty()){
-                try{
-                    fileRecorder.stop();
-                }catch (Exception e){
-
-                }
-            }
         }
     }
 
@@ -189,8 +183,11 @@ public class RecordListener implements Listener {
             isStarted = false;
             isStopped = true;
             if(executor!=null){
-                executor.shutdown();
+                executor.shutdownNow();
             }
+            // 存储queue中剩余的event
+            executorTask();
+            fileRecorder.stop();
             log.info("File recorder stopped");
         }catch (Exception e){
             log.error("File recorder failed to close");

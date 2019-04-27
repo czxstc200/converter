@@ -12,6 +12,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class ConverterApplication {
 	public static void main(String[] args) {
+		System.setProperty("org.bytedeco.javacpp.maxphysicalbytes", "0");
+		System.setProperty("org.bytedeco.javacpp.maxbytes", "0");
 		SpringApplication.run(ConverterApplication.class, args);
 	}
 }

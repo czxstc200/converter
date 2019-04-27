@@ -40,10 +40,11 @@ public class PushListener implements Listener {
     private boolean usePacket;
     private avformat.AVFormatContext fc;
 
-    private PushListener(){
+    private PushListener(String listenerName){
         this.isStarted = false;
         this.isInit = false;
         this.usePacket = false;
+        this.name = listenerName;
         //以下配置暂时无用
         this.queueThreshold = 240;
         this.offerTimeout = 100L;
@@ -51,10 +52,9 @@ public class PushListener implements Listener {
     }
 
     public PushListener(String listenerName,String rtmpPath,FFmpegFrameGrabber grabber,boolean usePacket){
-        this();
+        this(listenerName);
         this.rtmpPath = rtmpPath;
         this.grabber = grabber;
-        this.name = listenerName;
         this.usePacket = usePacket;
         pushRecorderInit(rtmpPath,grabber);
     }
@@ -171,7 +171,7 @@ public class PushListener implements Listener {
     }
 
     /**
-     * @Description FileRecord 进行初始化
+     * @Description PushRecorder 进行初始化
      * @author czx
      * @date 2018-12-02 16:34
      * @param [rtmpPath, grabber]

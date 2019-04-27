@@ -94,7 +94,7 @@ public class RtspVideoAdapter extends VideoAdapter{
     }
 
     public RtspVideoAdapter(String rtspPath, String rtmpPath,boolean save,boolean usePacket) {
-        this(rtmpPath);
+        this(rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length()));
         this.rtspPath = rtspPath;
         this.rtmpPath =rtmpPath;
         this.save = save;
@@ -174,12 +174,11 @@ public class RtspVideoAdapter extends VideoAdapter{
     @Override
     public void start() throws Exception{
 
-        log.info("RtspVideoAdapter starts for {rtsp is {},rtmp is {}}",rtspPath,rtmpPath);
+        log.info("RtspVideoAdapter is starting : [rtsp is {},rtmp is {}]",rtspPath,rtmpPath);
         grabberInit();
-        log.info("Grabber starts for video rtsp:{}",rtspPath);
+        log.info("Grabber started [{}]",rtspPath);
         startAllListeners();
-
-        String filePath = videoRootDir+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length())+"/";
+        String filePath = videoRootDir+name+"/";
         String capturesPath = filePath+"captures/";
         String videoPath = filePath+"videos/";
 
@@ -250,21 +249,22 @@ public class RtspVideoAdapter extends VideoAdapter{
                     }
                 }
 
+                Frame newFrame = frame.clone();
                 //进行抓拍操作
-                if(capture.get()&&judeDirExists(capturesPath)&&frame!=null){
-                    Frame frame1 = frame.clone();
-                    Future<Boolean> future = executor.submit(new CaptureTask(frame1,capturesPath));
+                if(capture.get()&&judeDirExists(capturesPath)&&newFrame!=null){
+                    Future<Boolean> future = executor.submit(new CaptureTask(newFrame,capturesPath));
                     captureFuture = future;
                     countDownLatch.countDown();
                     capture.set(false);
                 }
 
-                GrabEvent grabEvent = new GrabEvent(this,frame.clone(),grabber.getTimestamp());
+                GrabEvent grabEvent = new GrabEvent(this,newFrame,grabber.getTimestamp());
                 for(Listener listener:listeners){
                     listener.fireAfterEventInvoked(grabEvent);
                 }
             }
         }
+        grabber.stop();
         closeAllListeners();
         log.info("Grabber ends for video rtsp:{}",rtspPath);
     }
@@ -291,9 +291,10 @@ public class RtspVideoAdapter extends VideoAdapter{
     public boolean capture(){
         if(capture.compareAndSet(false,true)){
             try{
-                countDownLatch.await();
-                return captureFuture.get(1000,TimeUnit.MILLISECONDS);
+                countDownLatch.await(3000,TimeUnit.MILLISECONDS);
+                return captureFuture.get(5000,TimeUnit.MILLISECONDS);
             }catch (Exception e){
+                e.printStackTrace();
                 log.info("Capture failed!");
                 return false;
             }finally {
@@ -446,7 +447,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         if(isRecording){
             log.warn("Video recording has already been started.");
         }else {
-            RecordListener recordListener = new RecordListener(filename, getGrabber(),usePacket);
+            RecordListener recordListener = new RecordListener(name,filename, getGrabber(),usePacket);
             addListener(recordListener);
             recordListener.start();
             isRecording = true;
@@ -459,7 +460,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         }else {
             String filePath = videoRootDir+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length())+"/";
             String videoPath = filePath+"videos/";
-            RecordListener recordListener = new RecordListener(videoPath+generateFilenameByDate()+".flv", getGrabber(),usePacket);
+            RecordListener recordListener = new RecordListener(name,videoPath+generateFilenameByDate()+".flv", getGrabber(),usePacket);
             recordListener.start();
             addListener(recordListener);
             isRecording = true;
@@ -493,7 +494,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         if(isPushing){
             log.warn("Video pushing has already been started.");
         }else {
-            PushListener pushListener = new PushListener(rtmpPath,getGrabber(),usePacket);
+            PushListener pushListener = new PushListener(name,rtmpPath,getGrabber(),usePacket);
             addListener(pushListener);
             pushListener.start();
             isPushing = true;

@@ -81,18 +81,28 @@ public class VideoController {
     @ApiOperation(value = "TEST 对视频进行推流")
     @RequestMapping(value = "/convertAll", method = RequestMethod.GET)
     @ResponseBody
-    public void converttest(@RequestParam(required = false) Boolean save) throws Exception{
+    public void converttest(@RequestParam(required = false) Boolean save,
+                            @RequestParam(required = false) Boolean packet) throws Exception{
 //        String rtspPath = "rtsp://admin:ydslab215@10.112.239.157:554/h264/ch1/main/av_stream";
         boolean b = false;
         if(save!=null&&save==true){
             b = true;
         }
         boolean usePacket = false;
-        for(int i = 1;i<=4;i++){
-            convert("rtsp://admin:LITFYL@10.112.239.157:554/h264/ch1/main/av_stream","rtmp://10.112.217.199/live360p/test"+i,b,usePacket);
+        if(packet!=null&&packet==true){
+            usePacket = true;
         }
-        for(int i = 5;i<=8;i++){
-            convert("rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov","rtmp://10.112.217.199/live360p/test"+i,b,usePacket);
+        try {
+//            for (int i = 1; i <= 4; i++) {
+//                convert("rtsp://admin:LITFYL@10.112.239.157:554/h264/ch1/main/av_stream", "rtmp://10.112.217.199/live360p/test" + i, b, usePacket);
+//                Thread.sleep(1000);
+//            }
+            for (int i = 5; i <= 8; i++) {
+                convert("rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov", "rtmp://10.112.217.199/live360p/test" + i, b, usePacket);
+                Thread.sleep(1000);
+            }
+        }catch (Exception e){
+
         }
     }
 
@@ -101,10 +111,15 @@ public class VideoController {
     @ResponseBody
     public void stopAll() {
 //        String rtspPath = "rtsp://admin:ydslab215@10.112.239.157:554/h264/ch1/main/av_stream";
-        for(VideoAdapter videoAdapter : VideoAdapterManagement.map.values()){
-            videoAdapter.stop();
+        try {
+            for (VideoAdapter videoAdapter : VideoAdapterManagement.map.values()) {
+                videoAdapter.stop();
+                Thread.sleep(1000);
+            }
+            VideoAdapterManagement.map = new ConcurrentHashMap<>();
+        }catch (Exception e){
+
         }
-        VideoAdapterManagement.map = new ConcurrentHashMap<>();
     }
 
 

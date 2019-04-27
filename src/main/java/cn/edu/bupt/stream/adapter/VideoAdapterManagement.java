@@ -19,7 +19,7 @@ public class VideoAdapterManagement {
 
     private static Map<String,Future<String>> futures = new ConcurrentHashMap<>();
 
-    private static ExecutorService executorService = Executors.newCachedThreadPool(new BasicThreadFactory.Builder().namingPattern("Adapter-pool-%d").daemon(false).build());
+    private static ExecutorService executorService = Executors.newCachedThreadPool(new BasicThreadFactory.Builder().namingPattern("Adapter-%d").daemon(false).build());
 
     public VideoAdapterManagement(){
 

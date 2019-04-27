@@ -12,9 +12,9 @@ public class Constants {
     public final static String ROOT_DIR = "/Users/czx/Downloads/";
 //    public final static String ROOT_DIR = "/usr/share/red5/red5-server/webapps/oflaDemo/streams/";
 
-    public final static String RECORD_LISTENER_NAME = "Record Listener";
+    public final static String RECORD_LISTENER_NAME = "Rec-lis";
 
-    public final static String PUSH_LISTENER_NAME = "Push Listener";
+    public final static String PUSH_LISTENER_NAME = "Push-lis";
 
 
 }
