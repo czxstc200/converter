@@ -203,11 +203,12 @@ public class RecordListener implements Listener {
      * @return void
      */
     @Override
-    public void fireAfterEventInvoked(Event event) {
+    public void fireAfterEventInvoked(Event event) throws Exception{
         if(isStarted) {
             pushEvent(event);
         }else{
-            log.warn("Failed to fire the listener.You should start this file recorder before you start recording");
+            log.warn("Failed to fire the listener [{}].You should start this file recorder before you start recording",name);
+            throw new Exception("Failed to fire the listener");
         }
     }
 

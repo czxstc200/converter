@@ -19,7 +19,7 @@ public interface Listener extends EventListener {
      * @param [event]
      * @return void
      */
-    void fireAfterEventInvoked(Event event);
+    void fireAfterEventInvoked(Event event) throws Exception;
 
     /**
      * @Description 获取监听器的名字

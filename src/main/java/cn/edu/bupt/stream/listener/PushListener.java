@@ -141,7 +141,7 @@ public class PushListener implements Listener {
      * @return void
      */
     @Override
-    public void fireAfterEventInvoked(Event event) {
+    public void fireAfterEventInvoked(Event event) throws Exception{
         if(isStarted) {
             if (event instanceof PacketEvent) {
                 boolean success = false;
@@ -163,10 +163,11 @@ public class PushListener implements Listener {
                     log.warn("Push event failed for pushRecorder {}", getName());
                 }
             }else{
-                log.warn("Unknow event type!");
+                throw new Exception("Unknow event type!");
             }
         }else {
-            log.warn("Failed to fire the listener.You should start this push recorder before you start pushing");
+            log.warn("Failed to fire the listener [{}].You should start this push recorder before you start pushing",name);
+            throw new Exception("Failed to fire the listener!");
         }
     }
 
@@ -223,38 +224,6 @@ public class PushListener implements Listener {
             }catch (Exception e){
                 log.warn("Event data was not accepted by the queue");
             }
-        }
-
-        //如果还未给线程提交任务，则进入if内部
-        if(!isSubmitted){
-            this.executor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    while(isStarted){
-                        try{
-//                            if(!PushListener.this.queue.isEmpty()) {
-                                GrabEvent nextEvent = (GrabEvent) PushListener.this.queue.take();
-                                if(nextEvent!=null) {
-                                    pushRecorder.setTimestamp(grabber.getTimestamp());
-                                    pushRecorder.record(nextEvent.getFrame());
-                                }
-                                log.trace("Processing event from queue[size:{}]", queue.size());
-//                            }
-                        }catch (Exception e){
-                            log.warn("Failed to push event");
-                        }
-                    }
-                    try {
-                        pushRecorder.stop();
-                        pushRecorder.release();
-                        pushRecorder = null;
-                        queue=null;
-                    }catch (Exception e){
-
-                    }
-                }
-            });
-            this.isSubmitted = true;
         }
     }
 }

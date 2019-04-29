@@ -13,7 +13,6 @@ import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacpp.opencv_imgcodecs;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
-import org.bytedeco.javacv.Java2DFrameConverter;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 
 import java.io.File;
@@ -194,81 +193,88 @@ public class RtspVideoAdapter extends VideoAdapter{
 
         int count = 0;
         int nullFrames = 0;
-        while(!stop){
-            //记录帧数
-            count++;
-            if(count % 100 == 0){
-                log.debug("Video[{}] counts={}",rtspPath,count);
-            }
+        try {
+            while (!stop) {
+                //记录帧数
+                count++;
+                if (count % 100 == 0) {
+                    log.debug("Video[{}] counts={}", rtspPath, count);
+                }
 
-            //时间超过零点进行视频录像的切分
-            if(isRecording&&timestamp<getZeroTimestamp()){
-                timestamp = getZeroTimestamp();
-                restartRecording(filePath+generateFilenameByDate()+".flv");
-            }
+                //时间超过零点进行视频录像的切分
+                if (isRecording && timestamp < getZeroTimestamp()) {
+                    timestamp = getZeroTimestamp();
+                    restartRecording(videoPath + generateFilenameByDate() + ".flv");
+                }
 
-            //使用AVPacket进行推流，目前这种模式下不能对数据帧进行处理
-            if(usePacket) {
-                avcodec.AVPacket pkt = null;
-                pkt = grabber.grabPacket();
-                if (pkt == null) {
-                    nullFrames++;
-                    //连续5帧都是null时判断已经停止推流
-                    if (nullFrames >= 5) {
-                        stop();
-                        log.info("Video[{}] stopped!", rtspPath);
-                        break;
+                //使用AVPacket进行推流，目前这种模式下不能对数据帧进行处理
+                if (usePacket) {
+                    avcodec.AVPacket pkt = null;
+                    pkt = grabber.grabPacket();
+                    if (pkt == null) {
+                        nullFrames++;
+                        log.info("Null Frame in [{}]", rtmpPath);
+                        //连续5帧都是null时判断已经停止推流
+                        if (nullFrames >= 5) {
+                            stop();
+                            log.info("Video[{}] stopped!", rtmpPath);
+                            break;
+                        }
+                    } else {
+                        nullFrames = 0;
                     }
-                } else {
-                    nullFrames = 0;
-                }
 
-                //AVPacket采用计数法进行内存的回收，因此在每一个listener进行处理时，
-                //都需要创建一个新的ref。由于JavaCV中的方法自带unref，如果没有创建
-                //ref，一个listener处理完后就有可能回收内存
-                for (Listener listener : listeners) {
-                    avcodec.AVPacket newPkt = avcodec.av_packet_alloc();
-                    avcodec.av_packet_ref(newPkt, pkt);
-                    PacketEvent grabEvent = new PacketEvent(this, newPkt);
-                    listener.fireAfterEventInvoked(grabEvent);
-                }
-                avcodec.av_packet_unref(pkt);
-            }else{//使用传统方式进行处理，效率较低（增加了编解码的时间），但是可以对画面frame进行处理
-                Frame frame = null;
-                try {
-                    frame = grabber.grabImage();
-                }catch (Exception e){
-                    log.warn("Grab Image Exception!");
-                }
-                if(frame==null){
-                    nullFrames++;
-                    if(nullFrames >= 5){
-                        stop();
-                        log.info("Video[{}] stopped!",rtspPath);
-                        break;
+                    //AVPacket采用计数法进行内存的回收，因此在每一个listener进行处理时，
+                    //都需要创建一个新的ref。由于JavaCV中的方法自带unref，如果没有创建
+                    //ref，一个listener处理完后就有可能回收内存
+                    for (Listener listener : listeners) {
+                        avcodec.AVPacket newPkt = avcodec.av_packet_alloc();
+                        avcodec.av_packet_ref(newPkt, pkt);
+                        PacketEvent grabEvent = new PacketEvent(this, newPkt);
+                        listener.fireAfterEventInvoked(grabEvent);
                     }
-                }
-
-                Frame newFrame = frame.clone();
-                //进行抓拍操作
-                if(capture.get()&&newFrame!=null){
-                    if(judeDirExists(capturesPath)) {
-                        Future<Boolean> future = executor.submit(new CaptureTask(newFrame, capturesPath));
-                        captureFuture = future;
-                        countDownLatch.countDown();
+                    avcodec.av_packet_unref(pkt);
+                } else {//使用传统方式进行处理，效率较低（增加了编解码的时间），但是可以对画面frame进行处理
+                    Frame frame = null;
+                    try {
+                        frame = grabber.grabImage();
+                    } catch (Exception e) {
+                        log.warn("Grab Image Exception!");
                     }
-                    capture.set(false);
-                }
+                    if (frame == null) {
+                        nullFrames++;
+                        log.info("Null Frame in [{}]", rtmpPath);
+                        if (nullFrames >= 5) {
+                            stop();
+                            log.info("Video[{}] stopped!", rtmpPath);
+                            break;
+                        }
+                    }
 
-                GrabEvent grabEvent = new GrabEvent(this,newFrame,grabber.getTimestamp());
-                for(Listener listener:listeners){
-                    listener.fireAfterEventInvoked(grabEvent);
+                    Frame newFrame = frame.clone();
+                    //进行抓拍操作
+                    if (capture.get() && newFrame != null) {
+                        if (judeDirExists(capturesPath)) {
+                            Future<Boolean> future = executor.submit(new CaptureTask(newFrame, capturesPath));
+                            captureFuture = future;
+                            countDownLatch.countDown();
+                        }
+                        capture.set(false);
+                    }
+
+                    GrabEvent grabEvent = new GrabEvent(this, newFrame, grabber.getTimestamp());
+                    for (Listener listener : listeners) {
+                        listener.fireAfterEventInvoked(grabEvent);
+                    }
                 }
             }
+        }catch (Exception e){
+            log.warn("Adapter [{}] throws an Exception!",name);
+        }finally {
+            grabber.stop();
+            closeAllListeners();
+            log.info("Grabber ends for video rtmp:{}",rtmpPath);
         }
-        grabber.stop();
-        closeAllListeners();
-        log.info("Grabber ends for video rtsp:{}",rtspPath);
     }
 
     /**
