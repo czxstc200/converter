@@ -12,7 +12,7 @@ import java.util.List;
  * @Version: 1.0
  */
 @Slf4j
-public class VideoAdapter {
+public abstract class VideoAdapter {
 
     private List<Listener> listeners;
 
@@ -43,11 +43,7 @@ public class VideoAdapter {
         return listeners.remove(listener);
     }
 
-    public void start() throws Exception{
+    public abstract void start() throws Exception;
 
-    }
-
-    public void stop(){
-
-    }
+    public abstract void stop();
 }

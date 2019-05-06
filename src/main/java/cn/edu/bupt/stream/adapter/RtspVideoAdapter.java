@@ -58,8 +58,8 @@ public class RtspVideoAdapter extends VideoAdapter{
 
     private AtomicBoolean capture = new AtomicBoolean(false);
 
-    /*
-    是否使用AVPacket的方式直接进行拉流与推流
+    /**
+     * 是否使用AVPacket的方式直接进行拉流与推流
      */
     private boolean usePacket;
 
@@ -211,7 +211,7 @@ public class RtspVideoAdapter extends VideoAdapter{
                 if (usePacket) {
                     avcodec.AVPacket pkt = null;
                     pkt = grabber.grabPacket();
-                    if (pkt == null) {
+                    if (pkt==null || pkt.size()<=0 || pkt.data()==null) {
                         nullFrames++;
                         log.info("Null Frame in [{}]", rtmpPath);
                         //连续5帧都是null时判断已经停止推流
@@ -220,6 +220,7 @@ public class RtspVideoAdapter extends VideoAdapter{
                             log.info("Video[{}] stopped!", rtmpPath);
                             break;
                         }
+                        continue;
                     } else {
                         nullFrames = 0;
                     }
@@ -241,7 +242,7 @@ public class RtspVideoAdapter extends VideoAdapter{
                     } catch (Exception e) {
                         log.warn("Grab Image Exception!");
                     }
-                    if (frame == null) {
+                    if (frame == null || frame.image==null) {
                         nullFrames++;
                         log.info("Null Frame in [{}]", rtmpPath);
                         if (nullFrames >= 5) {
@@ -249,6 +250,7 @@ public class RtspVideoAdapter extends VideoAdapter{
                             log.info("Video[{}] stopped!", rtmpPath);
                             break;
                         }
+                        continue;
                     }
 
                     Frame newFrame = frame.clone();
@@ -414,21 +416,30 @@ public class RtspVideoAdapter extends VideoAdapter{
     }
 
     /**
-     * @Description 根据名字删除一个listener
+     * @Description 根据listener的类型删除一个listener
      * @author czx
      * @date 2018-12-07 14:56
      * @param [name]
-     * @return void
+     * @return boolean
      */
-    private void removeListener(String name){
+    private boolean removeListener(Class listenerClass){
         Listener removedListener = null;
         for(Listener listener:listeners){
-            if(listener.getName().equals(name)){
+            if(listener.getClass()==listenerClass){
                 removedListener = listener;
+                break;
             }
         }
+        if(removedListener==null){
+            return false;
+        }
         listeners.remove(removedListener);
-        removedListener.close();
+        try {
+            removedListener.close();
+            return true;
+        }catch (Exception e){
+            return false;
+        }
     }
 
     /**
@@ -486,7 +497,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         if(!isRecording){
             log.warn("Can not stop recording cause recording has not been started.");
         }else {
-            removeListener(RECORD_LISTENER_NAME);
+            removeListener(RecordListener.class);
             isRecording = false;
         }
     }
@@ -520,7 +531,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         if(!isPushing){
             log.warn("Can not stop pushing cause pushing has not been started.");
         }else {
-            removeListener(PUSH_LISTENER_NAME);
+            removeListener(PushListener.class);
             isPushing = false;
         }
     }

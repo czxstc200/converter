@@ -157,7 +157,6 @@ public class PushListener implements Listener {
                 }
             } else if (event instanceof GrabEvent) {
                 try {
-                    Frame frame = ((GrabEvent) event).getFrame();
                     pushRecorder.record(((GrabEvent) event).getFrame());
                 } catch (FrameRecorder.Exception e) {
                     log.warn("Push event failed for pushRecorder {}", getName());

@@ -139,10 +139,10 @@ public class RecordListener implements Listener {
                     if (startTimestamp == -1) {
                         startTimestamp = timestamp;
                         timestamp = 0;
+                        fileRecorder.setTimestamp(timestamp);
                     } else {
                         timestamp -= startTimestamp;
                     }
-                    fileRecorder.setTimestamp(timestamp);
                     if(timestamp>fileRecorder.getTimestamp()){
                         fileRecorder.setTimestamp(timestamp);
                     }
@@ -164,7 +164,7 @@ public class RecordListener implements Listener {
                         }
                     }
                 }else{
-                    log.warn("Unknow event type!");
+                    log.warn("Unknown event type!");
                 }
             }
         }
