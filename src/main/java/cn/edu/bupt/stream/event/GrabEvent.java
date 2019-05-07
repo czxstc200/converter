@@ -1,5 +1,6 @@
 package cn.edu.bupt.stream.event;
 
+import org.bytedeco.javacpp.PointerScope;
 import org.bytedeco.javacv.Frame;
 
 /**
@@ -10,13 +11,16 @@ import org.bytedeco.javacv.Frame;
  */
 public class GrabEvent extends Event {
 
-    private long timestamp;
+    private final long timestamp;
 
-    private Frame frame;
+    private final PointerScope pointerScope;
 
-    public GrabEvent(Object source,Frame frame,long timestamp) {
+    private final Frame frame;
+
+    public GrabEvent(Object source,Frame frame,PointerScope pointerScope,long timestamp) {
         super(source);
         this.frame = frame;
+        this.pointerScope = pointerScope;
         this.timestamp = timestamp;
     }
 
@@ -24,15 +28,11 @@ public class GrabEvent extends Event {
         return frame;
     }
 
-    public void setFrame(Frame frame) {
-        this.frame = frame;
-    }
-
     public long getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
+    public PointerScope getPointerScope() {
+        return pointerScope;
     }
 }

@@ -1,5 +1,6 @@
 package cn.edu.bupt.stream.listener;
 
+import cn.edu.bupt.stream.adapter.RtspVideoAdapter;
 import cn.edu.bupt.stream.event.Event;
 import cn.edu.bupt.stream.event.GrabEvent;
 import cn.edu.bupt.stream.event.PacketEvent;
@@ -7,19 +8,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.bytedeco.ffmpeg.avcodec.AVPacket;
 import org.bytedeco.ffmpeg.avformat.AVFormatContext;
-import org.bytedeco.ffmpeg.avutil.AVFrame;
 import org.bytedeco.ffmpeg.global.avcodec;
-import org.bytedeco.ffmpeg.global.avutil;
-import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacpp.Pointer;
-import org.bytedeco.javacpp.PointerPointer;
-import org.bytedeco.javacpp.PointerScope;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.FrameRecorder;
 
+import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static cn.edu.bupt.stream.Constants.PUSH_LISTENER_NAME;
 
@@ -31,7 +28,7 @@ import static cn.edu.bupt.stream.Constants.PUSH_LISTENER_NAME;
  * @Version: 1.0
  */
 @Slf4j
-public class PushListener implements Listener {
+public class PushListener extends RtspListener {
 
     private String name;
     private FFmpegFrameGrabber grabber;
@@ -44,36 +41,38 @@ public class PushListener implements Listener {
     private BlockingQueue<Event> queue;
     private long offerTimeout;
     private boolean usePacket;
+    private final RtspVideoAdapter rtspVideoAdapter;
     private AVFormatContext fc;
 
-    private PushListener(String listenerName){
+    private PushListener(String listenerName,RtspVideoAdapter rtspVideoAdapter){
         this.isStarted = false;
         this.isInit = false;
         this.usePacket = false;
         this.name = listenerName;
+        this.rtspVideoAdapter = rtspVideoAdapter;
         //以下配置暂时无用
         this.queueThreshold = 240;
         this.offerTimeout = 100L;
     }
 
-    public PushListener(String listenerName,String rtmpPath,FFmpegFrameGrabber grabber,boolean usePacket){
-        this(listenerName);
+    public PushListener(String listenerName,String rtmpPath,FFmpegFrameGrabber grabber,RtspVideoAdapter rtspVideoAdapter,boolean usePacket){
+        this(listenerName,rtspVideoAdapter);
         this.rtmpPath = rtmpPath;
         this.grabber = grabber;
         this.usePacket = usePacket;
         pushRecorderInit(rtmpPath,grabber);
     }
 
-    public PushListener(String listenerName,String rtmpPath,FFmpegFrameGrabber grabber){
-        this(listenerName,rtmpPath,grabber,false);
+    public PushListener(String listenerName,String rtmpPath,FFmpegFrameGrabber grabber,RtspVideoAdapter rtspVideoAdapter){
+        this(listenerName,rtmpPath,grabber,rtspVideoAdapter,false);
     }
 
-    public PushListener(String rtmpPath, FFmpegFrameGrabber grabber) {
-        this(PUSH_LISTENER_NAME,rtmpPath,grabber,false);
+    public PushListener(String rtmpPath, FFmpegFrameGrabber grabber,RtspVideoAdapter rtspVideoAdapter) {
+        this(PUSH_LISTENER_NAME,rtmpPath,grabber,rtspVideoAdapter,false);
     }
 
-    public PushListener(String rtmpPath, FFmpegFrameGrabber grabber,boolean usePacket) {
-        this(PUSH_LISTENER_NAME,rtmpPath,grabber,usePacket);
+    public PushListener(String rtmpPath, FFmpegFrameGrabber grabber,RtspVideoAdapter rtspVideoAdapter,boolean usePacket) {
+        this(PUSH_LISTENER_NAME,rtmpPath,grabber,rtspVideoAdapter,usePacket);
     }
 
     @Override
@@ -91,6 +90,10 @@ public class PushListener implements Listener {
 
     public boolean isUsePacket() {
         return usePacket;
+    }
+
+    public RtspVideoAdapter getRtspVideoAdapter() {
+        return rtspVideoAdapter;
     }
 
     /**
@@ -164,10 +167,16 @@ public class PushListener implements Listener {
                 Frame frame = ((GrabEvent) event).getFrame();
                 try {
                     pushRecorder.record(frame);
-//                    ((AVFrame)frame.opaque).deallocate();
                 } catch (Exception e) {
                     e.printStackTrace();
                     log.warn("Push event failed for pushRecorder {}", getName());
+                }finally {
+                    Map<GrabEvent, AtomicInteger> map = rtspVideoAdapter.getFrameFinishCount();
+                    int count = map.get(event).decrementAndGet();
+                    if(count==0){
+                        ((GrabEvent) event).getPointerScope().deallocate();
+                        map.remove(event);
+                    }
                 }
             }else{
                 throw new Exception("Unknow event type!");

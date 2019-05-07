@@ -1,5 +1,6 @@
 package cn.edu.bupt.stream.listener;
 
+import cn.edu.bupt.stream.adapter.RtspVideoAdapter;
 import cn.edu.bupt.stream.event.Event;
 import cn.edu.bupt.stream.event.GrabEvent;
 import cn.edu.bupt.stream.event.PacketEvent;
@@ -10,7 +11,9 @@ import org.bytedeco.ffmpeg.global.avcodec;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
 
+import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static cn.edu.bupt.stream.Constants.RECORD_LISTENER_NAME;
 
@@ -22,23 +25,24 @@ import static cn.edu.bupt.stream.Constants.RECORD_LISTENER_NAME;
  * @Version: 1.0
  */
 @Slf4j
-public class RecordListener implements Listener {
+public class RecordListener extends RtspListener {
 
     private String name;
     private ScheduledExecutorService executor;
     private FFmpegFrameRecorder fileRecorder;
     private int queueThreshold;
     private String fileName;
-    boolean isInit;
-    boolean isStarted;
-    boolean isStopped;
+    private boolean isInit;
+    private boolean isStarted;
+    private boolean isStopped;
     private BlockingQueue<Event> queue;
     private long offerTimeout;
     private long startTimestamp = -1;
     private boolean usePacket;
+    private final RtspVideoAdapter rtspVideoAdapter;
     private AVFormatContext fc;
 
-    public RecordListener(String listenerName){
+    private RecordListener(String listenerName, RtspVideoAdapter rtspVideoAdapter){
         this.executor = Executors.newScheduledThreadPool(1,new BasicThreadFactory.Builder().namingPattern(listenerName+"-Rec").daemon(false).build());
         this.isStarted = false;
         this.isInit = false;
@@ -47,26 +51,27 @@ public class RecordListener implements Listener {
         this.name = listenerName;
         this.queueThreshold = 1024;
         this.offerTimeout = 100L;
+        this.rtspVideoAdapter = rtspVideoAdapter;
         this.queue = new LinkedBlockingQueue<>();
     }
 
-    public RecordListener(String filename, FFmpegFrameGrabber grabber) {
-        this(RECORD_LISTENER_NAME,filename,grabber,false);
+    public RecordListener(String filename, FFmpegFrameGrabber grabber,RtspVideoAdapter rtspVideoAdapter) {
+        this(RECORD_LISTENER_NAME,filename,grabber,rtspVideoAdapter,false);
     }
 
-    public RecordListener(String filename, FFmpegFrameGrabber grabber,boolean usePacket) {
-        this(RECORD_LISTENER_NAME,filename,grabber,usePacket);
+    public RecordListener(String filename, FFmpegFrameGrabber grabber,RtspVideoAdapter rtspVideoAdapter,boolean usePacket) {
+        this(RECORD_LISTENER_NAME,filename,grabber,rtspVideoAdapter,usePacket);
     }
 
-    public RecordListener(String listenerName,String filename, FFmpegFrameGrabber grabber,boolean usePacket) {
-        this(listenerName);
+    public RecordListener(String listenerName,String filename, FFmpegFrameGrabber grabber,RtspVideoAdapter rtspVideoAdapter,boolean usePacket) {
+        this(listenerName,rtspVideoAdapter);
         this.fileName = filename;
         this.usePacket = usePacket;
         fileRecorderInit(filename,grabber);
     }
 
-    public RecordListener(String listenerName,String filename, FFmpegFrameGrabber grabber) {
-        this(listenerName,filename,grabber,false);
+    public RecordListener(String listenerName,String filename, FFmpegFrameGrabber grabber,RtspVideoAdapter rtspVideoAdapter) {
+        this(listenerName,filename,grabber,rtspVideoAdapter,false);
     }
 
     @Override
@@ -102,12 +107,7 @@ public class RecordListener implements Listener {
         try {
             if(isInit) {
                 fileRecorder.start(fc);
-                executor.scheduleAtFixedRate(new Runnable() {
-                    @Override
-                    public void run() {
-                        executorTask();
-                    }
-                },1,5,TimeUnit.SECONDS);
+                executor.scheduleAtFixedRate(this::executorTask,1,5,TimeUnit.SECONDS);
                 isStarted = true;
                 log.info("File recorder started");
             }else {
@@ -146,8 +146,15 @@ public class RecordListener implements Listener {
                     }
                     try {
                         fileRecorder.record(((GrabEvent) event).getFrame());
-                    } catch (Exception e) {
+                    }catch (Exception e) {
                         log.warn("Record event failed for Recorder {}", getName());
+                    }finally {
+                        Map<GrabEvent, AtomicInteger> map = rtspVideoAdapter.getFrameFinishCount();
+                        int count = map.get(event).decrementAndGet();
+                        if(count==0){
+                            ((GrabEvent) event).getPointerScope().deallocate();
+                            map.remove(event);
+                        }
                     }
                 }else if(event instanceof PacketEvent){
                     boolean success = false;
@@ -236,7 +243,7 @@ public class RecordListener implements Listener {
      * @param [event]
      * @return void
      */
-    public void pushEvent(Event event){
+    private void pushEvent(Event event){
         //如果queue为null，初始化queue
         if(this.queue == null){
             log.trace("Creating event queue");
@@ -246,7 +253,7 @@ public class RecordListener implements Listener {
         //将event推入queue
         try{
             if(this.queue.size() > this.queueThreshold) {
-                log.warn("Queue size is greater than threshold. queue size={} threshold={}", Integer.valueOf(this.queue.size()), Integer.valueOf(this.queueThreshold));
+                log.warn("Queue size is greater than threshold. queue size={} threshold={}", this.queue.size(), this.queueThreshold);
             }
             if(this.queue.size() < 2 * this.queueThreshold){
                 this.queue.offer(event, this.offerTimeout, TimeUnit.MILLISECONDS);

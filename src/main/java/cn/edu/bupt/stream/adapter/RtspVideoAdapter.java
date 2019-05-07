@@ -10,6 +10,7 @@ import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.bytedeco.ffmpeg.avcodec.AVPacket;
 import org.bytedeco.ffmpeg.global.avcodec;
 import org.bytedeco.ffmpeg.global.avutil;
+import org.bytedeco.javacpp.PointerScope;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
@@ -18,11 +19,10 @@ import org.bytedeco.opencv.opencv_core.Mat;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static cn.edu.bupt.stream.Constants.*;
 
@@ -36,43 +36,31 @@ import static cn.edu.bupt.stream.Constants.*;
 public class RtspVideoAdapter extends VideoAdapter{
 
     private String name;
-
     private static long timestamp;
-
     private String videoRootDir;
-    
     private boolean isRecording;
-
     private boolean isPushing;
-
     private boolean stop;
-
     private FFmpegFrameGrabber grabber;
-
     private String rtspPath;
-
     private String rtmpPath;
-
     private List<Listener> listeners;
-
     private boolean save;
-
     private AtomicBoolean capture = new AtomicBoolean(false);
-
     /**
      * 是否使用AVPacket的方式直接进行拉流与推流
      */
     private boolean usePacket;
-
-    OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
-
+    private OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
     private ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Capture-pool-%d").daemon(false).build());
-
     /**
      * 用于获取capture的future
      */
     private CountDownLatch countDownLatch = new CountDownLatch(1);
-
+    /**
+     * 用于记录每一个frame需要完成的listeners个数，在全部listener完成任务后，调用PointerScope进行内存回收
+     */
+    private Map<GrabEvent, AtomicInteger> frameFinishCount = new HashMap<>();
     private Future<Boolean> captureFuture;
 
     public RtspVideoAdapter(){
@@ -137,6 +125,10 @@ public class RtspVideoAdapter extends VideoAdapter{
         return rtmpPath;
     }
 
+    public Map<GrabEvent, AtomicInteger> getFrameFinishCount() {
+        return frameFinishCount;
+    }
+
     public FFmpegFrameGrabber getGrabber() {
         return grabber;
     }
@@ -173,12 +165,11 @@ public class RtspVideoAdapter extends VideoAdapter{
      */
     @Override
     public void start() throws Exception{
-
         log.info("RtspVideoAdapter is starting : [rtsp is {},rtmp is {}]",rtspPath,rtmpPath);
         grabberInit();
         log.info("Grabber started [{}]",rtspPath);
         startAllListeners();
-        String filePath = videoRootDir+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length())+"/";
+        String filePath = videoRootDir+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1)+"/";
         String capturesPath = filePath+"captures/";
         String videoPath = filePath+"videos/";
 
@@ -210,7 +201,7 @@ public class RtspVideoAdapter extends VideoAdapter{
 
                 //使用AVPacket进行推流，目前这种模式下不能对数据帧进行处理
                 if (usePacket) {
-                    AVPacket pkt = null;
+                    AVPacket pkt;
                     pkt = grabber.grabPacket();
                     if (pkt==null || pkt.size()<=0 || pkt.data()==null) {
                         nullFrames++;
@@ -253,18 +244,20 @@ public class RtspVideoAdapter extends VideoAdapter{
                         }
                         continue;
                     }
-
+                    // PointScope用于释放frame的内存
+                    // Pointer会自动attach到PointerScope上
+                    PointerScope pointerScope = new PointerScope();
                     Frame newFrame = frame.clone();
                     //进行抓拍操作
                     if (capture.get() && newFrame != null) {
                         if (judeDirExists(capturesPath)) {
-                            Future<Boolean> future = executor.submit(new CaptureTask(newFrame, capturesPath));
-                            captureFuture = future;
+                            captureFuture = executor.submit(new CaptureTask(newFrame, capturesPath));
                             countDownLatch.countDown();
                         }
                         capture.set(false);
                     }
-                    GrabEvent grabEvent = new GrabEvent(this, newFrame, grabber.getTimestamp());
+                    GrabEvent grabEvent = new GrabEvent(this,newFrame,pointerScope,grabber.getTimestamp());
+                    frameFinishCount.put(grabEvent,new AtomicInteger(listeners.size()));
                     for (Listener listener : listeners) {
                         listener.fireAfterEventInvoked(grabEvent);
                     }
@@ -341,7 +334,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         for(Listener listener:listeners){
             listener.close();
         }
-        listeners.removeAll(listeners);
+        listeners = new ArrayList<>();
     }
 
     /**
@@ -377,8 +370,7 @@ public class RtspVideoAdapter extends VideoAdapter{
     private static String generateFilenameByDate(){
         SimpleDateFormat sdf=new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
         Date date=new Date();
-        String dateStringParse = sdf.format(date);
-        return dateStringParse;
+        return sdf.format(date);
     }
 
     /**
@@ -389,8 +381,8 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @return java.lang.Long
      */
     private static Long getZeroTimestamp(){
-        Long currentTimestamps=System.currentTimeMillis();
-        Long oneDayTimestamps= Long.valueOf(60*60*24*1000);
+        long currentTimestamps=System.currentTimeMillis();
+        long oneDayTimestamps= 60*60*24*1000;
         return currentTimestamps-(currentTimestamps+60*60*8*1000)%oneDayTimestamps+oneDayTimestamps;
     }
 
@@ -401,7 +393,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @param []
      * @return void
      */
-    public void grabberInit(){
+    private void grabberInit(){
         try {
             // 使用rtsp的时候需要使用 FFmpegFrameGrabber，不能再用 FrameGrabber
             FFmpegFrameGrabber grabber = FFmpegFrameGrabber.createDefault(rtspPath);
@@ -449,7 +441,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @param [filename]
      * @return void
      */
-    public void restartRecording(String filename){
+    private void restartRecording(String filename){
         log.info("Restart recording. New filename is [{}]",filename);
         stopRecording();
         startRecording(filename);
@@ -462,11 +454,11 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @param [filename]
      * @return void
      */
-    public void startRecording(String filename){
+    private void startRecording(String filename){
         if(isRecording){
             log.warn("Video recording has already been started.");
         }else {
-            RecordListener recordListener = new RecordListener(filename, getGrabber(),usePacket);
+            RecordListener recordListener = new RecordListener(filename, getGrabber(),this,usePacket);
             addListener(recordListener);
             recordListener.start();
             isRecording = true;
@@ -477,9 +469,9 @@ public class RtspVideoAdapter extends VideoAdapter{
         if(isRecording){
             log.warn("Video recording has already been started.");
         }else {
-            String filePath = videoRootDir+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length())+"/";
+            String filePath = videoRootDir+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1)+"/";
             String videoPath = filePath+"videos/";
-            RecordListener recordListener = new RecordListener(videoPath+generateFilenameByDate()+".flv", getGrabber(),usePacket);
+            RecordListener recordListener = new RecordListener(videoPath+generateFilenameByDate()+".flv", getGrabber(),this,usePacket);
             recordListener.start();
             addListener(recordListener);
             isRecording = true;
@@ -509,11 +501,11 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @param []
      * @return void
      */
-    public void startPushing(){
+    private void startPushing(){
         if(isPushing){
             log.warn("Video pushing has already been started.");
         }else {
-            PushListener pushListener = new PushListener(rtmpPath,getGrabber(),usePacket);
+            PushListener pushListener = new PushListener(rtmpPath,getGrabber(),this,usePacket);
             addListener(pushListener);
             pushListener.start();
             isPushing = true;
@@ -527,7 +519,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @param []
      * @return void
      */
-    public void stopPushing(){
+    private void stopPushing(){
         if(!isPushing){
             log.warn("Can not stop pushing cause pushing has not been started.");
         }else {
@@ -544,16 +536,8 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @return java.util.List<java.lang.String>
      */
     public List<String> getFiles(String rtmpPath){
-        String path = ROOT_DIR+"videos/"+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length());
-        File file = new File(path);
-        File[] files = file.listFiles();
-        List<String> fileList = new ArrayList<>();
-        for (int i = 0; i < files.length; i++) {
-            if (files[i].isFile()) {
-                fileList.add(files[i].getName());
-            }
-        }
-        return fileList;
+        String path = ROOT_DIR+"videos/"+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1);
+        return getFileList(path);
     }
 
     /**
@@ -562,13 +546,19 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @return
      */
     public List<String> getCaptures(String rtmpPath){
-        String path = ROOT_DIR+"captures/"+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1,rtmpPath.length());
-        File file = new File(path);
-        File[] files = file.listFiles();
+        String path = ROOT_DIR+"captures/"+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1);
+        return getFileList(path);
+    }
+
+    private List<String> getFileList(String path) {
+        File[] files = new File(path).listFiles();
         List<String> fileList = new ArrayList<>();
-        for (int i = 0; i < files.length; i++) {
-            if (files[i].isFile()) {
-                fileList.add(files[i].getName());
+        if(files==null){
+            return fileList;
+        }
+        for (File file : files) {
+            if (file.isFile()) {
+                fileList.add(file.getName());
             }
         }
         return fileList;
@@ -581,7 +571,7 @@ public class RtspVideoAdapter extends VideoAdapter{
 
         private String capturesPath;
 
-        public CaptureTask(Frame frame, String capturesPath) {
+        private CaptureTask(Frame frame, String capturesPath) {
             this.frame = frame;
             this.capturesPath = capturesPath;
         }
