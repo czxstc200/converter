@@ -5,8 +5,15 @@ import cn.edu.bupt.stream.event.GrabEvent;
 import cn.edu.bupt.stream.event.PacketEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
-import org.bytedeco.javacpp.avcodec;
-import org.bytedeco.javacpp.avformat;
+import org.bytedeco.ffmpeg.avcodec.AVPacket;
+import org.bytedeco.ffmpeg.avformat.AVFormatContext;
+import org.bytedeco.ffmpeg.avutil.AVFrame;
+import org.bytedeco.ffmpeg.global.avcodec;
+import org.bytedeco.ffmpeg.global.avutil;
+import org.bytedeco.javacpp.BytePointer;
+import org.bytedeco.javacpp.Pointer;
+import org.bytedeco.javacpp.PointerPointer;
+import org.bytedeco.javacpp.PointerScope;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
 import org.bytedeco.javacv.Frame;
@@ -36,9 +43,8 @@ public class PushListener implements Listener {
     private boolean isStarted;
     private BlockingQueue<Event> queue;
     private long offerTimeout;
-    private boolean isSubmitted;
     private boolean usePacket;
-    private avformat.AVFormatContext fc;
+    private AVFormatContext fc;
 
     private PushListener(String listenerName){
         this.isStarted = false;
@@ -48,7 +54,6 @@ public class PushListener implements Listener {
         //以下配置暂时无用
         this.queueThreshold = 240;
         this.offerTimeout = 100L;
-        this.isSubmitted = false;
     }
 
     public PushListener(String listenerName,String rtmpPath,FFmpegFrameGrabber grabber,boolean usePacket){
@@ -145,7 +150,7 @@ public class PushListener implements Listener {
         if(isStarted) {
             if (event instanceof PacketEvent) {
                 boolean success = false;
-                avcodec.AVPacket pkt = ((PacketEvent) event).getFrame();
+                AVPacket pkt = ((PacketEvent) event).getFrame();
                 try {
                     success = pushRecorder.recordPacket(pkt);
                 } catch (FrameRecorder.Exception e) {
@@ -156,9 +161,12 @@ public class PushListener implements Listener {
                     }
                 }
             } else if (event instanceof GrabEvent) {
+                Frame frame = ((GrabEvent) event).getFrame();
                 try {
-                    pushRecorder.record(((GrabEvent) event).getFrame());
-                } catch (FrameRecorder.Exception e) {
+                    pushRecorder.record(frame);
+//                    ((AVFrame)frame.opaque).deallocate();
+                } catch (Exception e) {
+                    e.printStackTrace();
                     log.warn("Push event failed for pushRecorder {}", getName());
                 }
             }else{

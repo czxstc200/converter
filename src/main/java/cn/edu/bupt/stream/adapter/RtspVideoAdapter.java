@@ -7,13 +7,14 @@ import cn.edu.bupt.stream.listener.PushListener;
 import cn.edu.bupt.stream.listener.RecordListener;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
-import org.bytedeco.javacpp.avcodec;
-import org.bytedeco.javacpp.avutil;
-import org.bytedeco.javacpp.opencv_core;
-import org.bytedeco.javacpp.opencv_imgcodecs;
+import org.bytedeco.ffmpeg.avcodec.AVPacket;
+import org.bytedeco.ffmpeg.global.avcodec;
+import org.bytedeco.ffmpeg.global.avutil;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
+import org.bytedeco.opencv.global.opencv_imgcodecs;
+import org.bytedeco.opencv.opencv_core.Mat;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -209,7 +210,7 @@ public class RtspVideoAdapter extends VideoAdapter{
 
                 //使用AVPacket进行推流，目前这种模式下不能对数据帧进行处理
                 if (usePacket) {
-                    avcodec.AVPacket pkt = null;
+                    AVPacket pkt = null;
                     pkt = grabber.grabPacket();
                     if (pkt==null || pkt.size()<=0 || pkt.data()==null) {
                         nullFrames++;
@@ -229,7 +230,7 @@ public class RtspVideoAdapter extends VideoAdapter{
                     //都需要创建一个新的ref。由于JavaCV中的方法自带unref，如果没有创建
                     //ref，一个listener处理完后就有可能回收内存
                     for (Listener listener : listeners) {
-                        avcodec.AVPacket newPkt = avcodec.av_packet_alloc();
+                        AVPacket newPkt = avcodec.av_packet_alloc();
                         avcodec.av_packet_ref(newPkt, pkt);
                         PacketEvent grabEvent = new PacketEvent(this, newPkt);
                         listener.fireAfterEventInvoked(grabEvent);
@@ -263,7 +264,6 @@ public class RtspVideoAdapter extends VideoAdapter{
                         }
                         capture.set(false);
                     }
-
                     GrabEvent grabEvent = new GrabEvent(this, newFrame, grabber.getTimestamp());
                     for (Listener listener : listeners) {
                         listener.fireAfterEventInvoked(grabEvent);
@@ -588,7 +588,7 @@ public class RtspVideoAdapter extends VideoAdapter{
 
         @Override
         public Boolean call() {
-            opencv_core.Mat mat = converter.convertToMat(frame);
+            Mat mat = converter.convertToMat(frame);
             frame = null;
             long time = System.currentTimeMillis();
             log.info("Video capture is storing in [{}]!", this.capturesPath);

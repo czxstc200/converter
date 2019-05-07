@@ -1,8 +1,7 @@
 package cn.edu.bupt.stream.event;
 
-import org.bytedeco.javacpp.avcodec;
-import org.bytedeco.javacv.Frame;
-import org.bytedeco.javacpp.avcodec.AVPacket;
+
+import org.bytedeco.ffmpeg.avcodec.AVPacket;
 
 /**
  * @Description: PacketEvent，存储AVPacket

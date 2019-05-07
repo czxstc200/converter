@@ -5,12 +5,10 @@ import cn.edu.bupt.stream.event.GrabEvent;
 import cn.edu.bupt.stream.event.PacketEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
-import org.bytedeco.javacpp.avcodec;
-import org.bytedeco.javacpp.avformat;
+import org.bytedeco.ffmpeg.avformat.AVFormatContext;
+import org.bytedeco.ffmpeg.global.avcodec;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
-import org.bytedeco.javacv.Frame;
-import org.bytedeco.javacv.FrameRecorder;
 
 import java.util.concurrent.*;
 
@@ -38,7 +36,7 @@ public class RecordListener implements Listener {
     private long offerTimeout;
     private long startTimestamp = -1;
     private boolean usePacket;
-    private avformat.AVFormatContext fc;
+    private AVFormatContext fc;
 
     public RecordListener(String listenerName){
         this.executor = Executors.newScheduledThreadPool(1,new BasicThreadFactory.Builder().namingPattern(listenerName+"-Rec").daemon(false).build());
