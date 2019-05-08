@@ -41,9 +41,17 @@ public class RecordListener extends RtspListener {
     private boolean usePacket;
     private final RtspVideoAdapter rtspVideoAdapter;
     private AVFormatContext fc;
+    /**
+     * Listener的fire失败次数
+     */
+    private int failCount = 0;
+    /**
+     * 失败次数的阈值，达到这个数目会从adapter中移除该listener
+     */
+    private int FAIL_COUNT_THRESHOLD = 5;
 
     private RecordListener(String listenerName, RtspVideoAdapter rtspVideoAdapter){
-        this.executor = Executors.newScheduledThreadPool(1,new BasicThreadFactory.Builder().namingPattern(listenerName+"-Rec").daemon(false).build());
+        this.executor = Executors.newScheduledThreadPool(1,new BasicThreadFactory.Builder().namingPattern(listenerName+"-%d").daemon(false).build());
         this.isStarted = false;
         this.isInit = false;
         this.usePacket = false;
@@ -211,9 +219,25 @@ public class RecordListener extends RtspListener {
     public void fireAfterEventInvoked(Event event) throws Exception{
         if(isStarted) {
             pushEvent(event);
+            failCount = 0;
+        }else if(isInit){
+            start();
+            if(isStarted) {
+                pushEvent(event);
+                failCount = 0;
+            }else {
+                failCount++;
+                if(failCount>=5){
+                    rtspVideoAdapter.removeListener(this);
+                    close();
+                    log.error("Record Listener [{}] error. Remove it",name);
+                }else{
+                    log.warn("Failed to fire the listener [{}]",name);
+                }
+            }
         }else{
-            log.warn("Failed to fire the listener [{}].You should start this file recorder before you start recording",name);
-            throw new Exception("Failed to fire the listener");
+            rtspVideoAdapter.removeListener(this);
+            log.error("Record Listener [{}] not initialized. Remove it",name);
         }
     }
 

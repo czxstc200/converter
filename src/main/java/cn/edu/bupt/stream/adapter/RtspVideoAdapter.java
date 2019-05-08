@@ -51,7 +51,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * 是否使用AVPacket的方式直接进行拉流与推流
      */
     private boolean usePacket;
-    private OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
+    private static final OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
     private ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Capture-pool-%d").daemon(false).build());
     /**
      * 用于获取capture的future
@@ -265,9 +265,11 @@ public class RtspVideoAdapter extends VideoAdapter{
             }
         }catch (Exception e){
             log.warn("Adapter [{}] throws an Exception!",name);
+            e.printStackTrace();
         }finally {
             grabber.stop();
             closeAllListeners();
+            VideoAdapterManagement.stopAdapter(this);
             log.info("Grabber ends for video rtmp:{}",rtmpPath);
         }
     }

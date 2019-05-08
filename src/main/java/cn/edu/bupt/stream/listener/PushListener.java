@@ -32,13 +32,13 @@ public class PushListener extends RtspListener {
 
     private String name;
     private FFmpegFrameGrabber grabber;
-    private static ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Push-pool-%d").daemon(true).build());
+    private static ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Push-Pool-%d").daemon(false).build());
     private FFmpegFrameRecorder pushRecorder;
     private int queueThreshold;
     private String rtmpPath;
     private boolean isInit;
     private boolean isStarted;
-    private BlockingQueue<Event> queue;
+    private static BlockingQueue<Event> queue = new LinkedBlockingQueue<>();
     private long offerTimeout;
     private boolean usePacket;
     private final RtspVideoAdapter rtspVideoAdapter;
@@ -129,9 +129,6 @@ public class PushListener extends RtspListener {
     @Override
     public void close(){
         try {
-            if(executor!=null){
-                executor.shutdown();
-            }
             pushRecorder.stop();
             isStarted = false;
             log.info("Push recorder stopped");
@@ -217,29 +214,20 @@ public class PushListener extends RtspListener {
      * @return void
      */
     public void pushEvent(Event event){
-        if(event instanceof GrabEvent){
-
-            //如果queue为空，初始化它
-            if(this.queue == null){
-                log.trace("Creating event queue");
-                this.queue = new LinkedBlockingQueue<>();
+        //将event推入queue
+        try{
+            if(this.queue.size() > this.queueThreshold) {
+                log.warn("Queue size is greater than threshold. queue size={} threshold={} timestamp={}", Integer.valueOf(this.queue.size()), Integer.valueOf(this.queueThreshold),System.currentTimeMillis());
             }
-
-            //将event推入queue
-            try{
-                if(this.queue.size() > this.queueThreshold) {
-                    log.warn("Queue size is greater than threshold. queue size={} threshold={} timestamp={}", Integer.valueOf(this.queue.size()), Integer.valueOf(this.queueThreshold),System.currentTimeMillis());
-                }
-                if(this.queue.size() < 2 * this.queueThreshold){
-                    this.queue.offer(event, this.offerTimeout, TimeUnit.MILLISECONDS);
-                    log.trace("Inserting event into queue[size:{}]",queue.size());
-                }else {
-                    log.warn("clear queue");
-                    this.queue.clear();
-                }
-            }catch (Exception e){
-                log.warn("Event data was not accepted by the queue");
+            if(this.queue.size() < 2 * this.queueThreshold){
+                this.queue.offer(event, this.offerTimeout, TimeUnit.MILLISECONDS);
+                log.trace("Inserting event into queue[size:{}]",queue.size());
+            }else {
+                log.warn("clear queue");
+                this.queue.clear();
             }
+        }catch (Exception e){
+            log.warn("Event data was not accepted by the queue");
         }
     }
 }
