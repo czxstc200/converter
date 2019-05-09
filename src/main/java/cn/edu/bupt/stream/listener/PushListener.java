@@ -148,35 +148,19 @@ public class PushListener extends RtspListener {
     @Override
     public void fireAfterEventInvoked(Event event) throws Exception{
         if(isStarted) {
-            if (event instanceof PacketEvent) {
-                boolean success = false;
-                AVPacket pkt = ((PacketEvent) event).getFrame();
-                try {
-                    success = pushRecorder.recordPacket(pkt);
-                } catch (FrameRecorder.Exception e) {
-                    log.warn("Push event failed for pushRecorder {}", getName());
-                } finally {
-                    if (!success) {
-                        avcodec.av_packet_unref(pkt);
-                    }
+            try {
+                if (event instanceof PacketEvent) {
+                    pushRecorder.recordPacket(((PacketEvent) event).getFrame());
+                } else if (event instanceof GrabEvent) {
+                    pushRecorder.record(((GrabEvent) event).getFrame());
+                } else {
+                    throw new Exception("Unknown event type!");
                 }
-            } else if (event instanceof GrabEvent) {
-                Frame frame = ((GrabEvent) event).getFrame();
-                try {
-                    pushRecorder.record(frame);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    log.warn("Push event failed for pushRecorder {}", getName());
-                }finally {
-                    Map<GrabEvent, AtomicInteger> map = rtspVideoAdapter.getFrameFinishCount();
-                    int count = map.get(event).decrementAndGet();
-                    if(count==0){
-                        ((GrabEvent) event).getPointerScope().deallocate();
-                        map.remove(event);
-                    }
-                }
-            }else{
-                throw new Exception("Unknow event type!");
+            }catch (Exception e){
+                e.printStackTrace();
+                log.warn("Push event failed for pushRecorder {}", getName());
+            }finally {
+                rtspVideoAdapter.unref(event);
             }
         }else {
             log.warn("Failed to fire the listener [{}].You should start this push recorder before you start pushing",name);

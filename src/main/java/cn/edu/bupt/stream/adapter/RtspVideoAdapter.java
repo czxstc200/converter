@@ -1,5 +1,6 @@
 package cn.edu.bupt.stream.adapter;
 
+import cn.edu.bupt.stream.event.Event;
 import cn.edu.bupt.stream.event.GrabEvent;
 import cn.edu.bupt.stream.event.PacketEvent;
 import cn.edu.bupt.stream.listener.Listener;
@@ -52,7 +53,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      */
     private boolean usePacket;
     private static final OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
-    private ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Rtsp-pool-%d").daemon(false).build());
+    private static ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Rtsp-pool-%d").daemon(false).build());
     /**
      * 用于获取capture的future
      */
@@ -60,7 +61,7 @@ public class RtspVideoAdapter extends VideoAdapter{
     /**
      * 用于记录每一个frame需要完成的listeners个数，在全部listener完成任务后，调用PointerScope进行内存回收
      */
-    private Map<GrabEvent, AtomicInteger> frameFinishCount = new HashMap<>();
+    private Map<Event, AtomicInteger> frameFinishCount = new HashMap<>();
     private Future<Boolean> captureFuture;
 
     public RtspVideoAdapter(){
@@ -125,7 +126,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         return rtmpPath;
     }
 
-    public Map<GrabEvent, AtomicInteger> getFrameFinishCount() {
+    public Map<Event, AtomicInteger> getFrameFinishCount() {
         return frameFinishCount;
     }
 
@@ -203,8 +204,14 @@ public class RtspVideoAdapter extends VideoAdapter{
 
                 //使用AVPacket进行推流，目前这种模式下不能对数据帧进行处理
                 if (usePacket) {
-                    AVPacket pkt;
-                    pkt = grabber.grabPacket();
+                    AVPacket pkt = null;
+                    try {
+                        pkt = grabber.grabPacket();
+                    }catch (Exception e){
+                        log.warn("Grab Packet Exception!");
+                    }
+
+                    // 检查是否接收到数据
                     if (pkt==null || pkt.size()<=0 || pkt.data()==null) {
                         nullFrames++;
                         log.info("Null Frame in [{}]", rtmpPath);
@@ -219,13 +226,17 @@ public class RtspVideoAdapter extends VideoAdapter{
                         nullFrames = 0;
                     }
 
+                    PacketEvent.CountEvent countEvent = new PacketEvent.CountEvent();
+                    frameFinishCount.put(countEvent,new AtomicInteger(listeners.size()));
+
                     //AVPacket采用计数法进行内存的回收，因此在每一个listener进行处理时，
                     //都需要创建一个新的ref。由于JavaCV中的方法自带unref，如果没有创建
-                    //ref，一个listener处理完后就有可能回收内存
+                    //ref，一个listener处理完后就有可能回收内存。为了保险起见，再自己实现了一个
+                    //Unref的逻辑
                     for (Listener listener : listeners) {
                         AVPacket newPkt = avcodec.av_packet_alloc();
                         avcodec.av_packet_ref(newPkt, pkt);
-                        PacketEvent grabEvent = new PacketEvent(this, newPkt);
+                        PacketEvent grabEvent = new PacketEvent(this, newPkt,countEvent);
                         listener.fireAfterEventInvoked(grabEvent);
                     }
                     avcodec.av_packet_unref(pkt);
@@ -246,18 +257,19 @@ public class RtspVideoAdapter extends VideoAdapter{
                         }
                         continue;
                     }
+
                     // PointScope用于释放frame的内存
-                    // Pointer会自动attach到PointerScope上
+                    // Pointer会自动attach到PointerScope上。
+                    // 同样，clone获得的frame需要进行unref并且释放内存
                     PointerScope pointerScope = new PointerScope();
                     Frame newFrame = frame.clone();
+
                     //进行抓拍操作
                     if (capture.get() && newFrame != null) {
-                        if (judeDirExists(capturesPath)) {
-                            captureFuture = executor.submit(new CaptureTask(newFrame, capturesPath));
-                            countDownLatch.countDown();
-                        }
+                        captureFuture = executor.submit(new CaptureTask(newFrame, capturesPath));
                         capture.set(false);
                     }
+
                     GrabEvent grabEvent = new GrabEvent(this,newFrame,pointerScope,grabber.getTimestamp());
                     frameFinishCount.put(grabEvent,new AtomicInteger(listeners.size()));
                     for (Listener listener : listeners) {
@@ -399,7 +411,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      */
     private void grabberInit(){
         try {
-            // 使用rtsp的时候需要使用 FFmpegFrameGrabber，不能再用 FrameGrabber
+            // 使用rtsp的时候需要使用 FFmpegFrameGrabber，不能再用FrameGrabber
             FFmpegFrameGrabber grabber = FFmpegFrameGrabber.createDefault(rtspPath);
             // 使用tcp的方式，不然会丢包很严重
             grabber.setOption("rtsp_transport", "tcp");
@@ -568,6 +580,14 @@ public class RtspVideoAdapter extends VideoAdapter{
         return fileList;
     }
 
+    /**
+     * 通过unref将内存引用减少1，并且引用为0时进行回收
+     * @param event
+     */
+    public void unref(Event event){
+        executor.submit(new UnrefTask(frameFinishCount,event));
+    }
+
     // 抓拍任务
     class CaptureTask implements Callable<Boolean> {
 
@@ -582,11 +602,57 @@ public class RtspVideoAdapter extends VideoAdapter{
 
         @Override
         public Boolean call() {
-            Mat mat = converter.convertToMat(frame);
-            frame = null;
-            long time = System.currentTimeMillis();
-            log.info("Video capture is storing in [{}]!", this.capturesPath);
-            return opencv_imgcodecs.imwrite(capturesPath + time + ".png", mat);
+            boolean dirExists = false;
+            try{
+                dirExists = judeDirExists(capturesPath);
+            }catch (Exception e){
+                e.printStackTrace();
+                log.warn("judeDirExists() exception");
+            }
+            if (dirExists) {
+                Mat mat = converter.convertToMat(frame);
+                frame = null;
+                long time = System.currentTimeMillis();
+                log.info("Video capture is storing in [{}]!", this.capturesPath);
+                boolean res = opencv_imgcodecs.imwrite(capturesPath + time + ".png", mat);
+                countDownLatch.countDown();
+                return res;
+            }else{
+                countDownLatch.countDown();
+                return false;
+            }
+        }
+    }
+
+    // Unref任务
+    class UnrefTask implements Runnable{
+
+        final Map<Event,AtomicInteger> map;
+
+        final Event event;
+
+        UnrefTask(Map<Event, AtomicInteger> map, Event event) {
+            this.map = map;
+            this.event = event;
+        }
+
+        @Override
+        public void run() {
+            if(event instanceof GrabEvent){
+                int count = map.get(event).decrementAndGet();
+                if(count==0) {
+                    ((GrabEvent) event).getPointerScope().deallocate();
+                    map.remove(event);
+                }
+            }else if(event instanceof PacketEvent){
+                int count = map.get(((PacketEvent) event).getCountEvent()).decrementAndGet();
+                if(count==0){
+                    avcodec.av_packet_free(((PacketEvent) event).getFrame());
+                    map.remove(((PacketEvent) event).getCountEvent());
+                }
+            }else{
+                log.warn("Unknown event type!");
+            }
         }
     }
 }

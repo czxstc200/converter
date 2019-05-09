@@ -11,7 +11,15 @@ import org.bytedeco.ffmpeg.avcodec.AVPacket;
  */
 public class PacketEvent extends Event{
 
-    private AVPacket frame;
+    private final AVPacket frame;
+
+    private CountEvent countEvent;
+
+    public PacketEvent(Object source, AVPacket frame,CountEvent countEvent) {
+        super(source);
+        this.frame = frame;
+        this.countEvent = countEvent;
+    }
 
     public PacketEvent(Object source, AVPacket frame) {
         super(source);
@@ -22,8 +30,20 @@ public class PacketEvent extends Event{
         return frame;
     }
 
-    public void setFrame(AVPacket frame) {
-        this.frame = frame;
+    public CountEvent getCountEvent() {
+        return countEvent;
+    }
+
+    public PacketEvent setCountEvent(CountEvent countEvent) {
+        this.countEvent = countEvent;
+        return this;
+    }
+
+    public static class CountEvent extends Event{
+
+        public CountEvent() {
+            super(new Object());
+        }
     }
 
 }

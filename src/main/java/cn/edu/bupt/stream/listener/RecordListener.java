@@ -140,44 +140,32 @@ public class RecordListener extends RtspListener {
         }else{
             while(!queue.isEmpty()){
                 Event event = queue.poll();
-                if(event instanceof GrabEvent) {
-                    long timestamp = ((GrabEvent)event).getTimestamp();
-                    if (startTimestamp == -1) {
-                        startTimestamp = timestamp;
-                        timestamp = 0;
-                        fileRecorder.setTimestamp(timestamp);
-                    } else {
-                        timestamp -= startTimestamp;
-                    }
-                    if(timestamp>fileRecorder.getTimestamp()){
-                        fileRecorder.setTimestamp(timestamp);
-                    }
-                    try {
+                try {
+                    if (event instanceof GrabEvent) {
+
+                        // 时间戳设置
+                        long timestamp = ((GrabEvent) event).getTimestamp();
+                        if (startTimestamp == -1) {
+                            startTimestamp = timestamp;
+                            timestamp = 0;
+                            fileRecorder.setTimestamp(timestamp);
+                        } else {
+                            timestamp -= startTimestamp;
+                        }
+                        if (timestamp > fileRecorder.getTimestamp()) {
+                            fileRecorder.setTimestamp(timestamp);
+                        }
+
                         fileRecorder.record(((GrabEvent) event).getFrame());
-                    }catch (Exception e) {
-                        log.warn("Record event failed for Recorder {}", getName());
-                    }finally {
-                        Map<GrabEvent, AtomicInteger> map = rtspVideoAdapter.getFrameFinishCount();
-                        int count = map.get(event).decrementAndGet();
-                        if(count==0){
-                            ((GrabEvent) event).getPointerScope().deallocate();
-                            map.remove(event);
-                        }
-                    }
-                }else if(event instanceof PacketEvent){
-                    boolean success = false;
-                    try {
+                    } else if (event instanceof PacketEvent) {
                         fileRecorder.recordPacket(((PacketEvent) event).getFrame());
-                        success = true;
-                    }catch (Exception e){
-                        log.warn("Record event failed for Recorder : {}", getName());
-                    }finally {
-                        if(!success){
-                            avcodec.av_packet_unref(((PacketEvent) event).getFrame());
-                        }
+                    } else {
+                        log.warn("Unknown event type!");
                     }
-                }else{
-                    log.warn("Unknown event type!");
+                }catch (Exception e) {
+                    log.warn("Record event failed for Recorder : {}", getName());
+                }finally {
+                    rtspVideoAdapter.unref(event);
                 }
             }
         }
