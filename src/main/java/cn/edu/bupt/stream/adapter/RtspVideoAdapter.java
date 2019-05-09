@@ -52,7 +52,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      */
     private boolean usePacket;
     private static final OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
-    private ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Capture-pool-%d").daemon(false).build());
+    private ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Rtsp-pool-%d").daemon(false).build());
     /**
      * 用于获取capture的future
      */
@@ -195,8 +195,10 @@ public class RtspVideoAdapter extends VideoAdapter{
 
                 //时间超过零点进行视频录像的切分
                 if (isRecording && timestamp < getZeroTimestamp()) {
-                    timestamp = getZeroTimestamp();
-                    restartRecording(videoPath + generateFilenameByDate() + ".flv");
+                    executor.submit(()->{
+                        timestamp = getZeroTimestamp();
+                        restartRecording(videoPath + generateFilenameByDate() + ".flv");
+                    });
                 }
 
                 //使用AVPacket进行推流，目前这种模式下不能对数据帧进行处理
@@ -443,7 +445,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @param [filename]
      * @return void
      */
-    private void restartRecording(String filename){
+    public void restartRecording(String filename){
         log.info("Restart recording. New filename is [{}]",filename);
         stopRecording();
         startRecording(filename);

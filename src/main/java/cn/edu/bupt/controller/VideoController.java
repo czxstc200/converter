@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 import static cn.edu.bupt.hikVision.linux.HikUtil.hCNetSDK;
+import static cn.edu.bupt.stream.Constants.ROOT_DIR;
+
 import cn.edu.bupt.hikVision.linux.HikUtil;
 
 import javax.servlet.http.HttpServletResponse;
@@ -150,6 +152,21 @@ public class VideoController {
         }else {
             videoAdapter.startRecording();
             return "开始录制";
+        }
+    }
+
+    @ApiOperation("视频录制")
+    @RequestMapping(value = "/re", method = RequestMethod.GET)
+    @ResponseBody
+    public String restartRecord(@RequestParam String rtmp) throws Exception{
+        RtspVideoAdapter videoAdapter = (RtspVideoAdapter)VideoAdapterManagement.getVideoAdapter(rtmp);
+        boolean isRecording = videoAdapter.isRecording();
+        setHeader(response);
+        if(isRecording){
+            videoAdapter.restartRecording(ROOT_DIR+System.currentTimeMillis()+".flv");
+            return "成功";
+        }else {
+            return "失败";
         }
     }
 
