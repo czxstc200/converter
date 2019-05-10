@@ -35,7 +35,10 @@ public class HikUtil {
             System.out.println("注册失败");
             return false;
         }
-        System.out.println(lUserID.intValue());
+        System.out.println("lUserID : " + lUserID.intValue());
+        System.out.println("SerialNumber : "+new String(m_strDeviceInfo.sSerialNumber));
+        System.out.println("Res1 : "+new String(m_strDeviceInfo.byRes1));
+        System.out.println("toString : "+m_strDeviceInfo.toString());
         return true;
     }
 
@@ -54,6 +57,9 @@ public class HikUtil {
             System.out.println("注册失败");
             return false;
         }
+        System.out.println("SerialNumber : "+new String(m_strDeviceInfo.sSerialNumber));
+        System.out.println("Res1 : "+new String(m_strDeviceInfo.byRes1));
+        System.out.println("toString : "+m_strDeviceInfo.toString());
         return true;
     }
 
