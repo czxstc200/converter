@@ -266,6 +266,16 @@ public class VideoController {
         return true;
     }
 
+    @RequestMapping(value = "/control", method = RequestMethod.GET)
+    @ResponseBody
+    public boolean setEffect(@RequestParam int channel,
+                             @RequestParam int bright,@RequestParam int contrast,@RequestParam int saturation,@RequestParam int hue) throws Exception{
+        setHeader(response);
+        HikUtil.setEffect(channel,bright,contrast,saturation,hue);
+        setHeader(response);
+        return true;
+    }
+
     public void setHeader(HttpServletResponse response){
         response.setHeader("Access-Control-Allow-Origin", "*");
         response.setHeader("Access-Control-Allow-Method", "POST,GET");

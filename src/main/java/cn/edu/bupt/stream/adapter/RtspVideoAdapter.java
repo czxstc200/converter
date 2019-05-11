@@ -239,7 +239,6 @@ public class RtspVideoAdapter extends VideoAdapter{
                         PacketEvent grabEvent = new PacketEvent(this, newPkt,countEvent);
                         listener.fireAfterEventInvoked(grabEvent);
                     }
-                    avcodec.av_packet_unref(pkt);
                 } else {//使用传统方式进行处理，效率较低（增加了编解码的时间），但是可以对画面frame进行处理
                     Frame frame = null;
                     try {

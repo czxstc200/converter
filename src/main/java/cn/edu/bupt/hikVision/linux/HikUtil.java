@@ -63,6 +63,12 @@ public class HikUtil {
         return true;
     }
 
+    public static boolean setEffect(int channel,int bright, int contrast,int saturation,int hue){
+        hCNetSDK.NET_DVR_SetVideoEffect(lUserID,new NativeLong(channel),bright,contrast,saturation,hue);
+        System.out.println("control2 res code : "+hCNetSDK.NET_DVR_GetLastError());
+        return true;
+    }
+
     public static void main(String[] args) {
         System.out.println(HikUtil.subscribe());
     }
