@@ -266,7 +266,7 @@ public class VideoController {
         return true;
     }
 
-    @RequestMapping(value = "/control", method = RequestMethod.GET)
+    @RequestMapping(value = "/setEffect", method = RequestMethod.GET)
     @ResponseBody
     public boolean setEffect(@RequestParam int channel,
                              @RequestParam int bright,@RequestParam int contrast,@RequestParam int saturation,@RequestParam int hue) throws Exception{
