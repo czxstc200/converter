@@ -48,6 +48,7 @@ public class RtspVideoAdapter extends VideoAdapter{
     private List<Listener> listeners;
     private boolean save;
     private AtomicBoolean capture = new AtomicBoolean(false);
+    private final int NULL_FRAME_THRESHOLD = 512;
     /**
      * 是否使用AVPacket的方式直接进行拉流与推流
      */
@@ -214,12 +215,13 @@ public class RtspVideoAdapter extends VideoAdapter{
                     // 检查是否接收到数据
                     if (pkt==null || pkt.size()<=0 || pkt.data()==null) {
                         nullFrames++;
-                        log.info("Null Frame in [{}]", rtmpPath);
-                        //连续5帧都是null时判断已经停止推流
-                        if (nullFrames >= 5) {
+                        if(nullFrames%50==0){
+                            log.info("Null Frame number is [{}] and rtmp : [{}]",nullFrames, rtmpPath);
+                        }
+                        //连续帧都是null时判断已经停止推流
+                        if (nullFrames >= NULL_FRAME_THRESHOLD) {
                             stop();
                             log.info("Video[{}] stopped!", rtmpPath);
-                            break;
                         }
                         continue;
                     } else {
@@ -231,7 +233,7 @@ public class RtspVideoAdapter extends VideoAdapter{
 
                     //AVPacket采用计数法进行内存的回收，因此在每一个listener进行处理时，
                     //都需要创建一个新的ref。由于JavaCV中的方法自带unref，如果没有创建
-                    //ref，一个listener处理完后就有可能回收内存。为了保险起见，再自己实现了一个
+                    //ref，一个listener处理完后就有可能回收内存。为了保险起见，自己实现了一个
                     //Unref的逻辑
                     for (Listener listener : listeners) {
                         AVPacket newPkt = avcodec.av_packet_alloc();
@@ -248,11 +250,12 @@ public class RtspVideoAdapter extends VideoAdapter{
                     }
                     if (frame == null || frame.image==null) {
                         nullFrames++;
-                        log.info("Null Frame in [{}]", rtmpPath);
-                        if (nullFrames >= 5) {
+                        if(nullFrames%50==0){
+                            log.info("Null Frame number is [{}] and rtmp : [{}]",nullFrames, rtmpPath);
+                        }
+                        if (nullFrames >= NULL_FRAME_THRESHOLD) {
                             stop();
                             log.info("Video[{}] stopped!", rtmpPath);
-                            break;
                         }
                         continue;
                     }

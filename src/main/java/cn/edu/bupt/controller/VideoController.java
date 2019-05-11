@@ -138,6 +138,13 @@ public class VideoController {
         }
     }
 
+    @ApiOperation(value = "画面抓拍")
+    @RequestMapping(value = "/capture2", method = RequestMethod.GET)
+    @ResponseBody
+    public Boolean capture2() {
+        return HikUtil.capture("/Users/czx/Downloads/"+System.currentTimeMillis()+".jpeg");
+    }
+
 
     @ApiOperation("视频录制")
     @RequestMapping(value = "/record", method = RequestMethod.GET)
@@ -258,10 +265,10 @@ public class VideoController {
         }
         NativeLong nativeLong = new NativeLong(1L);
         hCNetSDK.NET_DVR_PTZControl_Other(HikUtil.lUserID,nativeLong,command,0);
-        System.out.println("control1 res code : "+hCNetSDK.NET_DVR_GetLastError());
+        System.out.println("res code : "+hCNetSDK.NET_DVR_GetLastError());
         Thread.sleep(2000);
         hCNetSDK.NET_DVR_PTZControl_Other(HikUtil.lUserID,nativeLong,command,1);
-        System.out.println("control2 res code : "+hCNetSDK.NET_DVR_GetLastError());
+        System.out.println("res code : "+hCNetSDK.NET_DVR_GetLastError());
         setHeader(response);
         return true;
     }

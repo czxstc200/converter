@@ -7,13 +7,10 @@ import cn.edu.bupt.stream.event.PacketEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.bytedeco.ffmpeg.avformat.AVFormatContext;
-import org.bytedeco.ffmpeg.global.avcodec;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
 
-import java.util.Map;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static cn.edu.bupt.stream.Constants.RECORD_LISTENER_NAME;
 

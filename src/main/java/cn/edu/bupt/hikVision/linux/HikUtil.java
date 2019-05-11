@@ -2,6 +2,7 @@ package cn.edu.bupt.hikVision.linux;
 
 
 import com.sun.jna.NativeLong;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @Description: 海康视频控制
@@ -9,6 +10,7 @@ import com.sun.jna.NativeLong;
  * @CreateDate: 2018/11/30 15:55
  * @Version: 1.0
  */
+@Slf4j
 public class HikUtil {
     public static HCNetSDK hCNetSDK = HCNetSDK.INSTANCE;
 
@@ -18,35 +20,15 @@ public class HikUtil {
 
     public static NativeLong lUserID;
 
-    public static NativeLong lPreviewHandle;
-
     public static boolean subscribe(){
-        boolean initSuc = hCNetSDK.NET_DVR_Init();
-        if (initSuc != true)
-        {
-            System.out.println("初始化失败");
-            return false;
-        }
-
-        m_strDeviceInfo = new HCNetSDK.NET_DVR_DEVICEINFO_V30();
-        lUserID = hCNetSDK.NET_DVR_Login_V30("10.112.239.157",(short)8000,"admin","LITFYL",m_strDeviceInfo);
-        if (lUserID.intValue() == -1)
-        {
-            System.out.println("注册失败");
-            return false;
-        }
-        System.out.println("lUserID : " + lUserID.intValue());
-        System.out.println("SerialNumber : "+new String(m_strDeviceInfo.sSerialNumber));
-        System.out.println("Res1 : "+new String(m_strDeviceInfo.byRes1));
-        System.out.println("toString : "+m_strDeviceInfo.toString());
-        return true;
+        return subscribe("10.112.239.157",8000);
     }
 
     public static boolean subscribe(String ip, int port){
         boolean initSuc = hCNetSDK.NET_DVR_Init();
         if (initSuc != true)
         {
-            System.out.println("初始化失败");
+            log.error("初始化失败");
             return false;
         }
 
@@ -54,22 +36,26 @@ public class HikUtil {
         lUserID = hCNetSDK.NET_DVR_Login_V30(ip,(short)port,"admin","LITFYL",m_strDeviceInfo);
         if (lUserID.intValue() == -1)
         {
-            System.out.println("注册失败");
+            log.error("注册失败");
             return false;
         }
-        System.out.println("SerialNumber : "+new String(m_strDeviceInfo.sSerialNumber));
-        System.out.println("Res1 : "+new String(m_strDeviceInfo.byRes1));
-        System.out.println("toString : "+m_strDeviceInfo.toString());
+        log.info("SerialNumber : "+new String(m_strDeviceInfo.sSerialNumber));
         return true;
     }
 
     public static boolean setEffect(int channel,int bright, int contrast,int saturation,int hue){
         hCNetSDK.NET_DVR_SetVideoEffect(lUserID,new NativeLong(channel),bright,contrast,saturation,hue);
-        System.out.println("control2 res code : "+hCNetSDK.NET_DVR_GetLastError());
+        log.info("SetEffect res code : "+hCNetSDK.NET_DVR_GetLastError());
         return true;
     }
 
-    public static void main(String[] args) {
-        System.out.println(HikUtil.subscribe());
+    public static boolean capture(String filename){
+        HCNetSDK.NET_DVR_JPEGPARA jpegpara = new HCNetSDK.NET_DVR_JPEGPARA();
+        jpegpara.wPicQuality = 0;
+        jpegpara.wPicSize = 0;
+        boolean res = hCNetSDK.NET_DVR_CaptureJPEGPicture(lUserID,new NativeLong(1),jpegpara,filename);
+        log.info("capture res code : "+hCNetSDK.NET_DVR_GetLastError());
+        return res;
     }
+
 }
