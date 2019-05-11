@@ -142,7 +142,7 @@ public class VideoController {
     @RequestMapping(value = "/capture2", method = RequestMethod.GET)
     @ResponseBody
     public Boolean capture2() {
-        return HikUtil.capture("/Users/czx/Downloads/"+System.currentTimeMillis()+".jpeg");
+        return HikUtil.capture(ROOT_DIR+System.currentTimeMillis()+".jpeg");
     }
 
 
