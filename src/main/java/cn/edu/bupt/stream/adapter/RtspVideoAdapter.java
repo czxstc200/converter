@@ -285,8 +285,8 @@ public class RtspVideoAdapter extends VideoAdapter{
             log.warn("Adapter [{}] throws an Exception!",name);
             e.printStackTrace();
         }finally {
-            grabber.stop();
             closeAllListeners();
+            grabber.stop();
             VideoAdapterManagement.stopAdapter(this);
             log.info("Grabber ends for video rtmp:{}",rtmpPath);
         }

@@ -48,8 +48,7 @@ public class PushListener extends RtspListener {
         this.usePacket = false;
         this.name = listenerName;
         this.rtspVideoAdapter = rtspVideoAdapter;
-        //以下配置暂时无用
-        this.queueThreshold = 240;
+        this.queueThreshold = 1024;
         this.offerTimeout = 100L;
     }
 
@@ -149,22 +148,6 @@ public class PushListener extends RtspListener {
         if(isStarted) {
             ((RTSPEvent)event).setListener(this);
             pushEvent(event);
-//            boolean success = false;
-//            try {
-//                if (event instanceof PacketEvent) {
-//                    success = pushRecorder.recordPacket(((PacketEvent) event).getFrame());
-//                } else if (event instanceof GrabEvent) {
-//                    pushRecorder.record(((GrabEvent) event).getFrame());
-//                    success = true;
-//                } else {
-//                    throw new Exception("Unknown event type!");
-//                }
-//            }catch (Exception e){
-//                e.printStackTrace();
-//                log.warn("Push event failed for pushRecorder {}", getName());
-//            }finally {
-//                rtspVideoAdapter.unref(event,success);
-//            }
         }else {
             log.warn("Failed to fire the listener [{}].You should start this push recorder before you start pushing",name);
             throw new Exception("Failed to fire the listener!");
@@ -194,7 +177,7 @@ public class PushListener extends RtspListener {
 
 
     /**
-     * @Description 将event推入队列中，通过新线程进行处理,目前暂时无用
+     * @Description 将event推入队列中，通过新线程进行处理
      * @author czx
      * @date 2018-12-04 13:13
      * @param [event]
@@ -226,11 +209,11 @@ public class PushListener extends RtspListener {
                     try {
                         while (true) {
                             Event event = queue.take();
-                            Listener listener = ((RTSPEvent) event).getListener();
-                            if (!((PushListener) listener).isStarted) {
+                            PushListener listener = (PushListener) ((RTSPEvent) event).getListener();
+                            if (!listener.isStarted) {
                                 continue;
                             }
-                            FFmpegFrameRecorder pushRecorder = ((PushListener) listener).pushRecorder;
+                            FFmpegFrameRecorder pushRecorder = listener.pushRecorder;
                             boolean success = false;
                             try {
                                 if (event instanceof PacketEvent) {
@@ -245,7 +228,7 @@ public class PushListener extends RtspListener {
                                 e.printStackTrace();
                                 log.warn("Push event failed for pushRecorder {}", getName());
                             } finally {
-                                rtspVideoAdapter.unref(event, success);
+                                listener.rtspVideoAdapter.unref(event, success);
                             }
                             if(queue.isEmpty()&&!executorStarted.get()){
                                 break;

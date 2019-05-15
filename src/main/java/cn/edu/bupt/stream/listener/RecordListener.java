@@ -4,13 +4,18 @@ import cn.edu.bupt.stream.adapter.RtspVideoAdapter;
 import cn.edu.bupt.stream.event.Event;
 import cn.edu.bupt.stream.event.GrabEvent;
 import cn.edu.bupt.stream.event.PacketEvent;
+import cn.edu.bupt.stream.event.RTSPEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.bytedeco.ffmpeg.avformat.AVFormatContext;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static cn.edu.bupt.stream.Constants.RECORD_LISTENER_NAME;
 
@@ -25,19 +30,21 @@ import static cn.edu.bupt.stream.Constants.RECORD_LISTENER_NAME;
 public class RecordListener extends RtspListener {
 
     private String name;
-    private ScheduledExecutorService executor;
+    private static ScheduledExecutorService executor = Executors.newScheduledThreadPool(1,new BasicThreadFactory.Builder().namingPattern("Record-Pool-%d").daemon(false).build());
+    private static AtomicBoolean executorStarted = new AtomicBoolean(false);
     private FFmpegFrameRecorder fileRecorder;
     private int queueThreshold;
     private String fileName;
     private boolean isInit;
     private boolean isStarted;
     private boolean isStopped;
-    private BlockingQueue<Event> queue;
+    private static BlockingQueue<Event> queue = new LinkedBlockingQueue<>();
     private long offerTimeout;
     private long startTimestamp = -1;
     private boolean usePacket;
     private final RtspVideoAdapter rtspVideoAdapter;
     private AVFormatContext fc;
+    private CountDownLatch closeCountDownLatch = new CountDownLatch(1);
     /**
      * Listener的fire失败次数
      */
@@ -48,7 +55,6 @@ public class RecordListener extends RtspListener {
     private int FAIL_COUNT_THRESHOLD = 5;
 
     private RecordListener(String listenerName, RtspVideoAdapter rtspVideoAdapter){
-        this.executor = Executors.newScheduledThreadPool(1,new BasicThreadFactory.Builder().namingPattern(listenerName+"-%d").daemon(false).build());
         this.isStarted = false;
         this.isInit = false;
         this.usePacket = false;
@@ -57,7 +63,6 @@ public class RecordListener extends RtspListener {
         this.queueThreshold = 1024;
         this.offerTimeout = 100L;
         this.rtspVideoAdapter = rtspVideoAdapter;
-        this.queue = new LinkedBlockingQueue<>();
     }
 
     public RecordListener(String filename, FFmpegFrameGrabber grabber,RtspVideoAdapter rtspVideoAdapter) {
@@ -112,7 +117,9 @@ public class RecordListener extends RtspListener {
         try {
             if(isInit) {
                 fileRecorder.start(fc);
-                executor.scheduleAtFixedRate(this::executorTask,1,5,TimeUnit.SECONDS);
+                if(executorStarted.compareAndSet(false,true)) {
+                    executor.scheduleAtFixedRate(()->{executorTask();}, 1, 5, TimeUnit.SECONDS);
+                }
                 isStarted = true;
                 log.info("File recorder started");
             }else {
@@ -135,24 +142,29 @@ public class RecordListener extends RtspListener {
         if(queue==null){
             log.warn("Queue is null");
         }else{
+            Set<RecordListener> recordListeners = new HashSet<>();
             while(!queue.isEmpty()){
                 Event event = queue.poll();
+                RecordListener listener = (RecordListener)((RTSPEvent) event).getListener();
+                FFmpegFrameRecorder fileRecorder = listener.fileRecorder;
+                if(listener.isStopped){
+                    recordListeners.add(listener);
+                }
                 boolean success = false;
                 try {
                     if (event instanceof GrabEvent) {
                         // 时间戳设置
                         long timestamp = ((GrabEvent) event).getTimestamp();
-                        if (startTimestamp == -1) {
-                            startTimestamp = timestamp;
+                        if (listener.startTimestamp == -1) {
+                            listener.startTimestamp = timestamp;
                             timestamp = 0;
                             fileRecorder.setTimestamp(timestamp);
                         } else {
-                            timestamp -= startTimestamp;
+                            timestamp -= listener.startTimestamp;
                         }
                         if (timestamp > fileRecorder.getTimestamp()) {
                             fileRecorder.setTimestamp(timestamp);
                         }
-
                         fileRecorder.record(((GrabEvent) event).getFrame());
                         success = true;
                     } else if (event instanceof PacketEvent) {
@@ -161,9 +173,26 @@ public class RecordListener extends RtspListener {
                         log.warn("Unknown event type!");
                     }
                 }catch (Exception e) {
-                    log.warn("Record event failed for Recorder : {}", getName());
+                    e.printStackTrace();
+                    log.warn("Record event failed for Recorder : {}", listener.getName());
                 }finally {
-                    rtspVideoAdapter.unref(event,success);
+                    listener.rtspVideoAdapter.unref(event,success);
+                }
+            }
+            // 关闭recorder
+            if(!recordListeners.isEmpty()){
+                Iterator<RecordListener> iterator = recordListeners.iterator();
+                while(iterator.hasNext()){
+                    RecordListener recordListener = iterator.next();
+                    FFmpegFrameRecorder recorder = recordListener.fileRecorder;
+                    try {
+                        recorder.stop();
+                    }catch (Exception e){
+                        e.printStackTrace();
+                        log.warn("Failed to stop a file recorder");
+                    }finally {
+                        recordListener.closeCountDownLatch.countDown();
+                    }
                 }
             }
         }
@@ -181,12 +210,7 @@ public class RecordListener extends RtspListener {
         try {
             isStarted = false;
             isStopped = true;
-            if(executor!=null){
-                executor.shutdownNow();
-            }
-            // 存储queue中剩余的event
-            executorTask();
-            fileRecorder.stop();
+            closeCountDownLatch.await(10000L,TimeUnit.MILLISECONDS);
             log.info("File recorder stopped");
         }catch (Exception e){
             log.error("File recorder failed to close");
@@ -204,9 +228,10 @@ public class RecordListener extends RtspListener {
     @Override
     public void fireAfterEventInvoked(Event event) throws Exception{
         if(isStarted) {
+            ((RTSPEvent)event).setListener(this);
             pushEvent(event);
             failCount = 0;
-        }else if(isInit){
+        }else if(isInit&&!isStopped){
             start();
             if(isStarted) {
                 pushEvent(event);
@@ -255,18 +280,18 @@ public class RecordListener extends RtspListener {
      */
     private void pushEvent(Event event){
         //如果queue为null，初始化queue
-        if(this.queue == null){
+        if(queue == null){
             log.trace("Creating event queue");
-            this.queue = new LinkedBlockingQueue<>();
+            queue = new LinkedBlockingQueue<>();
         }
 
         //将event推入queue
         try{
-            if(this.queue.size() > this.queueThreshold) {
+            if(queue.size() > this.queueThreshold) {
                 log.warn("Queue size is greater than threshold. queue size={} threshold={}", this.queue.size(), this.queueThreshold);
             }
-            if(this.queue.size() < 2 * this.queueThreshold){
-                this.queue.offer(event, this.offerTimeout, TimeUnit.MILLISECONDS);
+            if(queue.size() < 2 * this.queueThreshold){
+                queue.offer(event, this.offerTimeout, TimeUnit.MILLISECONDS);
                 log.trace("Inserting event into queue[size:{}]",queue.size());
             }
         }catch (Exception e) {
