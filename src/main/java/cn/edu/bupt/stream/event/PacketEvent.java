@@ -9,7 +9,7 @@ import org.bytedeco.ffmpeg.avcodec.AVPacket;
  * @CreateDate: 2019-04-23 16:53
  * @Version: 1.0
  */
-public class PacketEvent extends Event{
+public class PacketEvent extends RTSPEvent{
 
     private final AVPacket frame;
 

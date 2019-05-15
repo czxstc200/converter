@@ -56,7 +56,6 @@ public class VideoAdapterManagement {
      */
     public static void stopAdapter(VideoAdapter adapter){
         adapter.stop();
-        futures.get(adapter.getName()).cancel(false);
         futures.remove(adapter.getName());
         map.remove(adapter.getName());
     }

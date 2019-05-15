@@ -9,7 +9,7 @@ import org.bytedeco.javacv.Frame;
  * @CreateDate: 2018-12-02 15:57
  * @Version: 1.0
  */
-public class GrabEvent extends Event {
+public class GrabEvent extends RTSPEvent {
 
     private final long timestamp;
 

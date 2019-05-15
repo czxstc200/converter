@@ -4,6 +4,7 @@ import cn.edu.bupt.stream.adapter.RtspVideoAdapter;
 import cn.edu.bupt.stream.event.Event;
 import cn.edu.bupt.stream.event.GrabEvent;
 import cn.edu.bupt.stream.event.PacketEvent;
+import cn.edu.bupt.stream.event.RTSPEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.bytedeco.ffmpeg.avformat.AVFormatContext;
@@ -12,6 +13,7 @@ import org.bytedeco.javacv.FFmpegFrameRecorder;
 
 
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static cn.edu.bupt.stream.Constants.PUSH_LISTENER_NAME;
 
@@ -28,6 +30,7 @@ public class PushListener extends RtspListener {
     private String name;
     private FFmpegFrameGrabber grabber;
     private static ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Push-Pool-%d").daemon(false).build());
+    private static final AtomicBoolean executorStarted = new AtomicBoolean(false);
     private FFmpegFrameRecorder pushRecorder;
     private int queueThreshold;
     private String rtmpPath;
@@ -103,6 +106,7 @@ public class PushListener extends RtspListener {
         try {
             if(isInit) {
                 pushRecorder.start(fc);
+                startExecutor();
                 isStarted = true;
                 log.info("Push recorder started");
             }else {
@@ -143,20 +147,24 @@ public class PushListener extends RtspListener {
     @Override
     public void fireAfterEventInvoked(Event event) throws Exception{
         if(isStarted) {
-            try {
-                if (event instanceof PacketEvent) {
-                    pushRecorder.recordPacket(((PacketEvent) event).getFrame());
-                } else if (event instanceof GrabEvent) {
-                    pushRecorder.record(((GrabEvent) event).getFrame());
-                } else {
-                    throw new Exception("Unknown event type!");
-                }
-            }catch (Exception e){
-                e.printStackTrace();
-                log.warn("Push event failed for pushRecorder {}", getName());
-            }finally {
-                rtspVideoAdapter.unref(event);
-            }
+            ((RTSPEvent)event).setListener(this);
+            pushEvent(event);
+//            boolean success = false;
+//            try {
+//                if (event instanceof PacketEvent) {
+//                    success = pushRecorder.recordPacket(((PacketEvent) event).getFrame());
+//                } else if (event instanceof GrabEvent) {
+//                    pushRecorder.record(((GrabEvent) event).getFrame());
+//                    success = true;
+//                } else {
+//                    throw new Exception("Unknown event type!");
+//                }
+//            }catch (Exception e){
+//                e.printStackTrace();
+//                log.warn("Push event failed for pushRecorder {}", getName());
+//            }finally {
+//                rtspVideoAdapter.unref(event,success);
+//            }
         }else {
             log.warn("Failed to fire the listener [{}].You should start this push recorder before you start pushing",name);
             throw new Exception("Failed to fire the listener!");
@@ -192,21 +200,62 @@ public class PushListener extends RtspListener {
      * @param [event]
      * @return void
      */
-    public void pushEvent(Event event){
+    private void pushEvent(Event event){
         //将event推入queue
         try{
-            if(this.queue.size() > this.queueThreshold) {
+            if(queue.size() > this.queueThreshold) {
                 log.warn("Queue size is greater than threshold. queue size={} threshold={} timestamp={}", Integer.valueOf(this.queue.size()), Integer.valueOf(this.queueThreshold),System.currentTimeMillis());
             }
-            if(this.queue.size() < 2 * this.queueThreshold){
-                this.queue.offer(event, this.offerTimeout, TimeUnit.MILLISECONDS);
+            if(queue.size() < 2 * this.queueThreshold){
+                queue.offer(event, this.offerTimeout, TimeUnit.MILLISECONDS);
                 log.trace("Inserting event into queue[size:{}]",queue.size());
             }else {
                 log.warn("clear queue");
-                this.queue.clear();
+                queue.clear();
             }
         }catch (Exception e){
             log.warn("Event data was not accepted by the queue");
+        }
+    }
+
+    private void startExecutor(){
+        if(executorStarted.compareAndSet(false,true)) {
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        while (true) {
+                            Event event = queue.take();
+                            Listener listener = ((RTSPEvent) event).getListener();
+                            if (!((PushListener) listener).isStarted) {
+                                continue;
+                            }
+                            FFmpegFrameRecorder pushRecorder = ((PushListener) listener).pushRecorder;
+                            boolean success = false;
+                            try {
+                                if (event instanceof PacketEvent) {
+                                    success = pushRecorder.recordPacket(((PacketEvent) event).getFrame());
+                                } else if (event instanceof GrabEvent) {
+                                    pushRecorder.record(((GrabEvent) event).getFrame());
+                                    success = true;
+                                } else {
+                                    throw new Exception("Unknown event type!");
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                log.warn("Push event failed for pushRecorder {}", getName());
+                            } finally {
+                                rtspVideoAdapter.unref(event, success);
+                            }
+                            if(queue.isEmpty()&&!executorStarted.get()){
+                                break;
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.warn("Executor exception!");
+                    }
+                }
+            });
         }
     }
 }

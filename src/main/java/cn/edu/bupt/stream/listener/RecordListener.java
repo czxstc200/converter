@@ -137,9 +137,9 @@ public class RecordListener extends RtspListener {
         }else{
             while(!queue.isEmpty()){
                 Event event = queue.poll();
+                boolean success = false;
                 try {
                     if (event instanceof GrabEvent) {
-
                         // 时间戳设置
                         long timestamp = ((GrabEvent) event).getTimestamp();
                         if (startTimestamp == -1) {
@@ -154,15 +154,16 @@ public class RecordListener extends RtspListener {
                         }
 
                         fileRecorder.record(((GrabEvent) event).getFrame());
+                        success = true;
                     } else if (event instanceof PacketEvent) {
-                        fileRecorder.recordPacket(((PacketEvent) event).getFrame());
+                        success = fileRecorder.recordPacket(((PacketEvent) event).getFrame());
                     } else {
                         log.warn("Unknown event type!");
                     }
                 }catch (Exception e) {
                     log.warn("Record event failed for Recorder : {}", getName());
                 }finally {
-                    rtspVideoAdapter.unref(event);
+                    rtspVideoAdapter.unref(event,success);
                 }
             }
         }
@@ -212,7 +213,7 @@ public class RecordListener extends RtspListener {
                 failCount = 0;
             }else {
                 failCount++;
-                if(failCount>=5){
+                if(failCount>=FAIL_COUNT_THRESHOLD){
                     rtspVideoAdapter.removeListener(this);
                     close();
                     log.error("Record Listener [{}] error. Remove it",name);

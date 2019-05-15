@@ -11,6 +11,7 @@ import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.bytedeco.ffmpeg.avcodec.AVPacket;
 import org.bytedeco.ffmpeg.global.avcodec;
 import org.bytedeco.ffmpeg.global.avutil;
+import org.bytedeco.javacpp.Pointer;
 import org.bytedeco.javacpp.PointerScope;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
@@ -241,6 +242,7 @@ public class RtspVideoAdapter extends VideoAdapter{
                         PacketEvent grabEvent = new PacketEvent(this, newPkt,countEvent);
                         listener.fireAfterEventInvoked(grabEvent);
                     }
+                    avcodec.av_packet_unref(pkt);
                 } else {//使用传统方式进行处理，效率较低（增加了编解码的时间），但是可以对画面frame进行处理
                     Frame frame = null;
                     try {
@@ -586,8 +588,8 @@ public class RtspVideoAdapter extends VideoAdapter{
      * 通过unref将内存引用减少1，并且引用为0时进行回收
      * @param event
      */
-    public void unref(Event event){
-        executor.submit(new UnrefTask(frameFinishCount,event));
+    public void unref(Event event,boolean isSuccess){
+        executor.submit(new UnrefTask(frameFinishCount,event,isSuccess));
     }
 
     // 抓拍任务
@@ -633,9 +635,12 @@ public class RtspVideoAdapter extends VideoAdapter{
 
         final Event event;
 
-        UnrefTask(Map<Event, AtomicInteger> map, Event event) {
+        final boolean success;
+
+        UnrefTask(Map<Event, AtomicInteger> map, Event event,boolean isSuccess) {
             this.map = map;
             this.event = event;
+            this.success = isSuccess;
         }
 
         @Override
@@ -645,12 +650,21 @@ public class RtspVideoAdapter extends VideoAdapter{
                 if(count==0) {
                     ((GrabEvent) event).getPointerScope().deallocate();
                     map.remove(event);
+                    System.out.println(Pointer.physicalBytes());
                 }
             }else if(event instanceof PacketEvent){
+                AVPacket avPacket = ((PacketEvent) event).getFrame();
                 int count = map.get(((PacketEvent) event).getCountEvent()).decrementAndGet();
+                if(!success){
+                    avcodec.av_packet_unref(avPacket);
+                }
                 if(count==0){
-                    avcodec.av_packet_free(((PacketEvent) event).getFrame());
                     map.remove(((PacketEvent) event).getCountEvent());
+                    if(!avPacket.isNull()){
+                        avcodec.av_packet_free(avPacket);
+//                        System.out.println(avPacket.isNull());
+//                        avcodec.avcodec_free_context();
+                    }
                 }
             }else{
                 log.warn("Unknown event type!");
