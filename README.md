@@ -4,13 +4,36 @@ RTSP转RTMP的视频拉流推流程序。
 # 部署
 
 ## 必要组件
+- Java([安装教程](https://java.com/en/download/help/download_options.xml))
 - maven（[安装过程](http://maven.apache.org/install.html)）
 - git（[下载地址](https://git-scm.com/downloads)）
 - 海康SDK（[下载地址](https://www.hikvision.com/cn/download_61.html)）
 
-## 部署步骤
+## 海康SDK环境配置
+1. 获取之前下载获得的SDK开发包，解压
+2. SDK所需要的so库文件都在SDK解压后的lib文件夹下
+3. 在系统的/usr/lib文件夹中加入Java工程所需要使用的so文件,然后将SDK解压后的lib文件夹下的HCNetSDKCom文件夹下的其他so文件也copy到/usr/lib目录
 
-TODO
+注：系统默认加载库路径，cenos64位需拷贝/usr/lib64下
+## 搭建RTMP服务器
+目前有两种选择：
+1. 使用red5流媒体服务器作为RTMP服务器（[搭建过程](https://blog.csdn.net/u010651369/article/details/80886676)）
+2. 采用NGINX的方案，搭建自己的RTMP服务器（[搭建过程](https://obsproject.com/forum/resources/how-to-set-up-your-own-private-rtmp-server-using-nginx.50/)）
+## 项目部署
+
+1. 克隆项目代码，这里以保存到~文件为例
+> cd ~
+> git clone https://github.com/czxstc200/converter.git
+
+2. 进入项目文件夹，使用maven进行项目构建
+> cd converter/
+> mvn clean install
+
+3. 进入target文件夹，找到jar包并且使用Java运行jar包
+> cd target
+> java -jar converter-0.0.1-SNAPSHOT.jar
+
+4. 调用接口进行推流
 
 # 设计概要
 ## 架构图
