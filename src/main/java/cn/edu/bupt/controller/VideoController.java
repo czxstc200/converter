@@ -1,5 +1,6 @@
 package cn.edu.bupt.controller;
 
+import cn.edu.bupt.stream.Constants;
 import cn.edu.bupt.stream.adapter.RtspVideoAdapter;
 import cn.edu.bupt.stream.adapter.VideoAdapter;
 import cn.edu.bupt.stream.adapter.VideoAdapterManagement;
@@ -14,7 +15,6 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 import static cn.edu.bupt.hikVision.linux.HikUtil.hCNetSDK;
-import static cn.edu.bupt.stream.Constants.ROOT_DIR;
 
 import cn.edu.bupt.hikVision.linux.HikUtil;
 
@@ -142,7 +142,7 @@ public class VideoController {
     @RequestMapping(value = "/capture2", method = RequestMethod.GET)
     @ResponseBody
     public Boolean capture2() {
-        return HikUtil.capture(ROOT_DIR+System.currentTimeMillis()+".jpeg");
+        return HikUtil.capture(Constants.getRootDir() +System.currentTimeMillis()+".jpeg");
     }
 
 
@@ -170,7 +170,7 @@ public class VideoController {
         boolean isRecording = videoAdapter.isRecording();
         setHeader(response);
         if(isRecording){
-            videoAdapter.restartRecording(ROOT_DIR+System.currentTimeMillis()+".flv");
+            videoAdapter.restartRecording(Constants.getRootDir()+System.currentTimeMillis()+".flv");
             return "成功";
         }else {
             return "失败";

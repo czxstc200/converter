@@ -1,11 +1,13 @@
 package cn.edu.bupt.stream.adapter;
 
+import cn.edu.bupt.stream.Constants;
 import cn.edu.bupt.stream.event.Event;
 import cn.edu.bupt.stream.event.GrabEvent;
 import cn.edu.bupt.stream.event.PacketEvent;
 import cn.edu.bupt.stream.listener.Listener;
 import cn.edu.bupt.stream.listener.PushListener;
 import cn.edu.bupt.stream.listener.RecordListener;
+import cn.edu.bupt.util.DirUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.bytedeco.ffmpeg.avcodec.AVPacket;
@@ -70,8 +72,8 @@ public class RtspVideoAdapter extends VideoAdapter{
         listeners = new ArrayList<>();
         isRecording = false;
         stop = false;
-        videoRootDir = ROOT_DIR;
-        timestamp = getZeroTimestamp();
+        videoRootDir = Constants.getRootDir();
+        timestamp = DirUtil.getZeroTimestamp();
         save = false;
         usePacket = false;
         // 设置日志打印等级
@@ -176,11 +178,11 @@ public class RtspVideoAdapter extends VideoAdapter{
         String capturesPath = filePath+"captures/";
         String videoPath = filePath+"videos/";
 
-        judeDirExists(filePath);
-        judeDirExists(videoPath);
-        judeDirExists(capturesPath);
+        DirUtil.judeDirExists(filePath);
+        DirUtil.judeDirExists(videoPath);
+        DirUtil.judeDirExists(capturesPath);
         if(save){
-            startRecording(videoPath+generateFilenameByDate()+".flv");
+            startRecording(videoPath+DirUtil.generateFilenameByDate()+".flv");
         }
 
         startPushing();
@@ -197,10 +199,10 @@ public class RtspVideoAdapter extends VideoAdapter{
                 }
 
                 //时间超过零点进行视频录像的切分
-                if (isRecording && timestamp < getZeroTimestamp()) {
+                if (isRecording && timestamp < DirUtil.getZeroTimestamp()) {
                     executor.submit(()->{
-                        timestamp = getZeroTimestamp();
-                        restartRecording(videoPath + generateFilenameByDate() + ".flv");
+                        timestamp = DirUtil.getZeroTimestamp();
+                        restartRecording(videoPath + DirUtil.generateFilenameByDate() + ".flv");
                     });
                 }
 
@@ -357,54 +359,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         listeners = new ArrayList<>();
     }
 
-    /**
-     * @Description 判断文件夹是否存在,不存在则创建
-     * @author CZX
-     * @date 2018/11/30 12:24
-     * @param [filename]
-     * @return boolean
-     */
-    private static boolean judeDirExists(String filename) throws Exception{
-        File file = new File(filename);
-        if (file.exists()) {
-            if (file.isDirectory()) {
-                log.warn("dir[{}] exists",file.getName());
-                return true;
-            } else {
-                log.error("the same name file[{}] exists, can not create dir",file.getName());
-                throw new Exception("the same name file exists");
-            }
-        }else{
-            log.info("dir[{}] not exists, create it",file.getName());
-            return file.mkdir();
-        }
-    }
 
-    /**
-     * @Description 根据日期生成视频的文件名
-     * @author CZX
-     * @date 2018/11/30 12:30
-     * @param []
-     * @return java.lang.String
-     */
-    private static String generateFilenameByDate(){
-        SimpleDateFormat sdf=new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
-        Date date=new Date();
-        return sdf.format(date);
-    }
-
-    /**
-     * @Description 获取明天的零点时间戳
-     * @author CZX
-     * @date 2018/11/30 14:36
-     * @param []
-     * @return java.lang.Long
-     */
-    private static Long getZeroTimestamp(){
-        long currentTimestamps=System.currentTimeMillis();
-        long oneDayTimestamps= 60*60*24*1000;
-        return currentTimestamps-(currentTimestamps+60*60*8*1000)%oneDayTimestamps+oneDayTimestamps;
-    }
 
     /**
      * @Description 拉流grabber的初始化与启动
@@ -491,7 +446,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         }else {
             String filePath = videoRootDir+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1)+"/";
             String videoPath = filePath+"videos/";
-            RecordListener recordListener = new RecordListener(videoPath+generateFilenameByDate()+".flv", getGrabber(),this,usePacket);
+            RecordListener recordListener = new RecordListener(videoPath+DirUtil.generateFilenameByDate()+".flv", getGrabber(),this,usePacket);
             recordListener.start();
             addListener(recordListener);
             isRecording = true;
@@ -556,8 +511,8 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @return java.util.List<java.lang.String>
      */
     public List<String> getFiles(String rtmpPath){
-        String path = ROOT_DIR+"videos/"+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1);
-        return getFileList(path);
+        String path = Constants.getRootDir()+"videos/"+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1);
+        return DirUtil.getFileList(path);
     }
 
     /**
@@ -566,23 +521,10 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @return
      */
     public List<String> getCaptures(String rtmpPath){
-        String path = ROOT_DIR+"captures/"+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1);
-        return getFileList(path);
+        String path = Constants.getRootDir()+"captures/"+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1);
+        return DirUtil.getFileList(path);
     }
 
-    private List<String> getFileList(String path) {
-        File[] files = new File(path).listFiles();
-        List<String> fileList = new ArrayList<>();
-        if(files==null){
-            return fileList;
-        }
-        for (File file : files) {
-            if (file.isFile()) {
-                fileList.add(file.getName());
-            }
-        }
-        return fileList;
-    }
 
     /**
      * 通过unref将内存引用减少1，并且引用为0时进行回收
@@ -608,7 +550,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         public Boolean call() {
             boolean dirExists = false;
             try{
-                dirExists = judeDirExists(capturesPath);
+                dirExists = DirUtil.judeDirExists(capturesPath);
             }catch (Exception e){
                 e.printStackTrace();
                 log.warn("judeDirExists() exception");
@@ -662,8 +604,6 @@ public class RtspVideoAdapter extends VideoAdapter{
                     map.remove(((PacketEvent) event).getCountEvent());
                     if(!avPacket.isNull()){
                         avcodec.av_packet_free(avPacket);
-//                        System.out.println(avPacket.isNull());
-//                        avcodec.avcodec_free_context();
                     }
                 }
             }else{
