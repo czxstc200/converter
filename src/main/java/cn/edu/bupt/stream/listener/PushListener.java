@@ -220,10 +220,10 @@ public class PushListener extends RtspListener {
                             try {
                                 if (event instanceof PacketEvent) {
                                     AVPacket avPacket = ((PacketEvent) event).getFrame();
-                                    if(avPacket.dts()<PushListener.this.lastDTS){
+                                    if(avPacket.dts()<listener.lastDTS){
                                         continue;
                                     }else{
-                                        PushListener.this.lastDTS = avPacket.dts();
+                                        listener.lastDTS = avPacket.dts();
                                     }
                                     success = pushRecorder.recordPacket(avPacket);
                                 } else if (event instanceof GrabEvent) {
