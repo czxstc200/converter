@@ -24,4 +24,9 @@ public class NavigationController {
     public String  single() {
         return "template/singleVideo";
     }
+
+    @RequestMapping("/mobile")
+    public String  mobile() {
+        return "template/h5";
+    }
 }
