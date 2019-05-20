@@ -81,6 +81,13 @@ RTSP转RTMP的视频拉流推流程序。
 - 将通过Grabber拉取到的视频数据封装成Event，并且调用Listener的相关方法。例如存储视频，推流和物体检测等。
 - 在Listener完成自己的逻辑后，需要进行unref操作。通过引用计数的方式将堆外内存进行回收。
 - 最后，判断用户是否停止推流操作，如果没有停止，重复上述的拉流操作。否则，关闭各个Listener与Adapter。
+
+## 3.3 推拉流协议
+![推拉流协议](https://github.com/czxstc200/converter/raw/master/assets/%E6%8E%A8%E6%B5%81%E6%9E%B6%E6%9E%84%E5%9B%BE.jpg)
+
+- 在拉流端，由于摄像头本身会暴露出自己的RTSP地址，因此采用RTSP协议
+- 在推流端，采用的是RTMP和HLS。在延迟上，RTMP较之于HLS较低，但是技术较老，且需要Flash的支持，在PC端浏览器中可以使用Flash进行播放。HLS的延迟较高，但是iOS和Android都可以原生支持这一种协议，可以直接在页面上播放，而RTMP协议并不支持直接播放。因此，在推流端采用了RTMP和HLS两种协议。
+
 # 4. 要点说明
 ## 4.1. 视频的拉取、推流和存储
 由于采用Java进行项目的编写，选取了JavaCV这个库来实现视频处理。
