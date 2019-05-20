@@ -592,7 +592,6 @@ public class RtspVideoAdapter extends VideoAdapter{
                 if(count==0) {
                     ((GrabEvent) event).getPointerScope().deallocate();
                     map.remove(event);
-                    System.out.println(Pointer.physicalBytes());
                 }
             }else if(event instanceof PacketEvent){
                 AVPacket avPacket = ((PacketEvent) event).getFrame();

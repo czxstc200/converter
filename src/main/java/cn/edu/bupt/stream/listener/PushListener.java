@@ -7,6 +7,7 @@ import cn.edu.bupt.stream.event.PacketEvent;
 import cn.edu.bupt.stream.event.RTSPEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
+import org.bytedeco.ffmpeg.avcodec.AVPacket;
 import org.bytedeco.ffmpeg.avformat.AVFormatContext;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
@@ -41,6 +42,7 @@ public class PushListener extends RtspListener {
     private boolean usePacket;
     private final RtspVideoAdapter rtspVideoAdapter;
     private AVFormatContext fc;
+    private long lastDTS = 0;
 
     private PushListener(String listenerName,RtspVideoAdapter rtspVideoAdapter){
         this.isStarted = false;
@@ -187,7 +189,7 @@ public class PushListener extends RtspListener {
         //将event推入queue
         try{
             if(queue.size() > this.queueThreshold) {
-                log.warn("Queue size is greater than threshold. queue size={} threshold={} timestamp={}", Integer.valueOf(this.queue.size()), Integer.valueOf(this.queueThreshold),System.currentTimeMillis());
+                log.warn("Queue size is greater than threshold. queue size={} threshold={} timestamp={}", this.queue.size(), this.queueThreshold,System.currentTimeMillis());
             }
             if(queue.size() < 2 * this.queueThreshold){
                 queue.offer(event, this.offerTimeout, TimeUnit.MILLISECONDS);
@@ -217,7 +219,13 @@ public class PushListener extends RtspListener {
                             boolean success = false;
                             try {
                                 if (event instanceof PacketEvent) {
-                                    success = pushRecorder.recordPacket(((PacketEvent) event).getFrame());
+                                    AVPacket avPacket = ((PacketEvent) event).getFrame();
+                                    if(avPacket.dts()<PushListener.this.lastDTS){
+                                        continue;
+                                    }else{
+                                        PushListener.this.lastDTS = avPacket.dts();
+                                    }
+                                    success = pushRecorder.recordPacket(avPacket);
                                 } else if (event instanceof GrabEvent) {
                                     pushRecorder.record(((GrabEvent) event).getFrame());
                                     success = true;
@@ -226,7 +234,7 @@ public class PushListener extends RtspListener {
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                log.warn("Push event failed for pushRecorder {}", getName());
+                                log.warn("Push event failed for pushRecorder [{}]", getName());
                             } finally {
                                 listener.rtspVideoAdapter.unref(event, success);
                             }

@@ -142,7 +142,7 @@ public class VideoController {
     @RequestMapping(value = "/capture2", method = RequestMethod.GET)
     @ResponseBody
     public Boolean capture2() {
-        return HikUtil.capture(Constants.getRootDir() +System.currentTimeMillis()+".jpeg");
+        return HikUtil.capture("",Constants.getRootDir() +System.currentTimeMillis()+".jpeg");
     }
 
 
@@ -220,27 +220,27 @@ public class VideoController {
 
     @RequestMapping(value = "/subscribe", method = RequestMethod.GET)
     @ResponseBody
-    public boolean subscribe(@RequestParam(required = false) String ip,
+    public boolean subscribe(@RequestParam(required = false) String rtmp,@RequestParam(required = false) String ip,
                              @RequestParam(required = false) String port) throws Exception{
         setHeader(response);
         if(ip==null||port==null) {
             return HikUtil.subscribe();
         }else{
-            return HikUtil.subscribe(ip,Integer.valueOf(port));
+            return HikUtil.subscribe(rtmp,ip,Integer.valueOf(port));
         }
     }
 
     @RequestMapping(value = "/logout", method = RequestMethod.GET)
     @ResponseBody
-    public void logout() throws Exception{
+    public void logout(@RequestParam(required = false) String rtmp) throws Exception{
         setHeader(response);
-        hCNetSDK.NET_DVR_Logout(HikUtil.lUserID);
+        hCNetSDK.NET_DVR_Logout(HikUtil.getUserId(rtmp));
         hCNetSDK.NET_DVR_Cleanup();
     }
 
     @RequestMapping(value = "/control", method = RequestMethod.GET)
     @ResponseBody
-    public boolean control(@RequestParam String cmd,
+    public boolean control(@RequestParam String rtmp,@RequestParam String cmd,
                            @RequestParam int status) throws Exception{
         setHeader(response);
         int command = 0;
@@ -263,11 +263,14 @@ public class VideoController {
         if(command==0){
             return false;
         }
+        if(rtmp==null){
+            rtmp = "";
+        }
         NativeLong nativeLong = new NativeLong(1L);
-        hCNetSDK.NET_DVR_PTZControl_Other(HikUtil.lUserID,nativeLong,command,0);
+        hCNetSDK.NET_DVR_PTZControl_Other(HikUtil.getUserId(rtmp),nativeLong,command,0);
         System.out.println("res code : "+hCNetSDK.NET_DVR_GetLastError());
         Thread.sleep(2000);
-        hCNetSDK.NET_DVR_PTZControl_Other(HikUtil.lUserID,nativeLong,command,1);
+        hCNetSDK.NET_DVR_PTZControl_Other(HikUtil.getUserId(rtmp),nativeLong,command,1);
         System.out.println("res code : "+hCNetSDK.NET_DVR_GetLastError());
         setHeader(response);
         return true;
@@ -275,10 +278,10 @@ public class VideoController {
 
     @RequestMapping(value = "/setEffect", method = RequestMethod.GET)
     @ResponseBody
-    public boolean setEffect(@RequestParam int channel,
+    public boolean setEffect(@RequestParam String rtmp,@RequestParam int channel,
                              @RequestParam int bright,@RequestParam int contrast,@RequestParam int saturation,@RequestParam int hue) throws Exception{
         setHeader(response);
-        HikUtil.setEffect(channel,bright,contrast,saturation,hue);
+        HikUtil.setEffect(rtmp,channel,bright,contrast,saturation,hue);
         setHeader(response);
         return true;
     }
