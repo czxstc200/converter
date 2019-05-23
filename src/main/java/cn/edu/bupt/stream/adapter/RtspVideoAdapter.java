@@ -7,28 +7,29 @@ import cn.edu.bupt.stream.event.PacketEvent;
 import cn.edu.bupt.stream.listener.Listener;
 import cn.edu.bupt.stream.listener.PushListener;
 import cn.edu.bupt.stream.listener.RecordListener;
-import cn.edu.bupt.util.DirUtil;
+import cn.edu.bupt.stream.util.DirUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.bytedeco.ffmpeg.avcodec.AVPacket;
+import org.bytedeco.ffmpeg.avformat.AVFormatContext;
+import org.bytedeco.ffmpeg.avformat.AVIOInterruptCB;
 import org.bytedeco.ffmpeg.global.avcodec;
 import org.bytedeco.ffmpeg.global.avutil;
 import org.bytedeco.javacpp.Pointer;
 import org.bytedeco.javacpp.PointerScope;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
+import org.bytedeco.javacv.FFmpegFrameRecorder;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.bytedeco.opencv.global.opencv_imgcodecs;
 import org.bytedeco.opencv.opencv_core.Mat;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static cn.edu.bupt.stream.Constants.*;
+import static org.bytedeco.ffmpeg.global.avformat.avformat_alloc_context;
 
 /**
  * @Description: RtspVideoAdapter
@@ -51,7 +52,8 @@ public class RtspVideoAdapter extends VideoAdapter{
     private List<Listener> listeners;
     private boolean save;
     private AtomicBoolean capture = new AtomicBoolean(false);
-    private final int NULL_FRAME_THRESHOLD = 512;
+    private final int NULL_FRAME_THRESHOLD = 10;
+    private Long lastFrameTime = System.currentTimeMillis();
     /**
      * 是否使用AVPacket的方式直接进行拉流与推流
      */
@@ -174,10 +176,10 @@ public class RtspVideoAdapter extends VideoAdapter{
         grabberInit();
         log.info("Grabber started [{}]",rtspPath);
         startAllListeners();
+
         String filePath = videoRootDir+rtmpPath.substring(rtmpPath.lastIndexOf("/")+1)+"/";
         String capturesPath = filePath+"captures/";
         String videoPath = filePath+"videos/";
-
         DirUtil.judeDirExists(filePath);
         DirUtil.judeDirExists(videoPath);
         DirUtil.judeDirExists(capturesPath);
@@ -186,7 +188,6 @@ public class RtspVideoAdapter extends VideoAdapter{
         }
 
         startPushing();
-
 
         int count = 0;
         int nullFrames = 0;
@@ -211,6 +212,7 @@ public class RtspVideoAdapter extends VideoAdapter{
                     AVPacket pkt = null;
                     try {
                         pkt = grabber.grabPacket();
+                        lastFrameTime = System.currentTimeMillis();
                     }catch (Exception e){
                         log.warn("Grab Packet Exception!");
                     }
@@ -249,17 +251,18 @@ public class RtspVideoAdapter extends VideoAdapter{
                     Frame frame = null;
                     try {
                         frame = grabber.grabImage();
+                        lastFrameTime = System.currentTimeMillis();
                     } catch (Exception e) {
                         log.warn("Grab Image Exception!");
                     }
                     if (frame == null || frame.image==null) {
                         nullFrames++;
-                        if(nullFrames%50==0){
+                        if(nullFrames%5==0){
                             log.info("Null Frame number is [{}] and rtmp : [{}]",nullFrames, rtmpPath);
                         }
                         if (nullFrames >= NULL_FRAME_THRESHOLD) {
                             stop();
-                            log.info("Video[{}] stopped!", rtmpPath);
+                            log.info("Video[{}] lost!", rtmpPath);
                         }
                         continue;
                     }
@@ -371,11 +374,30 @@ public class RtspVideoAdapter extends VideoAdapter{
     private void grabberInit(){
         try {
             // 使用rtsp的时候需要使用 FFmpegFrameGrabber，不能再用FrameGrabber
-            FFmpegFrameGrabber grabber = FFmpegFrameGrabber.createDefault(rtspPath);
-            // 使用tcp的方式，不然会丢包很严重
-            grabber.setOption("rtsp_transport", "tcp");
+            FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(rtspPath);
             this.grabber = grabber;
             this.grabber.start();
+
+            // TODO:设置回调函数后,虚拟机会崩溃
+
+//            // 设置超时,每一次grab的timeout为1000ms
+//            AVIOInterruptCB.Callback_Pointer cp = new AVIOInterruptCB.Callback_Pointer() {
+//                @Override
+//                public int call(Pointer pointer) {
+//                    if(System.currentTimeMillis()-lastFrameTime>1000){
+//                        return 1;
+//                    }else{
+//                        return 0;
+//                    }
+//                }
+//            };
+//            AVFormatContext oc = grabber.getFormatContext();
+//            avformat_alloc_context();
+//            AVIOInterruptCB cb = new AVIOInterruptCB();
+//            cb.callback(cp);
+//            // 设置回调函数
+//            oc.interrupt_callback(cb);
+
         }catch (Exception e){
             log.error("Grabber failed to initialize");
             e.printStackTrace();
@@ -608,6 +630,25 @@ public class RtspVideoAdapter extends VideoAdapter{
             }else{
                 log.warn("Unknown event type!");
             }
+        }
+    }
+
+    public static void main(String[] args) {
+        RtspVideoAdapter rtspVideoAdapter = new RtspVideoAdapter("rtsp://admin:LITFYL@10.112.239.157:554/h264/ch1/main/av_stream","rtmp://10.112.217.199/live360p/test2",false,true);
+        try {
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        rtspVideoAdapter.start();
+                    }catch (Exception e){
+
+                    }
+                }
+            });
+            thread.start();
+        }catch (Exception e){
+
         }
     }
 }

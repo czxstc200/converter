@@ -1,4 +1,4 @@
-package cn.edu.bupt.util;
+package cn.edu.bupt.stream.util;
 
 import lombok.extern.slf4j.Slf4j;
 

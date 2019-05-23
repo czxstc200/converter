@@ -1,6 +1,6 @@
 package cn.edu.bupt;
 
-import cn.edu.bupt.util.DirUtil;
+import cn.edu.bupt.stream.util.DirUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
