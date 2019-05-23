@@ -12,6 +12,10 @@
     <name>converter</name>
     <description>Converter</description>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
     <modules>
         <module>stream</module>
         <module>hikVision</module>
