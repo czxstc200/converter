@@ -66,13 +66,13 @@ RTSP转RTMP/HLS的视频拉流推流程序。
 
 > mvn clean install
 
-3. 进入target文件夹，找到jar包并且使用Java运行jar包。java命令之后需要加上视频录像的存放根目录，例如/home/rec/，注意需要使用绝对路径
+3. 进入controller/target文件夹，找到jar包并且使用Java运行jar包。java命令之后需要加上视频录像的存放根目录，例如/home/rec/，注意需要使用绝对路径
 
-> cd target
+> cd controller/target
 
 将命令中的${YOUR_ABSOLUTE_PATH}换作你自己的录像存放地址。
 
-> java -jar converter-0.0.1-SNAPSHOT.jar ${YOUR_ABSOLUTE_PATH}
+> java -DRootDir=${YOUR_ABSOLUTE_PATH} -jar controller-1.0-SNAPSHOT.jar 
 
 4. 调用接口进行推流
 
