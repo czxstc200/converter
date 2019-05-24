@@ -23,6 +23,9 @@
         <dependency>
             <groupId>com.sun.jna</groupId>
             <artifactId>jna</artifactId>
+            <version>3.0.9</version>
+            <scope>system</scope>
+            <systemPath>${pom.basedir}/lib/jna-3.0.9.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
