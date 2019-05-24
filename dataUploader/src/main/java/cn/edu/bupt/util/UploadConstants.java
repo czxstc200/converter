@@ -3,13 +3,12 @@ package cn.edu.bupt.util;
 import okhttp3.MediaType;
 
 /**
- * @Description: Constants
+ * @Description: UploadConstants
  * @Author: czx
- * @CreateDate: 2019-05-24 14:46
+ * @CreateDate: 2019-05-24 17:46
  * @Version: 1.0
  */
-public class Constants {
-
+public class UploadConstants {
     public static final String HOST = "39.104.84.131";
 
     public static final MediaType APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8");

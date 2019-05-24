@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static cn.edu.bupt.util.Constants.*;
+import static cn.edu.bupt.util.UploadConstants.*;
 
 /**
  * @Description: HttpUtil
