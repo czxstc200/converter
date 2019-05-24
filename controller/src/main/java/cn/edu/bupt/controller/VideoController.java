@@ -28,10 +28,6 @@ import java.util.concurrent.Future;
 @CrossOrigin
 public class VideoController {
 
-    private static ExecutorService executorService = Executors.newCachedThreadPool();
-
-    private static Map<String,Future<String>> resultMap = new ConcurrentHashMap<>();
-
     @Autowired
     private HttpServletResponse response;
 
@@ -47,19 +43,6 @@ public class VideoController {
         }
 
     }
-
-//    @ApiOperation("查看推流状态")
-//    @RequestMapping(value = "/status", method = RequestMethod.GET)
-//    @ResponseBody
-//    public boolean getStatus(@RequestParam String rtmp) throws Exception{
-//        try {
-//            Future<String> fs = resultMap.get(rtmp);
-//            return fs.isDone();
-//        }catch (Exception e){
-//            throw new Exception("该rtmp地址不存在");
-//        }
-//
-//    }
 
     @ApiOperation(value = "对视频进行推流")
     @RequestMapping(value = "/convert", method = RequestMethod.GET)

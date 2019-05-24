@@ -31,10 +31,6 @@ public class ConverterApplication {
 			path+="/";
 			System.setProperty("RootDir",path);
 		}
-		if(!path.startsWith("/")){
-			log.error("Wrong store path. Please use absolute path.");
-			System.exit(1);
-		}
 		if (!DirUtil.judeDirExists(path)) {
 			log.error("Wrong store path. Please check it.");
 			System.exit(1);
