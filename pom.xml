@@ -14,12 +14,15 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <lombok.version>1.16.22</lombok.version>
+        <okhttp3.version>3.9.1</okhttp3.version>
     </properties>
 
     <modules>
         <module>stream</module>
         <module>hikVision</module>
         <module>controller</module>
+        <module>dataUploader</module>
     </modules>
     <dependencyManagement>
         <dependencies>
@@ -79,6 +82,34 @@
             </dependency>
             <!--   hikVision ends    -->
 
+            <!--dataUploader starts-->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>mockwebserver</artifactId>
+                <version>${okhttp3.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.paho</groupId>
+                <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+                <version>1.1.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>2.6.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.googlecode.json-simple</groupId>
+                <artifactId>json-simple</artifactId>
+                <version>1.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.xerial</groupId>
+                <artifactId>sqlite-jdbc</artifactId>
+                <version>3.8.11.2</version>
+            </dependency>
+            <!--dataUploader ends-->
+
             <!--  others   -->
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -94,6 +125,11 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
+                <version>1.7.25</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-log4j12</artifactId>
                 <version>1.7.25</version>
             </dependency>
         </dependencies>

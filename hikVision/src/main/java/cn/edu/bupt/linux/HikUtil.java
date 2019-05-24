@@ -1,6 +1,8 @@
 package cn.edu.bupt.linux;
 
 
+import cn.edu.bupt.client.ClientImpl;
+import cn.edu.bupt.data.CameraInfo;
 import com.sun.jna.NativeLong;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,6 +45,8 @@ public class HikUtil {
             return false;
         }
         log.info("SerialNumber : "+new String(m_strDeviceInfo.sSerialNumber));
+        ClientImpl client = new ClientImpl();
+        client.sendTelemetries(new CameraInfo(new String(m_strDeviceInfo.sSerialNumber),"rtsp"),"serialNumber",new String(m_strDeviceInfo.sSerialNumber));
         UserIDMap.put(rtmp,lUserID);
         return true;
     }
