@@ -45,8 +45,13 @@ public class HikUtil {
             return false;
         }
         log.info("SerialNumber : "+new String(m_strDeviceInfo.sSerialNumber));
-//        ClientImpl client = new ClientImpl();
-//        client.sendTelemetries(new CameraInfo(new String(m_strDeviceInfo.sSerialNumber),"rtsp"),"serialNumber",new String(m_strDeviceInfo.sSerialNumber));
+        try {
+            ClientImpl client = new ClientImpl();
+            client.sendTelemetries(new CameraInfo(new String(m_strDeviceInfo.sSerialNumber), "rtsp"), "serialNumber", new String(m_strDeviceInfo.sSerialNumber));
+
+        }catch (Exception e){
+            System.out.println("Upload failed");
+        }
         UserIDMap.put(rtmp,lUserID);
         return true;
     }
