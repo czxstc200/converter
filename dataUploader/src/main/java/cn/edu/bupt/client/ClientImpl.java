@@ -11,42 +11,45 @@ import java.sql.Statement;
 
 public class ClientImpl implements Client{
 
-    public static boolean first = true;
+    private static final Client CLIENT_INSTANCE = new ClientImpl();
 
-    public ClientImpl() {
-        if(first=true){
-            Connection c = null;
-            Statement stmt = null;
-            try {
-                Class.forName("org.sqlite.JDBC");
-                c = DriverManager.getConnection("jdbc:sqlite::resource:cameras.db");
-                System.out.println("Opened database successfully");
-
-                stmt = c.createStatement();
-                String sql = "CREATE TABLE camera " +
-                        "(serialNumber text PRIMARY KEY     NOT NULL," +
-                        " token           CHAR(50)    NOT NULL)";
-                stmt.executeUpdate(sql);
-                stmt.close();
-                c.close();
-            } catch ( Exception e ) {
-                System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-                System.exit(0);
-            }
-            System.out.println("Table created successfully");
-            first = false;
-        }
+    private ClientImpl() {
+        tableInit();
     }
 
     @Override
-    public void sendTelemetries(CameraInfo cameraInfo,String key,String value) {
-        String token = TokenUtil.getToken(cameraInfo);
+    public void sendTelemetries(String cameraName,String key,String value) {
+        String token = TokenUtil.getToken(cameraName);
         Publish.sendTelemetries(token,key,value);
     }
 
     @Override
     public void sendAttributes(CameraInfo cameraInfo) {
-        String token = TokenUtil.getToken(cameraInfo);
+        String token = TokenUtil.getToken(cameraInfo.getName());
         Publish.sendAttributes(cameraInfo,token);
+    }
+
+    public static Client getClient(){
+        return CLIENT_INSTANCE;
+    }
+
+    private void tableInit(){
+        try {
+            Connection c;
+            Statement stmt;
+            Class.forName("org.sqlite.JDBC");
+            c = DriverManager.getConnection("jdbc:sqlite::resource:cameras.db");
+            System.out.println("Opened database successfully");
+
+            stmt = c.createStatement();
+            String sql = "CREATE TABLE camera " +
+                    "(serialNumber text PRIMARY KEY     NOT NULL," +
+                    " token           CHAR(50)    NOT NULL)";
+            stmt.executeUpdate(sql);
+            stmt.close();
+            c.close();
+        } catch ( Exception e ) {
+            System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+        }
     }
 }

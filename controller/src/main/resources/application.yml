@@ -4,6 +4,3 @@ spring.thymeleaf.mode: LEGACYHTML5
 spring.thymeleaf.cache: true
 server:
   port: 8083
-
-convert.dir: /home/Video/
-#convert.dir: /Users/czx/Downloads/

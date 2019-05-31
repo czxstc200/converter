@@ -1,6 +1,7 @@
 package cn.edu.bupt.linux;
 
 
+import cn.edu.bupt.client.Client;
 import cn.edu.bupt.client.ClientImpl;
 import cn.edu.bupt.data.CameraInfo;
 import com.sun.jna.NativeLong;
@@ -46,8 +47,8 @@ public class HikUtil {
         }
         log.info("SerialNumber : "+new String(m_strDeviceInfo.sSerialNumber));
         try {
-            ClientImpl client = new ClientImpl();
-            client.sendTelemetries(new CameraInfo(new String(m_strDeviceInfo.sSerialNumber), "rtsp"), "serialNumber", new String(m_strDeviceInfo.sSerialNumber));
+            Client client = ClientImpl.getClient();
+            client.sendAttributes(new CameraInfo(rtmp,new String(m_strDeviceInfo.sSerialNumber),rtmp));
 
         }catch (Exception e){
             System.out.println("Upload failed");
@@ -64,9 +65,9 @@ public class HikUtil {
 
     public static boolean capture(String rtmp,String filename){
         HCNetSDK.NET_DVR_JPEGPARA jpegpara = new HCNetSDK.NET_DVR_JPEGPARA();
-        jpegpara.wPicQuality = 0;
-        jpegpara.wPicSize = 0;
-        boolean res = hCNetSDK.NET_DVR_CaptureJPEGPicture(getUserId(rtmp),getUserId(rtmp),jpegpara,filename);
+        jpegpara.wPicQuality = 2;
+        jpegpara.wPicSize = 2;
+        boolean res = hCNetSDK.NET_DVR_CaptureJPEGPicture(getUserId(rtmp),new NativeLong(1),jpegpara,filename);
         log.info("capture res code : "+hCNetSDK.NET_DVR_GetLastError());
         return res;
     }

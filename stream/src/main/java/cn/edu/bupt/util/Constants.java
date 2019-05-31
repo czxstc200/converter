@@ -8,8 +8,8 @@ package cn.edu.bupt.util;
  */
 public class Constants {
 
-//    public final static String ROOT_DIR = "/home/rec/";
-    public final static String ROOT_DIR = "/Users/czx/Downloads/";
+    public final static String ROOT_DIR = "/home/rec/";
+//    public final static String ROOT_DIR = "/Users/czx/Downloads/";
 
     public final static String RECORD_LISTENER_NAME = "Rec-lis";
 

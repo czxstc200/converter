@@ -13,13 +13,12 @@ public class TokenUtil {
 
     public static final dbTokenImpl db = new dbTokenImpl();
 
-    public static String getToken(CameraInfo cameraInfo){
+    public static String getToken(String cameraName){
         String token = null;
-        String serialNumber= cameraInfo.getSerialNumber();
-        if(db.get(serialNumber) == null){ //SQLite里没有token
+        if(db.get(cameraName) == null){ //SQLite里没有token
             try{
                 String session = HttpUtil.login();
-                String id = HttpUtil.createDevice(cameraInfo.getSerialNumber(),session);
+                String id = HttpUtil.createDevice(cameraName,session);
                 token = HttpUtil.findToken(id,session);
             }catch (Exception e){
                 e.printStackTrace();
@@ -29,10 +28,10 @@ public class TokenUtil {
                 System.out.println("null token");
                 return null;
             }
-            db.insert(serialNumber,token);
+            db.insert(cameraName,token);
             return token;
         }else{//SQLite里有token，从表中拿token
-            token = db.get(serialNumber);
+            token = db.get(cameraName);
             return token;
         }
     }

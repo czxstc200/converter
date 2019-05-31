@@ -4,7 +4,7 @@ import cn.edu.bupt.data.CameraInfo;
 
 public interface Client {
 
-    void sendTelemetries(CameraInfo cameraInfo,String key,String value);
+    void sendTelemetries(String cameraName,String key,String value);
 
     void sendAttributes(CameraInfo cameraInfo);
 }

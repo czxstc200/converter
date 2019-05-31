@@ -1,5 +1,7 @@
 package cn.edu.bupt.adapter;
 
+import cn.edu.bupt.client.Client;
+import cn.edu.bupt.client.ClientImpl;
 import cn.edu.bupt.event.Event;
 import cn.edu.bupt.event.GrabEvent;
 import cn.edu.bupt.event.PacketEvent;
@@ -188,11 +190,13 @@ public class RtspVideoAdapter extends VideoAdapter{
 
         int count = 0;
         int nullFrames = 0;
+        Client client = ClientImpl.getClient();
         try {
             while (!stop) {
                 //记录帧数
                 count++;
                 if (count % 100 == 0) {
+                    client.sendTelemetries(rtmpPath,"count",String.valueOf(count/100));
                     log.debug("Video[{}] counts={}", rtspPath, count);
                 }
 

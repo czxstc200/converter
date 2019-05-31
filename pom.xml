@@ -16,6 +16,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <lombok.version>1.16.22</lombok.version>
         <okhttp3.version>3.9.1</okhttp3.version>
+        <netty-all.version>4.1.6.Final</netty-all.version>
     </properties>
 
     <modules>
@@ -23,6 +24,8 @@
         <module>hikVision</module>
         <module>controller</module>
         <module>dataUploader</module>
+        <module>onvif</module>
+        <module>transport</module>
     </modules>
     <dependencyManagement>
         <dependencies>
@@ -110,6 +113,22 @@
             </dependency>
             <!--dataUploader ends-->
 
+            <!--    ONVIF   -->
+            <dependency>
+                <groupId>be.teletask.onvif</groupId>
+                <artifactId>onvif</artifactId>
+                <version>1.0.2</version>
+            </dependency>
+            <!--    ONVIF Ends   -->
+
+            <!--    Netty Starts   -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>${netty-all.version}</version>
+            </dependency>
+            <!--    Netty Ends   -->
+
             <!--  others   -->
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -132,6 +151,9 @@
                 <artifactId>slf4j-log4j12</artifactId>
                 <version>1.7.25</version>
             </dependency>
+
+
+
         </dependencies>
     </dependencyManagement>
 
@@ -180,6 +202,21 @@
                             <version>3.0.9</version>
                             <packaging>jar</packaging>
                             <file>${basedir}/hikVision/lib/jna-3.0.9.jar</file>
+                            <generatePom>true</generatePom>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>onvif</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <groupId>be.teletask.onvif</groupId>
+                            <artifactId>onvif</artifactId>
+                            <version>1.0.2</version>
+                            <packaging>jar</packaging>
+                            <file>${basedir}/onvif/lib/onvif-1.0.2.jar</file>
                             <generatePom>true</generatePom>
                         </configuration>
                     </execution>

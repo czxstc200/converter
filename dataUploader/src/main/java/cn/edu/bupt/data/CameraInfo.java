@@ -11,21 +11,25 @@ import lombok.Data;
 @Data
 public class CameraInfo {
 
+    private String name;
     private String serialNumber;
-    private String RTSP;
+    private String RTMP;
 
-    public CameraInfo(String serialNumber, String RTSP) {
+    public CameraInfo(String name,String serialNumber, String RTMP) {
+        this.name = name;
         this.serialNumber = serialNumber;
-        this.RTSP = RTSP;
+        this.RTMP = RTMP;
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("{");
-        sb.append("\"serialNumber\":\"")
+        sb.append("\"name\":\"")
+                .append(name).append('\"');
+        sb.append(",\"serialNumber\":\"")
                 .append(serialNumber).append('\"');
-        sb.append(",\"RTSP\":\"")
-                .append(RTSP).append('\"');
+        sb.append(",\"RTMP\":\"")
+                .append(RTMP).append('\"');
         sb.append('}');
         return sb.toString();
     }

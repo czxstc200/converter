@@ -11,11 +11,9 @@ public class Publish {
    发送属性
     */
     public static void sendAttributes(CameraInfo cameraInfo, String token) {
-        // TODO Auto-generated method stub
         try{
             Gson gson = new Gson();
             String deviceDataStr = gson.toJson(cameraInfo);
-            System.out.println(deviceDataStr);
             //进行发送
             DataMqttClient.publishAttribute(token,deviceDataStr);
         }catch(Exception e) {
