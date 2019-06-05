@@ -25,6 +25,7 @@
         <module>controller</module>
         <module>dataUploader</module>
         <module>onvif</module>
+        <module>transport</module>
     </modules>
     <dependencyManagement>
         <dependencies>
@@ -120,6 +121,13 @@
             </dependency>
             <!--    ONVIF Ends   -->
 
+            <!--    Netty Starts   -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>${netty-all.version}</version>
+            </dependency>
+            <!--    Netty Ends   -->
 
             <!--  others   -->
             <dependency>
@@ -143,6 +151,9 @@
                 <artifactId>slf4j-log4j12</artifactId>
                 <version>1.7.25</version>
             </dependency>
+
+
+
         </dependencies>
     </dependencyManagement>
 
