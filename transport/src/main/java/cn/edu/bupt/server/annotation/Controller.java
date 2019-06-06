@@ -1,4 +1,4 @@
-package cn.edu.bupt.annotation;
+package cn.edu.bupt.server.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

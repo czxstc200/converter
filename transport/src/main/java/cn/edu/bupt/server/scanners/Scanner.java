@@ -1,12 +1,17 @@
-package cn.edu.bupt.scanners;
+package cn.edu.bupt.server.scanners;
 
-import cn.edu.bupt.annotation.Controller;
-import cn.edu.bupt.annotation.RequestMapping;
+import cn.edu.bupt.server.annotation.Controller;
+import cn.edu.bupt.server.annotation.RequestMapping;
+import cn.edu.bupt.server.annotation.RequestParam;
+import cn.edu.bupt.server.parser.RequestParser;
+import io.netty.handler.codec.http.FullHttpRequest;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -31,25 +36,49 @@ public class Scanner {
         return INSTANCE;
     }
 
-    // controller的集合
     private Set<Class<?>> controllers;
 
-    public Object invokeMethod(String url,Object... paras) throws Exception{
+    public Object invokeMethod(FullHttpRequest request) throws Exception{
+        Map<String,String> params = RequestParser.parse(request);
+        return invokeMethod(request.uri(),params);
+    }
+
+    public Object invokeMethod(String url,Map<String,String> params) throws Exception{
         for (Class<?> cls : getControllers()) {
-            String prefix= "";
+
+            // 判断Controller的URL前缀
+            String prefix = "";
             if(cls.getAnnotation(RequestMapping.class)!=null) {
                 prefix = cls.getAnnotation(RequestMapping.class).value();
                 if (!url.startsWith(prefix)) {
                     continue;
                 }
             }
-            Method[] methods = cls.getMethods();
+
+            // 获取Controller下的方法
+            Method[] methods = cls.getDeclaredMethods();
             for (Method method : methods) {
+                // 获取方法的URL
                 RequestMapping annotation = method.getAnnotation(RequestMapping.class);
                 if (annotation != null) {
-                    String value = annotation.value();//找到RequestMapping的注入value值
-                    if (value.equals(url.substring(prefix.length()))) {
-                        return method.invoke(cls.newInstance(), paras);
+                    //找到RequestMapping的注入value值
+                    String value = annotation.value();
+                    //提取不带参数的URL
+                    int endIndex = url.indexOf('?');
+                    if(endIndex==-1){
+                        endIndex=url.length();
+                    }
+                    String urlWithoutParam = url.substring(prefix.length(),endIndex);
+
+                    // 判断方法是否符合
+                    if (value.equals(urlWithoutParam)) {
+                        Parameter[] parameters = method.getParameters();
+                        Object[] paramValues = new Object[parameters.length];
+                        for(int i = 0;i<paramValues.length;i++){
+                            String paramStr = params.get(parameters[i].getAnnotation(RequestParam.class).value());
+                            paramValues[i]=typeCast(parameters[i].getType(),paramStr);
+                        }
+                        return method.invoke(cls.newInstance(), paramValues);
                     }
                 }
             }
@@ -57,7 +86,30 @@ public class Scanner {
         throw new Exception("404");
     }
 
-    public Set<Class<?>> getControllers() throws Exception{
+    public Object typeCast(Type type, String paramStr){
+        String typeName = type.getTypeName();
+        if(typeName.equals("int")||typeName.equals("java.lang.Integer")){
+            return Integer.valueOf(paramStr);
+        }else if(typeName.equals("boolean")||typeName.equals("java.lang.Boolean")){
+            return Boolean.valueOf(paramStr);
+        }else if(typeName.equals("float")||typeName.equals("java.lang.Float")){
+            return Float.valueOf(paramStr);
+        }else if(typeName.equals("long")||typeName.equals("java.lang.Long")){
+            return Long.valueOf(paramStr);
+        }else if(typeName.equals("double")||typeName.equals("java.lang.Double")){
+            return Double.valueOf(paramStr);
+        }else if(typeName.equals("char")||typeName.equals("java.lang.Character")){
+            return paramStr.charAt(0);
+        }else if(typeName.equals("short")||typeName.equals("java.lang.Short")){
+            return Short.valueOf(paramStr);
+        }else if(typeName.equals("byte")||typeName.equals("java.lang.Byte")){
+            return Byte.valueOf(paramStr);
+        }else{
+            return paramStr;
+        }
+    }
+
+    private Set<Class<?>> getControllers() throws Exception{
         if (controllers == null) {
             synchronized (Scanner.class){
                 if(controllers==null) {
@@ -77,7 +129,7 @@ public class Scanner {
         return controllers;
     }
 
-    public Set<Class<?>> getClasses(String packageName) {
+    private Set<Class<?>> getClasses(String packageName) {
         // 第一个class类的集合
         Set<Class<?>> classes = new HashSet<>();
         // 是否循环迭代
@@ -157,8 +209,6 @@ public class Scanner {
     }
 
 
-
-
     /**
      * 以文件的形式来获取包下的所有Class
      *
@@ -167,8 +217,8 @@ public class Scanner {
      * @param recursive
      * @param classes
      */
-    public static void findAndAddClassesInPackageByFile(String packageName,
-                                                        String packagePath, final boolean recursive, Set<Class<?>> classes) {
+    private static void findAndAddClassesInPackageByFile(String packageName,
+                                                         String packagePath, final boolean recursive, Set<Class<?>> classes) {
         // 获取此包的目录 建立一个File
         File dir = new File(packagePath);
         // 如果不存在或者不是目录就直接返回
@@ -202,8 +252,11 @@ public class Scanner {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        Object res = Scanner.getInstance().invokeMethod("/about","1");
-        System.out.println(res==null);
+    public static void main(String[] args) throws Exception{
+        Scanner scanner = Scanner.getInstance();
+        Map<String,String> map = new HashMap<>();
+        map.put("aa","hhh");
+        map.put("bb","3");
+        System.out.println(scanner.invokeMethod("/about",map));
     }
 }

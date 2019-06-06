@@ -1,6 +1,6 @@
-package cn.edu.bupt;
+package cn.edu.bupt.server;
 
-import cn.edu.bupt.handler.HttpHandler;
+import cn.edu.bupt.server.handler.HttpHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -23,11 +23,6 @@ public class HttpServer {
 
     public HttpServer(int port) {
         this.port = port;
-    }
-
-    public static void main(String[] args) throws Exception {
-        int port = 8080;
-        new HttpServer(port).start();
     }
 
     public void start() throws Exception {

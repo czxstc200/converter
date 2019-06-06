@@ -1,4 +1,4 @@
-package cn.edu.bupt.annotation;
+package cn.edu.bupt.server.annotation;
 
 /**
  * @Description: RequestMethod
