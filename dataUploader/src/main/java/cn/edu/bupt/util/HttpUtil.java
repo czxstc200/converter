@@ -119,6 +119,26 @@ public class HttpUtil {
 
     }
 
+    public static String findDeviceId(String deviceName,String session) throws Exception{
+        Request requestCreate = new Request.Builder()
+                .url(FIND_DEVICE_URL + deviceName)
+                .get()
+                .addHeader("Accept", "application/json, text/plain, */*")
+                .addHeader("Connection", "keep-alive")
+                .addHeader("Cookie", session)
+                .build();
+        //得到一个call对象
+        Response response = mOkHttpClient.newCall(requestCreate).execute();
+        if (response.isSuccessful()) {
+            String result = response.body().string();
+            System.out.println("findDeviceId result : "+result);
+            return result;
+        }else{
+            System.out.println("token failed");
+        }
+        return null;
+    }
+
     /**
      * 查看设备的token令牌
      * @param deviceId

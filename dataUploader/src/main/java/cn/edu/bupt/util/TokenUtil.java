@@ -14,21 +14,22 @@ public class TokenUtil {
     public static final dbTokenImpl db = new dbTokenImpl();
 
     public static String getToken(String cameraName){
-        String token = null;
+        String token;
         if(db.get(cameraName) == null){ //SQLite里没有token
-            try{
+            try {
                 String session = HttpUtil.login();
-                String id = HttpUtil.createDevice(cameraName,session);
-                token = HttpUtil.findToken(id,session);
+                String id = HttpUtil.createDevice(cameraName, session);
+                if (id == null || id.equals("")) {
+                    id = HttpUtil.findDeviceId(cameraName,session);
+                    System.out.println("new id : "+id);
+                }
+                token = HttpUtil.findToken(id, session);
+                System.out.println(token);
+                db.insert(cameraName, token);
             }catch (Exception e){
                 e.printStackTrace();
                 return null;
             }//存入DB
-            if(token==null){
-                System.out.println("null token");
-                return null;
-            }
-            db.insert(cameraName,token);
             return token;
         }else{//SQLite里有token，从表中拿token
             token = db.get(cameraName);

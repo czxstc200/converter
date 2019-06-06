@@ -1,4 +1,4 @@
-package cn.edu.bupt;
+package cn.edu.bupt.test;
 
 import cn.edu.bupt.client.Client;
 import cn.edu.bupt.client.ClientImpl;
