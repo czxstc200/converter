@@ -12,9 +12,14 @@ import java.net.*;
 import java.security.SecureRandom;
 import java.util.*;
 import javax.xml.soap.*;
+
+import cn.edu.bupt.soap.OnvifDevice;
+import cn.edu.bupt.util.URLClassifier;
+import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.Node;
 import org.w3c.dom.*;
 
+@Slf4j
 public class DeviceDiscovery {
 
     public static final String WS_DISCOVERY_SOAP_VERSION = "SOAP 1.2 Protocol";
@@ -30,6 +35,30 @@ public class DeviceDiscovery {
             System.out.println("Device discovered: " + url.toString());
         }
     }
+
+    /**
+     * 找到所有的设备，设备的地址为Ipv4且没有使用代理，不使用代理确保了同一个摄像头只会出现一次
+     * @return 找到的摄像头
+     */
+    public static Set<String> discoverIpv4DevicesWithoutProxy(){
+        Set<URL> urls = discoverWsDevicesAsUrls();
+        Set<String> ips = new HashSet<>();
+        for(URL url : urls){
+            try {
+                if (URLClassifier.isIPv4Address(url.getHost())) {
+                    OnvifDevice device = new OnvifDevice(url.getHost(), "", "", false);
+                    if(!device.isProxy()){
+                        ips.add(url.getHost());
+                    }
+                }
+            }catch (Exception e){
+                log.warn("discovery exception.");
+                e.printStackTrace();
+            }
+        }
+        return ips;
+    }
+
 
     /**
      * 获取所有ONVIF设备

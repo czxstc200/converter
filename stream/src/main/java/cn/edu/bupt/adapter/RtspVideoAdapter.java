@@ -166,7 +166,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @Description adapter启动，根据需要可以添加listener实现相应功能
      * @author czx
      * @date 2018-12-03 23:01
-     * @param []
+     * @param
      * @return void
      */
     @Override
@@ -190,13 +190,13 @@ public class RtspVideoAdapter extends VideoAdapter{
 
         int count = 0;
         int nullFrames = 0;
-        Client client = ClientImpl.getClient();
+//        Client client = ClientImpl.getClient();
         try {
             while (!stop) {
                 //记录帧数
                 count++;
                 if (count % 100 == 0) {
-                    client.sendTelemetries(rtmpPath,"count",String.valueOf(count/100));
+//                    client.sendTelemetries(rtmpPath,"count",String.valueOf(count/100));
                     log.debug("Video[{}] counts={}", rtspPath, count);
                 }
 
@@ -302,7 +302,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @Description 结束推流
      * @author czx
      * @date 2019-04-23 23:50
-     * @param []
+     * @param
      * @return void
      */
     @Override
@@ -314,7 +314,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @Description 进行抓拍
      * @author czx
      * @date 2019-04-23 23:50
-     * @param []
+     * @param
      * @return void
      */
     public boolean capture(){
@@ -338,7 +338,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @Description 启动所有的listener
      * @author czx
      * @date 2019-04-23 23:49
-     * @param []
+     * @param
      * @return void
      */
     private void startAllListeners(){
@@ -352,7 +352,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @Description 关闭所有listener
      * @author czx
      * @date 2019-04-23 23:49
-     * @param []
+     * @param
      * @return void
      */
     private void closeAllListeners(){
@@ -369,7 +369,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @Description 拉流grabber的初始化与启动
      * @author czx
      * @date 2018-12-03 23:00
-     * @param []
+     * @param
      * @return void
      */
     private void grabberInit(){
@@ -409,7 +409,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @Description 根据listener的类型删除一个listener
      * @author czx
      * @date 2018-12-07 14:56
-     * @param [name]
+     * @param listenerClass
      * @return boolean
      */
     private boolean removeListener(Class listenerClass){
@@ -436,7 +436,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @Description 重新开始录制视频
      * @author czx
      * @date 2018-12-07 13:58
-     * @param [filename]
+     * @param filename
      * @return void
      */
     public void restartRecording(String filename){
@@ -449,7 +449,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @Description 开始录制
      * @author czx
      * @date 2018-12-07 14:12
-     * @param [filename]
+     * @param filename
      * @return void
      */
     private void startRecording(String filename){
@@ -480,7 +480,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @Description 停止录制
      * @author czx
      * @date 2018-12-07 14:13
-     * @param []
+     * @param
      * @return void
      */
     public void stopRecording(){
@@ -496,7 +496,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @Description 开始推流
      * @author czx
      * @date 2018-12-07 15:06
-     * @param []
+     * @param
      * @return void
      */
     private void startPushing(){
@@ -514,7 +514,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @Description 停止推流
      * @author czx
      * @date 2018-12-07 15:05
-     * @param []
+     * @param
      * @return void
      */
     private void stopPushing(){
@@ -530,7 +530,7 @@ public class RtspVideoAdapter extends VideoAdapter{
      * @Description 根据rtmp获取该视频流下的所有录像文件
      * @author CZX
      * @date 2018/11/30 18:55
-     * @param [rtmpPath]
+     * @param rtmpPath
      * @return java.cn.edu.bupt.util.List<java.lang.String>
      */
     public List<String> getFiles(String rtmpPath){

@@ -27,6 +27,7 @@ import java.util.*;
 @Slf4j
 public class OnvifDevice {
 	private final String HOST_IP;
+
 	private String originalIp;
 
 	private boolean isProxy;
@@ -327,7 +328,15 @@ public class OnvifDevice {
 	public String getHostname() {
 		return initialDevices.getHostname();
 	}
-	
+
+	public boolean isProxy() {
+		return isProxy;
+	}
+
+	public String getOriginalIp() {
+		return originalIp;
+	}
+
 	public String reboot() throws ConnectException, SOAPException {
 		return initialDevices.reboot();
 	}

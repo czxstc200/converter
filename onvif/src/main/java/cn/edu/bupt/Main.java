@@ -1,7 +1,9 @@
 package cn.edu.bupt;
 
+import cn.edu.bupt.discovery.DeviceDiscovery;
 import cn.edu.bupt.soap.OnvifDevice;
 import cn.edu.bupt.soap.devices.MediaDevices;
+import cn.edu.bupt.util.URLClassifier;
 import org.onvif.ver10.schema.Profile;
 
 import javax.xml.soap.SOAPException;
@@ -9,13 +11,21 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ConnectException;
+import java.net.URL;
 import java.util.List;
+import java.util.Set;
 
 public class Main {
 
 	private static final String INFO = "Commands:\n  \n  url: Get snapshort URL.\n  info: Get information about each valid command.\n  profiles: Get all profiles.\n  exit: Exit this application.\n  rtsp: get the rtsp path.";
 
-	public static void main(String args[]) {
+	public static void main(String args[]) throws Exception{
+
+//		Set<String> ips = DeviceDiscovery.discoverIpv4DevicesWithoutProxy();
+//		for(String ip : ips){
+//			System.out.println(ip);
+//		}
+//		System.out.println("--------");
 
 		InputStreamReader inputStream = new InputStreamReader(System.in);
 		BufferedReader keyboardInput = new BufferedReader(inputStream);
@@ -91,6 +101,9 @@ public class Main {
 					}catch (Exception e){
 
 					}
+					break;
+				case "name":
+					System.out.println(cam.getDevices().getDeviceInformation());
 					break;
 				default:
 					System.out.println("Unknown command!");

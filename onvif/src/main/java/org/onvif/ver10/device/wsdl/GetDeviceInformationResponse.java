@@ -155,4 +155,20 @@ public class GetDeviceInformationResponse {
 		this.hardwareId = value;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"manufacturer\":\"")
+				.append(manufacturer).append('\"');
+		sb.append(",\"model\":\"")
+				.append(model).append('\"');
+		sb.append(",\"firmwareVersion\":\"")
+				.append(firmwareVersion).append('\"');
+		sb.append(",\"serialNumber\":\"")
+				.append(serialNumber).append('\"');
+		sb.append(",\"hardwareId\":\"")
+				.append(hardwareId).append('\"');
+		sb.append('}');
+		return sb.toString();
+	}
 }

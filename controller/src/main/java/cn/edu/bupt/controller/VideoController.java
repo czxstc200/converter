@@ -1,6 +1,8 @@
 package cn.edu.bupt.controller;
 
+import cn.edu.bupt.discovery.DeviceDiscovery;
 import cn.edu.bupt.linux.HikUtil;
+import cn.edu.bupt.soap.OnvifDevice;
 import cn.edu.bupt.util.Constants;
 import cn.edu.bupt.adapter.RtspVideoAdapter;
 import cn.edu.bupt.adapter.VideoAdapter;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -37,71 +40,40 @@ public class VideoController {
         }catch (Exception e){
             throw new Exception("该rtmp地址不存在");
         }
-
     }
 
     @ApiOperation(value = "对视频进行推流")
     @RequestMapping(value = "/convert", method = RequestMethod.GET)
     @ResponseBody
-    public String convert(@RequestParam(required = false) String rtsp,
-                          @RequestParam(required = false) String rtmp,
+    public String convert(@RequestParam String rtsp,
+                          @RequestParam String rtmp,
                           @RequestParam(required = false) Boolean save,
                           @RequestParam(required = false) Boolean usePacket ) throws Exception{
-//        String rtspPath = "rtsp://admin:ydslab215@10.112.239.157:554/h264/ch1/main/av_stream";
         String rtmpPath = rtmp==null?"rtmp://localhost/oflaDemo/haikang1":rtmp;
         String rtspPath = rtsp==null?"rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov":rtsp;
         boolean saveVideo = save==null?false:save;
-        boolean isUsePacket = usePacket==null?false:usePacket;
+        boolean isUsePacket = usePacket==null?true:usePacket;
         VideoAdapterManagement.startAdapter(new RtspVideoAdapter(rtspPath,rtmpPath,saveVideo,isUsePacket));
         setHeader(response);
         return "{rtsp:'"+rtspPath+"',"+"rtmp:'"+rtmpPath+"',"+"saveVideo:"+saveVideo+",usePacket:"+isUsePacket+"}";
     }
 
-    @ApiOperation(value = "TEST 对视频进行推流")
-    @RequestMapping(value = "/convertAll", method = RequestMethod.GET)
+    @ApiOperation("通过ip推流")
+    @RequestMapping(value = "/convertWithIp", method = RequestMethod.GET)
     @ResponseBody
-    public void converttest(@RequestParam(required = false) Boolean save,
-                            @RequestParam(required = false) Boolean packet) throws Exception{
-//        String rtspPath = "rtsp://admin:ydslab215@10.112.239.157:554/h264/ch1/main/av_stream";
-        boolean b = false;
-        if(save!=null&&save==true){
-            b = true;
-        }
-        boolean usePacket = false;
-        if(packet!=null&&packet==true){
-            usePacket = true;
-        }
-        try {
-//            for (int i = 1; i <= 4; i++) {
-//                convert("rtsp://admin:LITFYL@10.112.239.157:554/h264/ch1/main/av_stream", "rtmp://10.112.217.199/live360p/test" + i, b, usePacket);
-//                Thread.sleep(1000);
-//            }
-            for (int i = 5; i <= 8; i++) {
-                convert("rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov", "rtmp://10.112.217.199/live360p/test" + i, b, usePacket);
-                Thread.sleep(1000);
-            }
-        }catch (Exception e){
-
-        }
+    public String convertWithIp(@RequestParam String ip,@RequestParam String username,
+                          @RequestParam String password,@RequestParam String rtmp,
+                                @RequestParam(required = false) Boolean save,
+                                @RequestParam(required = false) Boolean usePacket) throws Exception{
+        setHeader(response);
+        boolean saveVideo = save==null?false:save;
+        boolean isUsePacket = usePacket==null?true:usePacket;
+        OnvifDevice device = new OnvifDevice(ip,username,password,false);
+        String rtsp = device.getMedia().getRTSPStreamUri(device.getDevices().getProfiles().get(0).getToken());
+        String rtspPath = rtsp.replace("rtsp://","rtsp://"+username+":"+password+"@");
+        VideoAdapterManagement.startAdapter(new RtspVideoAdapter(rtspPath,rtmp,saveVideo,isUsePacket));
+        return "{rtsp:'"+rtspPath+"',"+"rtmp:'"+rtmp+"',"+"saveVideo:"+saveVideo+",usePacket:"+isUsePacket+"}";
     }
-
-    @ApiOperation(value = "TEST 对视频停止推流")
-    @RequestMapping(value = "/stopAll", method = RequestMethod.GET)
-    @ResponseBody
-    public void stopAll() {
-//        String rtspPath = "rtsp://admin:ydslab215@10.112.239.157:554/h264/ch1/main/av_stream";
-        try {
-            for (VideoAdapter videoAdapter : VideoAdapterManagement.map.values()) {
-                videoAdapter.stop();
-                Thread.sleep(1000);
-            }
-            VideoAdapterManagement.map = new ConcurrentHashMap<>();
-        }catch (Exception e){
-
-        }
-    }
-
-
 
     @ApiOperation(value = "画面抓拍")
     @RequestMapping(value = "/capture", method = RequestMethod.GET)
@@ -183,14 +155,29 @@ public class VideoController {
     @ApiOperation("获取所有视频源")
     @RequestMapping(value = "/feedback", method = RequestMethod.GET)
     @ResponseBody
-    public List<String> getFeedbacks(){
+    public Set<String> getFeedbacks(){
         setHeader(response);
-        List<String> list = new ArrayList<>();
-        list.add("rtmp://39.104.186.210/oflaDemo/haikang1/2019_01_18_17_08.flv");
-        list.add("rtmp://39.104.186.210/oflaDemo/haikang1/2019_01_18_17_06.flv");
-        list.add("rtmp://39.104.186.210/oflaDemo/haikang1/BladeRunner2049.flv");
-        list.add("rtmp://39.104.186.210/oflaDemo/haikang1/guardians2.mp4");
-        return list;
+        return VideoAdapterManagement.getAllStreams();
+    }
+
+    @ApiOperation("查找局域网内的摄像头")
+    @RequestMapping(value = "/discovery", method = RequestMethod.GET)
+    @ResponseBody
+    public Set<String> discovery(){
+        setHeader(response);
+        return DeviceDiscovery.discoverIpv4DevicesWithoutProxy();
+    }
+
+    @ApiOperation("获取设备的RTSP地址")
+    @RequestMapping(value = "/getRtsp", method = RequestMethod.GET)
+    @ResponseBody
+    public String getRtsp(@RequestParam String ip,@RequestParam String username,
+                               @RequestParam String password) throws Exception{
+        setHeader(response);
+        OnvifDevice device = new OnvifDevice(ip,username,password,false);
+        String info = device.getDevices().getDeviceInformation().toString();
+        System.out.println(info);
+        return device.getMedia().getRTSPStreamUri(device.getDevices().getProfiles().get(0).getToken());
     }
 
     //以下是视频控制

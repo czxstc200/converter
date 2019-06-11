@@ -2,7 +2,9 @@ package cn.edu.bupt.adapter;
 
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.*;
 
 /**
@@ -27,7 +29,7 @@ public class VideoAdapterManagement {
      * @Description 启动一个适配器
      * @author czx
      * @date 2019-04-23 23:44
-     * @param [adapter]
+     * @param adapter
      * @return void
      */
     public static void startAdapter(VideoAdapter adapter) throws Exception{
@@ -49,7 +51,7 @@ public class VideoAdapterManagement {
      * @Description 关闭适配器
      * @author czx
      * @date 2019-04-23 23:44
-     * @param [adapter]
+     * @param adapter
      * @return void
      */
     public static void stopAdapter(VideoAdapter adapter){
@@ -62,7 +64,7 @@ public class VideoAdapterManagement {
      * @Description 获取适配器
      * @author czx
      * @date 2019-04-23 23:44
-     * @param [name]
+     * @param name
      * @return cn.edu.bupt.stream.cn.edu.bupt.adapter.VideoAdapter
      */
     public static VideoAdapter getVideoAdapter(String name){
@@ -73,11 +75,23 @@ public class VideoAdapterManagement {
      * @Description 获取适配器的状态
      * @author czx
      * @date 2019-04-23 23:44
-     * @param [adapterName]
+     * @param adapterName
      * @return boolean
      */
     public static boolean getAdapterStatus(String adapterName){
         return futures.get(adapterName).isDone();
+    }
+
+    /**
+     * 获取目前推流的所有RTMP地址
+     * @return
+     */
+    public static Set<String> getAllStreams(){
+        Set<String> sources = new HashSet<>();
+        for(Map.Entry<String,VideoAdapter> entry : map.entrySet()){
+            sources.add(((RtspVideoAdapter)entry.getValue()).getRtmpPath());
+        }
+        return sources;
     }
 
     public static void main(String[] args) {

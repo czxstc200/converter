@@ -19,8 +19,12 @@ public class ClientImpl implements Client{
 
     @Override
     public void sendTelemetries(String cameraName,String key,String value) {
-        String token = TokenUtil.getToken(cameraName);
-        Publish.sendTelemetries(token,key,value);
+        try {
+            String token = TokenUtil.getToken(cameraName);
+            Publish.sendTelemetries(token, key, value);
+        }catch (Exception e){
+
+        }
     }
 
     @Override
