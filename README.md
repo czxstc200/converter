@@ -3,7 +3,7 @@
 - [1. 简介](#1-简介)
 - [2. 部署](#2-部署)
   - [2.1. 必要组件](#21-必要组件)
-  - [2.2. 海康SDK环境配置](#22-海康sdk环境配置)
+  - [2.2. 海康SDK环境配置（非必须）](#22-海康sdk环境配置（非必须）)
   - [2.3. 搭建RTMP服务器](#23-搭建rtmp服务器)
   - [2.4. 快速开始](#24-快速开始)
 - [3. 设计概要](#3-设计概要)
@@ -35,9 +35,9 @@ RTSP转RTMP/HLS的视频拉流推流程序。
 - Java([安装教程](https://java.com/en/download/help/download_options.xml))
 - maven（[安装过程](http://maven.apache.org/install.html)）
 - git（[下载地址](https://git-scm.com/downloads)）
-- 海康SDK（[下载地址](https://www.hikvision.com/cn/download_61.html)）
+- 海康SDK（非必须）（[下载地址](https://www.hikvision.com/cn/download_61.html)）
 
-## 2.2. 海康SDK环境配置
+## 2.2. 海康SDK环境配置（非必须）
 
 1. 获取之前下载获得的SDK开发包，解压
 2. SDK所需要的so库文件都在SDK解压后的lib文件夹下
@@ -56,27 +56,35 @@ RTSP转RTMP/HLS的视频拉流推流程序。
 
 1. 克隆项目代码，这里以保存到~文件为例
 
-> cd ~
-
-> git clone https://github.com/czxstc200/converter.git
+```shell
+cd ~
+git clone https://github.com/czxstc200/converter.git
+```
 
 2. 进入项目文件夹，使用maven进行项目构建
 
-> cd converter/
-
-> mvn clean install
+```shell
+cd converter/
+mvn clean install
+```
 
 3. 进入controller/target文件夹，找到jar包并且使用Java运行jar包。java命令之后需要加上视频录像的存放根目录，例如/home/rec/，注意需要使用绝对路径
 
-> cd controller/target
+```shell
+cd controller/target
+```
 
 将命令中的${YOUR_ABSOLUTE_PATH}换作你自己的录像存放地址。
 
-> java -DRootDir=${YOUR_ABSOLUTE_PATH} -jar controller-1.0-SNAPSHOT.jar 
+```shell
+java -DRootDir=${YOUR_ABSOLUTE_PATH} -jar controller-1.0-SNAPSHOT.jar
+```
 
 4. 调用接口进行推流
 
-> curl 127.0.0.1:8083/convert?rtsp=rtsp://admin:LITFYL@10.112.239.157:554/h264/ch1/main/av_stream\\&rtmp=rtmp://10.112.217.199/live360p/test\\&usePacket=true
+```shell
+curl 127.0.0.1:8083/convert?rtsp=rtsp://admin:LITFYL@10.112.239.157:554/h264/ch1/main/av_stream\\&rtmp=rtmp://10.112.217.199/live360p/test\\&usePacket=true
+```
 
 将rtsp和rtmp的地址换成自己的rtsp和rtmp地址即可。
 
@@ -114,6 +122,30 @@ RTSP转RTMP/HLS的视频拉流推流程序。
 
 - 在拉流端，由于摄像头本身会暴露出自己的RTSP地址，因此采用RTSP协议
 - 在推流端，采用的是RTMP和HLS。在延迟上，RTMP较之于HLS较低，但是技术较老，且需要Flash的支持，在PC端浏览器中可以使用Flash进行播放。HLS的延迟较高，但是iOS和Android都可以原生支持这一种协议，可以直接在页面上播放，而RTMP协议并不支持直接播放。因此，在推流端采用了RTMP和HLS两种协议。
+
+## 3.4 ONVIF
+
+对于局域网内支持ONVIF协议的网络摄像头，还可以通过接口调用实现设备发现：
+
+```shell
+curl 127.0.0.1:8083/discovery
+```
+
+该接口会返回找到的ONVIF设备的IP地址。继续调用接口可以获取设备的RTSP地址，并且使用这个RTSP进行推流。
+
+```shell
+curl 127.0.0.1:8083/convertWithIp?ip=${YOUR_CAMERA_IP}\\&username=${YOUR_ONVIF_USERNAME}\\&password=${YOUR_ONVIF_PASSWORD}\\&rtmp=${RTMP_PATH}\\&usePacket=true
+```
+
+将${YOUR_CAMERA_IP}换成摄像头的IP地址;
+
+将${YOUR_ONVIF_USERNAME}换成摄像头ONVIF的用户名；
+
+将${YOUR_ONVIF_PASSWORD}换成摄像头ONVIF的密码；
+
+将${RTMP_PATH}换成要推流的RTMP地址。
+
+这个接口通过摄像头IP和ONVIF的用户名和密码进行推流操作。
 
 # 4. 要点说明
 
