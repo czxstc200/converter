@@ -109,6 +109,7 @@ public class DeviceDiscovery {
                 long startTime = System.currentTimeMillis();
                 DatagramPacket packet = new DatagramPacket(new byte[4096], 4096);
                 server.setSoTimeout(WS_DISCOVERY_TIMEOUT/2);
+                // TODO：将parse过程移到获取了所有回应（即for循环之外）之后。
                 while (System.currentTimeMillis() - startTime < WS_DISCOVERY_TIMEOUT) {
                     try {
                         server.receive(packet);
@@ -157,12 +158,14 @@ public class DeviceDiscovery {
     private static List<InetAddress> findInterfaceAddress(){
         List<InetAddress> addressList = new ArrayList<>();
         try {
-            final Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            final Enumeration<NetworkInterface> interfaces =
+                    NetworkInterface.getNetworkInterfaces();
             if(interfaces != null) {
                 while (interfaces.hasMoreElements()) {
                     NetworkInterface anInterface = interfaces.nextElement();
                     if(!anInterface.isLoopback() ) {
-                        final List<InterfaceAddress> interfaceAddresses = anInterface.getInterfaceAddresses();
+                        final List<InterfaceAddress> interfaceAddresses =
+                                anInterface.getInterfaceAddresses();
                         for (InterfaceAddress address : interfaceAddresses) {
                             if(address.getAddress() instanceof Inet4Address) {
                                 addressList.add(address.getAddress());

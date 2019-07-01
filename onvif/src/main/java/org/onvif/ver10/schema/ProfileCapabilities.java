@@ -108,4 +108,16 @@ public class ProfileCapabilities {
 		return otherAttributes;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"maximumNumberOfProfiles\":")
+				.append(maximumNumberOfProfiles);
+		sb.append(",\"any\":")
+				.append(any);
+		sb.append(",\"otherAttributes\":")
+				.append(otherAttributes);
+		sb.append('}');
+		return sb.toString();
+	}
 }

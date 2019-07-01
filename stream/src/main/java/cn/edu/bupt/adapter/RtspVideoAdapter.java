@@ -6,9 +6,11 @@ import cn.edu.bupt.event.Event;
 import cn.edu.bupt.event.GrabEvent;
 import cn.edu.bupt.event.PacketEvent;
 import cn.edu.bupt.listener.Listener;
+import cn.edu.bupt.listener.ObjectDetectionListener;
 import cn.edu.bupt.listener.PushListener;
 import cn.edu.bupt.listener.RecordListener;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.bytedeco.ffmpeg.avcodec.AVPacket;
 import org.bytedeco.ffmpeg.global.avcodec;
@@ -18,10 +20,12 @@ import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.bytedeco.opencv.global.opencv_imgcodecs;
+import org.bytedeco.opencv.opencv_core.IplImage;
 import org.bytedeco.opencv.opencv_core.Mat;
 import cn.edu.bupt.util.Constants;
 import cn.edu.bupt.util.DirUtil;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +57,8 @@ public class RtspVideoAdapter extends VideoAdapter{
     private AtomicBoolean capture = new AtomicBoolean(false);
     private final int NULL_FRAME_THRESHOLD = 10;
     private Long lastFrameTime = System.currentTimeMillis();
+    private AtomicBoolean cv = new AtomicBoolean(false);
+    private String result = "";
     /**
      * 是否使用AVPacket的方式直接进行拉流与推流
      */
@@ -187,6 +193,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         }
 
         startPushing();
+        addListener(new ObjectDetectionListener(this,rtmpPath));
 
         int count = 0;
         int nullFrames = 0;
@@ -197,6 +204,10 @@ public class RtspVideoAdapter extends VideoAdapter{
                 count++;
                 if (count % 100 == 0) {
 //                    client.sendTelemetries(rtmpPath,"count",String.valueOf(count/100));
+//                    if(cv.get()){
+//                        client.sendTelemetries(rtmpPath,"ObjectDetection",result);
+//                        cv.set(false);
+//                    }
                     log.debug("Video[{}] counts={}", rtspPath, count);
                 }
 
@@ -376,6 +387,7 @@ public class RtspVideoAdapter extends VideoAdapter{
         try {
             // 使用rtsp的时候需要使用 FFmpegFrameGrabber，不能再用FrameGrabber
             FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(rtspPath);
+            grabber.setOption("rtsp_transport", "tcp");
             this.grabber = grabber;
             this.grabber.start();
 
@@ -632,6 +644,11 @@ public class RtspVideoAdapter extends VideoAdapter{
                 log.warn("Unknown cn.edu.bupt.event type!");
             }
         }
+    }
+
+    public void send(String result){
+        this.result = result;
+        cv.compareAndSet(false,true);
     }
 
     public static void main(String[] args) {

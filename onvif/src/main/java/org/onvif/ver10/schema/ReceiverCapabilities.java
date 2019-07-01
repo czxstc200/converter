@@ -209,4 +209,26 @@ public class ReceiverCapabilities {
 		return otherAttributes;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"xAddr\":\"")
+				.append(xAddr).append('\"');
+		sb.append(",\"rtpMulticast\":")
+				.append(rtpMulticast);
+		sb.append(",\"rtptcp\":")
+				.append(rtptcp);
+		sb.append(",\"rtprtsptcp\":")
+				.append(rtprtsptcp);
+		sb.append(",\"supportedReceivers\":")
+				.append(supportedReceivers);
+		sb.append(",\"maximumRTSPURILength\":")
+				.append(maximumRTSPURILength);
+		sb.append(",\"any\":")
+				.append(any);
+		sb.append(",\"otherAttributes\":")
+				.append(otherAttributes);
+		sb.append('}');
+		return sb.toString();
+	}
 }

@@ -189,4 +189,22 @@ public class SystemCapabilitiesExtension {
 		this.extension = value;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"any\":")
+				.append(any);
+		sb.append(",\"httpFirmwareUpgrade\":")
+				.append(httpFirmwareUpgrade);
+		sb.append(",\"httpSystemBackup\":")
+				.append(httpSystemBackup);
+		sb.append(",\"httpSystemLogging\":")
+				.append(httpSystemLogging);
+		sb.append(",\"httpSupportInformation\":")
+				.append(httpSupportInformation);
+		sb.append(",\"extension\":")
+				.append(extension);
+		sb.append('}');
+		return sb.toString();
+	}
 }

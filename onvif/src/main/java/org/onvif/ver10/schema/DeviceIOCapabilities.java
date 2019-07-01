@@ -209,4 +209,26 @@ public class DeviceIOCapabilities {
 		return otherAttributes;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"xAddr\":\"")
+				.append(xAddr).append('\"');
+		sb.append(",\"videoSources\":")
+				.append(videoSources);
+		sb.append(",\"videoOutputs\":")
+				.append(videoOutputs);
+		sb.append(",\"audioSources\":")
+				.append(audioSources);
+		sb.append(",\"audioOutputs\":")
+				.append(audioOutputs);
+		sb.append(",\"relayOutputs\":")
+				.append(relayOutputs);
+		sb.append(",\"any\":")
+				.append(any);
+		sb.append(",\"otherAttributes\":")
+				.append(otherAttributes);
+		sb.append('}');
+		return sb.toString();
+	}
 }

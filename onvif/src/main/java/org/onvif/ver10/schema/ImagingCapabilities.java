@@ -80,4 +80,14 @@ public class ImagingCapabilities {
 		return otherAttributes;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"xAddr\":\"")
+				.append(xAddr).append('\"');
+		sb.append(",\"otherAttributes\":")
+				.append(otherAttributes);
+		sb.append('}');
+		return sb.toString();
+	}
 }

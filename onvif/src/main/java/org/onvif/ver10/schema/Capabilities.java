@@ -223,4 +223,26 @@ public class Capabilities {
 		return otherAttributes;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"analytics\":")
+				.append(analytics);
+		sb.append(",\"device\":")
+				.append(device);
+		sb.append(",\"events\":")
+				.append(events);
+		sb.append(",\"imaging\":")
+				.append(imaging);
+		sb.append(",\"media\":")
+				.append(media);
+		sb.append(",\"ptz\":")
+				.append(ptz);
+		sb.append(",\"extension\":")
+				.append(extension);
+		sb.append(",\"otherAttributes\":")
+				.append(otherAttributes);
+		sb.append('}');
+		return sb.toString();
+	}
 }

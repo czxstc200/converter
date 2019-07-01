@@ -133,4 +133,18 @@ public class DisplayCapabilities {
 		return otherAttributes;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"xAddr\":\"")
+				.append(xAddr).append('\"');
+		sb.append(",\"fixedLayout\":")
+				.append(fixedLayout);
+		sb.append(",\"any\":")
+				.append(any);
+		sb.append(",\"otherAttributes\":")
+				.append(otherAttributes);
+		sb.append('}');
+		return sb.toString();
+	}
 }

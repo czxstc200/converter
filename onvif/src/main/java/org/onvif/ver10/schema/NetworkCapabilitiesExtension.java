@@ -116,4 +116,16 @@ public class NetworkCapabilitiesExtension {
 		this.extension = value;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"any\":")
+				.append(any);
+		sb.append(",\"dot11Configuration\":")
+				.append(dot11Configuration);
+		sb.append(",\"extension\":")
+				.append(extension);
+		sb.append('}');
+		return sb.toString();
+	}
 }

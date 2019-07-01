@@ -75,4 +75,14 @@ public class OnvifVersion {
 		this.minor = value;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"major\":")
+				.append(major);
+		sb.append(",\"minor\":")
+				.append(minor);
+		sb.append('}');
+		return sb.toString();
+	}
 }

@@ -71,4 +71,12 @@ public class DeviceCapabilitiesExtension {
 		return this.any;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"any\":")
+				.append(any);
+		sb.append('}');
+		return sb.toString();
+	}
 }

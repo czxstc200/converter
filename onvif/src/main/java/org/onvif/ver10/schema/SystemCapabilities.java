@@ -226,4 +226,28 @@ public class SystemCapabilities {
 		return otherAttributes;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"discoveryResolve\":")
+				.append(discoveryResolve);
+		sb.append(",\"discoveryBye\":")
+				.append(discoveryBye);
+		sb.append(",\"remoteDiscovery\":")
+				.append(remoteDiscovery);
+		sb.append(",\"systemBackup\":")
+				.append(systemBackup);
+		sb.append(",\"systemLogging\":")
+				.append(systemLogging);
+		sb.append(",\"firmwareUpgrade\":")
+				.append(firmwareUpgrade);
+		sb.append(",\"supportedVersions\":")
+				.append(supportedVersions);
+		sb.append(",\"extension\":")
+				.append(extension);
+		sb.append(",\"otherAttributes\":")
+				.append(otherAttributes);
+		sb.append('}');
+		return sb.toString();
+	}
 }

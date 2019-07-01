@@ -261,4 +261,28 @@ public class CapabilitiesExtension {
 		this.extensions = value;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"any\":")
+				.append(any);
+		sb.append(",\"deviceIO\":")
+				.append(deviceIO);
+		sb.append(",\"display\":")
+				.append(display);
+		sb.append(",\"recording\":")
+				.append(recording);
+		sb.append(",\"search\":")
+				.append(search);
+		sb.append(",\"replay\":")
+				.append(replay);
+		sb.append(",\"receiver\":")
+				.append(receiver);
+		sb.append(",\"analyticsDevice\":")
+				.append(analyticsDevice);
+		sb.append(",\"extensions\":")
+				.append(extensions);
+		sb.append('}');
+		return sb.toString();
+	}
 }

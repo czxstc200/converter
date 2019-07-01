@@ -266,4 +266,32 @@ public class SecurityCapabilities {
 		return otherAttributes;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"tls11\":")
+				.append(tls11);
+		sb.append(",\"tls12\":")
+				.append(tls12);
+		sb.append(",\"onboardKeyGeneration\":")
+				.append(onboardKeyGeneration);
+		sb.append(",\"accessPolicyConfig\":")
+				.append(accessPolicyConfig);
+		sb.append(",\"x509Token\":")
+				.append(x509Token);
+		sb.append(",\"samlToken\":")
+				.append(samlToken);
+		sb.append(",\"kerberosToken\":")
+				.append(kerberosToken);
+		sb.append(",\"relToken\":")
+				.append(relToken);
+		sb.append(",\"any\":")
+				.append(any);
+		sb.append(",\"extension\":")
+				.append(extension);
+		sb.append(",\"otherAttributes\":")
+				.append(otherAttributes);
+		sb.append('}');
+		return sb.toString();
+	}
 }

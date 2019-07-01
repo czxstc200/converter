@@ -162,4 +162,20 @@ public class MediaCapabilities {
 		return otherAttributes;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"xAddr\":\"")
+				.append(xAddr).append('\"');
+		sb.append(",\"streamingCapabilities\":")
+				.append(streamingCapabilities);
+		sb.append(",\"any\":")
+				.append(any);
+		sb.append(",\"extension\":")
+				.append(extension);
+		sb.append(",\"otherAttributes\":")
+				.append(otherAttributes);
+		sb.append('}');
+		return sb.toString();
+	}
 }

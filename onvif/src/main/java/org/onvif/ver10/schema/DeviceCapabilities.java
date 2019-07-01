@@ -200,4 +200,24 @@ public class DeviceCapabilities {
 		return otherAttributes;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"xAddr\":\"")
+				.append(xAddr).append('\"');
+		sb.append(",\"network\":")
+				.append(network);
+		sb.append(",\"system\":")
+				.append(system);
+		sb.append(",\"io\":")
+				.append(io);
+		sb.append(",\"security\":")
+				.append(security);
+		sb.append(",\"extension\":")
+				.append(extension);
+		sb.append(",\"otherAttributes\":")
+				.append(otherAttributes);
+		sb.append('}');
+		return sb.toString();
+	}
 }

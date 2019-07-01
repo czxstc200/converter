@@ -167,6 +167,7 @@ public class PushListener extends RtspListener {
         this.pushRecorder = new FFmpegFrameRecorder(rtmpPath,grabber.getImageWidth(),grabber.getImageHeight(),0);
         pushRecorder.setFrameRate(grabber.getFrameRate());
         pushRecorder.setFormat("flv");
+        pushRecorder.setVideoOption("preset", "ultrafast");
         if(usePacket){
             fc = grabber.getFormatContext();
         }else{

@@ -127,4 +127,18 @@ public class IOCapabilities {
 		return otherAttributes;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"inputConnectors\":")
+				.append(inputConnectors);
+		sb.append(",\"relayOutputs\":")
+				.append(relayOutputs);
+		sb.append(",\"extension\":")
+				.append(extension);
+		sb.append(",\"otherAttributes\":")
+				.append(otherAttributes);
+		sb.append('}');
+		return sb.toString();
+	}
 }

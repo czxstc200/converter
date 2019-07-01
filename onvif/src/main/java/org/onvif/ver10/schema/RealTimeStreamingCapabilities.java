@@ -151,4 +151,20 @@ public class RealTimeStreamingCapabilities {
 		return otherAttributes;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"rtpMulticast\":")
+				.append(rtpMulticast);
+		sb.append(",\"rtptcp\":")
+				.append(rtptcp);
+		sb.append(",\"rtprtsptcp\":")
+				.append(rtprtsptcp);
+		sb.append(",\"extension\":")
+				.append(extension);
+		sb.append(",\"otherAttributes\":")
+				.append(otherAttributes);
+		sb.append('}');
+		return sb.toString();
+	}
 }

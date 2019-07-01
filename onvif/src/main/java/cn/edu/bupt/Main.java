@@ -21,17 +21,17 @@ public class Main {
 
 	public static void main(String args[]) throws Exception{
 
-//		Set<String> ips = DeviceDiscovery.discoverIpv4DevicesWithoutProxy();
-//		for(String ip : ips){
-//			System.out.println(ip);
-//		}
-//		System.out.println("--------");
+		Set<String> ips = DeviceDiscovery.discoverIpv4DevicesWithoutProxy();
+		for(String ip : ips){
+			System.out.println(ip);
+		}
+		System.out.println("--------");
 
 		InputStreamReader inputStream = new InputStreamReader(System.in);
 		BufferedReader keyboardInput = new BufferedReader(inputStream);
 		String input, cameraAddress, user, password;
 
-		cameraAddress = "10.112.234.40";
+		cameraAddress = "192.168.1.107";
 		user = "czx";
 		password = "zx19950529";
 //
@@ -104,6 +104,9 @@ public class Main {
 					break;
 				case "name":
 					System.out.println(cam.getDevices().getDeviceInformation());
+					break;
+				case "capacity":
+					System.out.println(cam.getDevices().getCapabilities());
 					break;
 				default:
 					System.out.println("Unknown command!");

@@ -175,4 +175,22 @@ public class NetworkCapabilities {
 		return otherAttributes;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("{");
+		sb.append("\"ipFilter\":")
+				.append(ipFilter);
+		sb.append(",\"zeroConfiguration\":")
+				.append(zeroConfiguration);
+		sb.append(",\"ipVersion6\":")
+				.append(ipVersion6);
+		sb.append(",\"dynDNS\":")
+				.append(dynDNS);
+		sb.append(",\"extension\":")
+				.append(extension);
+		sb.append(",\"otherAttributes\":")
+				.append(otherAttributes);
+		sb.append('}');
+		return sb.toString();
+	}
 }
