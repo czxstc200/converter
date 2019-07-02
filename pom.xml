@@ -24,7 +24,6 @@
         <module>hikVision</module>
         <module>controller</module>
         <module>dataUploader</module>
-        <module>onvif</module>
         <module>transport</module>
     </modules>
     <dependencyManagement>
@@ -200,21 +199,6 @@
                             <version>3.0.9</version>
                             <packaging>jar</packaging>
                             <file>${basedir}/hikVision/lib/jna-3.0.9.jar</file>
-                            <generatePom>true</generatePom>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>onvif</id>
-                        <phase>clean</phase>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <configuration>
-                            <groupId>be.teletask.onvif</groupId>
-                            <artifactId>onvif</artifactId>
-                            <version>1.0.2</version>
-                            <packaging>jar</packaging>
-                            <file>${basedir}/onvif/lib/onvif-1.0.2.jar</file>
                             <generatePom>true</generatePom>
                         </configuration>
                     </execution>

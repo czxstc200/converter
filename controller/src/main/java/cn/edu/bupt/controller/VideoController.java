@@ -1,8 +1,6 @@
 package cn.edu.bupt.controller;
 
-import cn.edu.bupt.discovery.DeviceDiscovery;
 import cn.edu.bupt.linux.HikUtil;
-import cn.edu.bupt.soap.OnvifDevice;
 import cn.edu.bupt.util.Constants;
 import cn.edu.bupt.adapter.RtspVideoAdapter;
 import cn.edu.bupt.adapter.VideoAdapter;
@@ -58,22 +56,22 @@ public class VideoController {
         return "{rtsp:'"+rtspPath+"',"+"rtmp:'"+rtmpPath+"',"+"saveVideo:"+saveVideo+",usePacket:"+isUsePacket+"}";
     }
 
-    @ApiOperation("通过ip推流")
-    @RequestMapping(value = "/convertWithIp", method = RequestMethod.GET)
-    @ResponseBody
-    public String convertWithIp(@RequestParam String ip,@RequestParam String username,
-                          @RequestParam String password,@RequestParam String rtmp,
-                                @RequestParam(required = false) Boolean save,
-                                @RequestParam(required = false) Boolean usePacket) throws Exception{
-        setHeader(response);
-        boolean saveVideo = save==null?false:save;
-        boolean isUsePacket = usePacket==null?true:usePacket;
-        OnvifDevice device = new OnvifDevice(ip,username,password,false);
-        String rtsp = device.getMedia().getRTSPStreamUri(device.getDevices().getProfiles().get(0).getToken());
-        String rtspPath = rtsp.replace("rtsp://","rtsp://"+username+":"+password+"@");
-        VideoAdapterManagement.startAdapter(new RtspVideoAdapter(rtspPath,rtmp,saveVideo,isUsePacket));
-        return "{rtsp:'"+rtspPath+"',"+"rtmp:'"+rtmp+"',"+"saveVideo:"+saveVideo+",usePacket:"+isUsePacket+"}";
-    }
+//    @ApiOperation("通过ip推流")
+//    @RequestMapping(value = "/convertWithIp", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String convertWithIp(@RequestParam String ip,@RequestParam String username,
+//                          @RequestParam String password,@RequestParam String rtmp,
+//                                @RequestParam(required = false) Boolean save,
+//                                @RequestParam(required = false) Boolean usePacket) throws Exception{
+//        setHeader(response);
+//        boolean saveVideo = save==null?false:save;
+//        boolean isUsePacket = usePacket==null?true:usePacket;
+//        OnvifDevice device = new OnvifDevice(ip,username,password,false);
+//        String rtsp = device.getMedia().getRTSPStreamUri(device.getDevices().getProfiles().get(0).getToken());
+//        String rtspPath = rtsp.replace("rtsp://","rtsp://"+username+":"+password+"@");
+//        VideoAdapterManagement.startAdapter(new RtspVideoAdapter(rtspPath,rtmp,saveVideo,isUsePacket));
+//        return "{rtsp:'"+rtspPath+"',"+"rtmp:'"+rtmp+"',"+"saveVideo:"+saveVideo+",usePacket:"+isUsePacket+"}";
+//    }
 
     @ApiOperation(value = "画面抓拍")
     @RequestMapping(value = "/capture", method = RequestMethod.GET)
@@ -160,25 +158,25 @@ public class VideoController {
         return VideoAdapterManagement.getAllStreams();
     }
 
-    @ApiOperation("查找局域网内的摄像头")
-    @RequestMapping(value = "/discovery", method = RequestMethod.GET)
-    @ResponseBody
-    public Set<String> discovery(){
-        setHeader(response);
-        return DeviceDiscovery.discoverIpv4DevicesWithoutProxy();
-    }
+//    @ApiOperation("查找局域网内的摄像头")
+//    @RequestMapping(value = "/discovery", method = RequestMethod.GET)
+//    @ResponseBody
+//    public Set<String> discovery(){
+//        setHeader(response);
+//        return DeviceDiscovery.discoverIpv4DevicesWithoutProxy();
+//    }
 
-    @ApiOperation("获取设备的RTSP地址")
-    @RequestMapping(value = "/getRtsp", method = RequestMethod.GET)
-    @ResponseBody
-    public String getRtsp(@RequestParam String ip,@RequestParam String username,
-                               @RequestParam String password) throws Exception{
-        setHeader(response);
-        OnvifDevice device = new OnvifDevice(ip,username,password,false);
-        String info = device.getDevices().getDeviceInformation().toString();
-        System.out.println(info);
-        return device.getMedia().getRTSPStreamUri(device.getDevices().getProfiles().get(0).getToken());
-    }
+//    @ApiOperation("获取设备的RTSP地址")
+//    @RequestMapping(value = "/getRtsp", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String getRtsp(@RequestParam String ip,@RequestParam String username,
+//                               @RequestParam String password) throws Exception{
+//        setHeader(response);
+//        OnvifDevice device = new OnvifDevice(ip,username,password,false);
+//        String info = device.getDevices().getDeviceInformation().toString();
+//        System.out.println(info);
+//        return device.getMedia().getRTSPStreamUri(device.getDevices().getProfiles().get(0).getToken());
+//    }
 
     //以下是视频控制
 
