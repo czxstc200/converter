@@ -1,46 +1,67 @@
 package cn.edu.bupt.adapter;
 
 import cn.edu.bupt.listener.Listener;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-/**
- * @Description: VideoAdapter
- * @Author: czx
- * @CreateDate: 2018-12-02 19:14
- * @Version: 1.0
- */
 @Slf4j
+@Data
 public abstract class VideoAdapter {
 
-    private List<Listener> listeners;
+    protected final List<Listener> listeners = new ArrayList<>();
 
-    private String name;
+    protected final Set<Class<? extends Listener>> listenerSet = new HashSet<>();
 
-    public VideoAdapter(String adapterName) {
-        this.name = adapterName;
-    }
+    protected String name;
 
-    public VideoAdapter() {
-    }
+    protected VideoAdapterManagement videoAdapterManagement;
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
+    VideoAdapter(String name, VideoAdapterManagement videoAdapterManagement) {
         this.name = name;
+        this.videoAdapterManagement = videoAdapterManagement;
     }
 
-    public boolean addListener(Listener listener){
-        log.info("Add cn.edu.bupt.listener[{}] from VideoAdapter[{}]",listener.getName(),getName());
-        return listeners.add(listener);
+    public boolean addListener(Listener listener) {
+        log.info("Add listener[{}] to VideoAdapter[{}]", listener.getName(), name);
+        if (listenerSet.add(listener.getClass())) {
+            return listeners.add(listener);
+        } else {
+            log.info("Add listener failed, listener class:[{}]", listener.getClass().getName());
+            return false;
+        }
     }
 
-    public boolean removeListener(Listener listener){
-        log.info("remove cn.edu.bupt.listener[{}] from VideoAdapter[{}]",listener.getName(),getName());
+    public boolean removeListener(Listener listener) {
+        log.info("Remove listener[{}] from VideoAdapter[{}]", listener.getName(), name);
+        listenerSet.remove(listener.getClass());
         return listeners.remove(listener);
+    }
+
+    public boolean removeListener(Class listenerClass) {
+        Listener removedListener = null;
+        for (Listener listener : listeners) {
+            if (listener.getClass() == listenerClass) {
+                removedListener = listener;
+                break;
+            }
+        }
+        if (removedListener == null) {
+            return false;
+        }
+        listenerSet.remove(listenerClass);
+        listeners.remove(removedListener);
+        try {
+            removedListener.close();
+            return true;
+        } catch (Exception e) {
+            log.error("Listener failed to close, listenerName:[{}], e:", removedListener.getName(), e);
+            return false;
+        }
     }
 
     public abstract void start() throws Exception;

@@ -3,12 +3,6 @@ package cn.edu.bupt.event;
 
 import org.bytedeco.ffmpeg.avcodec.AVPacket;
 
-/**
- * @Description: PacketEvent，存储AVPacket
- * @Author: czx
- * @CreateDate: 2019-04-23 16:53
- * @Version: 1.0
- */
 public class PacketEvent extends RTSPEvent{
 
     private final AVPacket frame;

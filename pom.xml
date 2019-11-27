@@ -14,7 +14,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <lombok.version>1.16.22</lombok.version>
+        <lombok.version>1.16.20</lombok.version>
         <okhttp3.version>3.9.1</okhttp3.version>
         <netty-all.version>4.1.6.Final</netty-all.version>
     </properties>
@@ -145,7 +145,7 @@
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <optional>true</optional>
-                <version>1.16.22</version>
+                <version>${lombok.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>

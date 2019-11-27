@@ -31,7 +31,7 @@ public class ConverterApplication {
 			path+="/";
 			System.setProperty("RootDir",path);
 		}
-		if (!DirUtil.judeDirExists(path)) {
+		if (!DirUtil.judgeDirExists(path)) {
 			log.error("Wrong store path. Please check it.");
 			System.exit(1);
 		}

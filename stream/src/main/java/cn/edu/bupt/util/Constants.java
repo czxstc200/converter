@@ -17,7 +17,7 @@ public class Constants {
 
     public final static String OBJECT_DETECTION_LISTENER_NAME = "CV-lis";
 
-    public final static String getRootDir(){
+    public static String getRootDir(){
         String path = System.getProperty("RootDir");
         if(path!=null){
             return path;

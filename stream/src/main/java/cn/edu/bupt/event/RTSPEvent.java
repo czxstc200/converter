@@ -2,12 +2,6 @@ package cn.edu.bupt.event;
 
 import cn.edu.bupt.listener.Listener;
 
-/**
- * @Description: RTSPEvent
- * @Author: czx
- * @CreateDate: 2019-05-15 18:17
- * @Version: 1.0
- */
 public class RTSPEvent extends Event {
 
     private Listener listener;
