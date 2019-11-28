@@ -1,4 +1,4 @@
-package cn.edu.bupt.adapter.tasks;
+package cn.edu.bupt.tasks;
 
 import cn.edu.bupt.event.Event;
 import cn.edu.bupt.event.GrabEvent;
@@ -29,7 +29,7 @@ public class PushTask implements Runnable {
         try {
             while (true) {
                 Event event = queue.take();
-                PushListener listener = (PushListener) ((RTSPEvent) event).getListener();
+                PushListener listener = (PushListener) ((RTSPEvent) event).getRtspListener();
                 if (!listener.isStarted()) {
                     continue;
                 }

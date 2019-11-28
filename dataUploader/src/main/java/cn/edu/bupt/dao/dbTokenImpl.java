@@ -1,9 +1,5 @@
 package cn.edu.bupt.dao;
 
-
-/**
- * Created by zyf on 2018/6/13.
- */
 public class dbTokenImpl implements dbToken {
 
     //添加数据
@@ -25,7 +21,6 @@ public class dbTokenImpl implements dbToken {
 
     //查询数据
     public String get(String serialNumber) {
-        String rs = DAO.getAll(serialNumber);
-        return rs;
+        return DAO.getAll(serialNumber);
     }
 }

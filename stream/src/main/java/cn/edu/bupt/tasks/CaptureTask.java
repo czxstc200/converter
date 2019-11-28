@@ -1,4 +1,4 @@
-package cn.edu.bupt.adapter.tasks;
+package cn.edu.bupt.tasks;
 
 import cn.edu.bupt.util.DirUtil;
 import lombok.extern.slf4j.Slf4j;

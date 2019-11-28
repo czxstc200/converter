@@ -1,8 +1,13 @@
 package cn.edu.bupt.event;
 
+import cn.edu.bupt.listener.RTSPListener;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.bytedeco.javacpp.PointerScope;
 import org.bytedeco.javacv.Frame;
 
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class GrabEvent extends RTSPEvent {
 
     private final long timestamp;
@@ -11,22 +16,10 @@ public class GrabEvent extends RTSPEvent {
 
     private final Frame frame;
 
-    public GrabEvent(Object source,Frame frame,PointerScope pointerScope,long timestamp) {
+    public GrabEvent(Object source, Frame frame, PointerScope pointerScope, long timestamp) {
         super(source);
         this.frame = frame;
         this.pointerScope = pointerScope;
         this.timestamp = timestamp;
-    }
-
-    public Frame getFrame() {
-        return frame;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public PointerScope getPointerScope() {
-        return pointerScope;
     }
 }

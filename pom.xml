@@ -17,6 +17,7 @@
         <lombok.version>1.16.20</lombok.version>
         <okhttp3.version>3.9.1</okhttp3.version>
         <netty-all.version>4.1.6.Final</netty-all.version>
+        <commons-pool2-version>2.7.0</commons-pool2-version>
     </properties>
 
     <modules>
@@ -86,6 +87,11 @@
             <!--   hikVision ends    -->
 
             <!--dataUploader starts-->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-pool2</artifactId>
+                <version>${commons-pool2-version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>mockwebserver</artifactId>

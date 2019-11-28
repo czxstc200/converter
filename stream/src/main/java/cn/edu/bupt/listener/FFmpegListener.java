@@ -66,7 +66,7 @@ public abstract class FFmpegListener extends RTSPListener {
     @Override
     public void fireAfterEventInvoked(Event event) throws Exception {
         if (isStarted) {
-            ((RTSPEvent) event).setListener(this);
+            ((RTSPEvent) event).setRtspListener(this);
             pushEvent(event);
         } else {
             log.warn("Failed to fire listener [{}]. You should start this recorder before you start pushing", name);
@@ -78,7 +78,7 @@ public abstract class FFmpegListener extends RTSPListener {
 
     abstract void startExecutor();
 
-    void pushEvent(Event event) {
+    private void pushEvent(Event event) {
         try {
             if (queue.size() > this.queueThreshold) {
                 log.warn("Queue size is greater than threshold. queue size={} threshold={} timestamp={}", queue.size(), this.queueThreshold, System.currentTimeMillis());

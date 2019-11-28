@@ -13,12 +13,6 @@ import java.util.List;
 
 import static cn.edu.bupt.util.UploadConstants.*;
 
-/**
- * @Description: HttpUtil
- * @Author: czx
- * @CreateDate: 2019-05-24 14:39
- * @Version: 1.0
- */
 @Slf4j
 public class HttpUtil {
 
@@ -40,12 +34,6 @@ public class HttpUtil {
             })
             .build();
 
-
-    /**
-     * 登录
-     * @return session
-     * @throws IOException
-     */
     public static String login() throws IOException {
 
         cookieStore.clear();
@@ -75,13 +63,6 @@ public class HttpUtil {
         return null;
     }
 
-    /**
-     * 创建设备
-     * @param deviceName
-     * @param session
-     * @return deviceId
-     * @throws Exception
-     */
     public static String createDevice(final String deviceName,final String session) throws Exception{
 
         //请求体
@@ -139,13 +120,6 @@ public class HttpUtil {
         return null;
     }
 
-    /**
-     * 查看设备的token令牌
-     * @param deviceId
-     * @param session
-     * @return device token
-     * @throws Exception
-     */
     public static String findToken(String deviceId,String session)throws Exception {
 
         //创建一个Request Request是OkHttp中访问的请求，Builder是辅助类。Response即OkHttp中的响应。

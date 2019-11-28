@@ -19,9 +19,9 @@ public abstract class VideoAdapter {
 
     protected String name;
 
-    protected VideoAdapterManagement videoAdapterManagement;
+    protected VideoAdapterManagement<? extends VideoAdapter> videoAdapterManagement;
 
-    VideoAdapter(String name, VideoAdapterManagement videoAdapterManagement) {
+    VideoAdapter(String name, VideoAdapterManagement<? extends VideoAdapter> videoAdapterManagement) {
         this.name = name;
         this.videoAdapterManagement = videoAdapterManagement;
     }

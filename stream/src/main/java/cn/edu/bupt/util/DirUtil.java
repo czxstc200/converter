@@ -14,7 +14,7 @@ public class DirUtil {
     public static List<String> getFileList(String path) {
         File[] files = new File(path).listFiles();
         List<String> fileList = new ArrayList<>();
-        if(files==null){
+        if (files == null) {
             return fileList;
         }
         for (File file : files) {
@@ -25,31 +25,31 @@ public class DirUtil {
         return fileList;
     }
 
-    public static boolean judgeDirExists(String filename){
+    public static boolean judgeDirExists(String filename) {
         File file = new File(filename);
         if (file.exists()) {
             if (file.isDirectory()) {
-                log.warn("dir[{}] exists",file.getName());
+                log.warn("dir[{}] exists", file.getName());
                 return true;
             } else {
-                log.error("the same name file[{}] exists, can not create dir",file.getName());
+                log.error("the same name file[{}] exists, can not create dir", file.getName());
                 return false;
             }
-        }else{
-            log.info("dir[{}] not exists, create it",file.getName());
+        } else {
+            log.info("dir[{}] not exists, create it", file.getName());
             return file.mkdir();
         }
     }
 
-    public static String generateFilenameByDate(){
-        SimpleDateFormat sdf=new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
-        Date date=new Date();
+    public static String generateFilenameByDate() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+        Date date = new Date();
         return sdf.format(date);
     }
 
-    public static Long getZeroTimestamp(){
-        long currentTimestamps=System.currentTimeMillis();
-        long oneDayTimestamps= 60*60*24*1000;
-        return currentTimestamps-(currentTimestamps+60*60*8*1000)%oneDayTimestamps+oneDayTimestamps;
+    public static Long getZeroTimestamp() {
+        long currentTimestamps = System.currentTimeMillis();
+        long oneDayTimestamps = 60 * 60 * 24 * 1000;
+        return currentTimestamps - (currentTimestamps + 60 * 60 * 8 * 1000) % oneDayTimestamps + oneDayTimestamps;
     }
 }

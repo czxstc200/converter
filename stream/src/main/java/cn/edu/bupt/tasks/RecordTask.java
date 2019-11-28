@@ -1,4 +1,4 @@
-package cn.edu.bupt.adapter.tasks;
+package cn.edu.bupt.tasks;
 
 import cn.edu.bupt.event.Event;
 import cn.edu.bupt.event.GrabEvent;
@@ -27,7 +27,7 @@ public class RecordTask implements Runnable {
         Set<RecordListener> recordListeners = new HashSet<>();
         while (!queue.isEmpty()) {
             Event event = queue.poll();
-            RecordListener listener = (RecordListener) ((RTSPEvent) event).getListener();
+            RecordListener listener = (RecordListener) ((RTSPEvent) event).getRtspListener();
             FFmpegFrameRecorder fileRecorder = listener.getRecorder();
             if (listener.isStopped()) {
                 recordListeners.add(listener);
@@ -64,18 +64,16 @@ public class RecordTask implements Runnable {
         // 关闭recorder
         if (!recordListeners.isEmpty()) {
             Iterator<RecordListener> iterator = recordListeners.iterator();
-            while (iterator.hasNext()) {
-                RecordListener recordListener = iterator.next();
+            iterator.forEachRemaining(recordListener -> {
                 FFmpegFrameRecorder recorder = recordListener.getRecorder();
                 try {
                     recorder.stop();
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    log.warn("Failed to stop a file recorder");
+                    log.warn("Failed to stop a file recorder, e:", e);
                 } finally {
                     recordListener.getCloseCountDownLatch().countDown();
                 }
-            }
+            });
         }
     }
 }

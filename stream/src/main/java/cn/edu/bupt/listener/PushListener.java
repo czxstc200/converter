@@ -1,7 +1,7 @@
 package cn.edu.bupt.listener;
 
 import cn.edu.bupt.adapter.RTSPVideoAdapter;
-import cn.edu.bupt.adapter.tasks.PushTask;
+import cn.edu.bupt.tasks.PushTask;
 import cn.edu.bupt.event.Event;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

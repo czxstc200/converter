@@ -1,47 +1,48 @@
 package cn.edu.bupt.mqtt;
 
+import cn.edu.bupt.client.MqttClientFactory;
+import cn.edu.bupt.client.MqttClientPool;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
+@Slf4j
 public class DataMqttClient {
 
-    public static MqttClient client;
+    private static MqttClientPool mqttClientPool = new MqttClientPool(new MqttClientFactory());
 
-    static{
-        try{
-            client = new MqttClient(Config.HOST, "data", new MemoryPersistence());
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-
-    }
-    public static synchronized void publishData(String token,String data) throws  Exception{
-        clientConnect(token);
-        client.publish(Config.datatopic, newMsg(data));
+    public static void publishData(String token, String data) throws Exception {
+        MqttClient client = clientConnect(token);
+        client.publish(Config.TELEMETRY_TOPIC, newMsg(data));
         client.disconnect();
     }
 
-    public static synchronized  void publishAttribute(String token,String data)throws  Exception{
-        clientConnect(token);
-        client.publish(Config.attributetopic, newMsg(data));
+    public static void publishAttribute(String token, String data) throws Exception {
+        MqttClient client = clientConnect(token);
+        client.publish(Config.ATTRIBUTE_TOPIC, newMsg(data));
         client.disconnect();
     }
 
-    private static void clientConnect(String token) throws Exception{
+    private static MqttClient clientConnect(String token) throws Exception {
         MqttConnectOptions options = new MqttConnectOptions();
         options.setCleanSession(true);
         options.setUserName(token);
         options.setConnectionTimeout(10);
+        MqttClient client = getClient();
         client.setCallback(new DataMessageCallBack());
         client.connect(options);
+        return client;
     }
 
-    private static MqttMessage newMsg(String data){
+    private static MqttMessage newMsg(String data) {
         MqttMessage msg = new MqttMessage(data.getBytes());
         msg.setRetained(false);
         msg.setQos(0);
         return msg;
+    }
+
+    private static MqttClient getClient() throws Exception {
+        return mqttClientPool.borrowObject();
     }
 }

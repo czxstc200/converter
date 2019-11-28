@@ -4,7 +4,7 @@ import cn.edu.bupt.adapter.RTSPVideoAdapter;
 import lombok.Data;
 
 @Data
-abstract class RTSPListener implements Listener{
+public abstract class RTSPListener implements Listener{
 
     protected final RTSPVideoAdapter rTSPVideoAdapter;
 

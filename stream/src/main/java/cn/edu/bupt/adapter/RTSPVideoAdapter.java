@@ -1,12 +1,11 @@
 package cn.edu.bupt.adapter;
 
-import cn.edu.bupt.adapter.tasks.CaptureTask;
-import cn.edu.bupt.adapter.tasks.UnrefTask;
+import cn.edu.bupt.tasks.CaptureTask;
+import cn.edu.bupt.tasks.UnrefTask;
 import cn.edu.bupt.event.Event;
 import cn.edu.bupt.event.GrabEvent;
 import cn.edu.bupt.event.PacketEvent;
 import cn.edu.bupt.listener.Listener;
-import cn.edu.bupt.listener.PushListener;
 import cn.edu.bupt.listener.RecordListener;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -44,7 +43,6 @@ public class RTSPVideoAdapter extends VideoAdapter {
     private String rTMPPath;
     private boolean save;
     private AtomicBoolean capture = new AtomicBoolean(false);
-    private final int NULL_FRAME_THRESHOLD = 10;
     private Long lastFrameTime = System.currentTimeMillis();
     private AtomicBoolean cv = new AtomicBoolean(false);
     private String result = "";
@@ -53,8 +51,10 @@ public class RTSPVideoAdapter extends VideoAdapter {
     // 用于记录每一个frame需要完成的listeners个数，在全部listener完成任务后，调用PointerScope进行内存回收
     private Map<Event, AtomicInteger> frameFinishCount = new HashMap<>();
     private Future<Boolean> captureFuture;
+    private final int NULL_FRAME_THRESHOLD = 10;
+    private int nullFrames = 0;
 
-    public RTSPVideoAdapter(String rTSPPath, String rTMPPath, VideoAdapterManagement videoAdapterManagement, boolean save, boolean usePacket) {
+    public RTSPVideoAdapter(String rTSPPath, String rTMPPath, VideoAdapterManagement<RTSPVideoAdapter> videoAdapterManagement, boolean save, boolean usePacket) {
         super(rTMPPath, videoAdapterManagement);
         this.rTSPPath = rTSPPath;
         this.rTMPPath = rTMPPath;
@@ -79,23 +79,14 @@ public class RTSPVideoAdapter extends VideoAdapter {
         grabberInit();
         log.info("Grabber started, rtsp:[{}]", rTSPPath);
         startAllListeners();
-
         int count = 0;
-        int nullFrames = 0;
-//        Client client = ClientImpl.getClient();
         try {
             while (!stop) {
                 //记录帧数
                 count++;
                 if (count % 100 == 0) {
-//                    client.sendTelemetries(rTMPPath,"count",String.valueOf(count/100));
-//                    if(cv.get()){
-//                        client.sendTelemetries(rTMPPath,"ObjectDetection",result);
-//                        cv.set(false);
-//                    }
                     log.debug("Video[{}] counts={}", rTSPPath, count);
                 }
-
                 //时间超过零点进行视频录像的切分
                 if (recording && timestamp < DirUtil.getZeroTimestamp()) {
                     executor.submit(() -> {
@@ -104,94 +95,101 @@ public class RTSPVideoAdapter extends VideoAdapter {
                     });
                 }
 
-                //使用AVPacket进行推流，目前这种模式下不能对数据帧进行处理
                 if (usePacket) {
-                    AVPacket pkt = null;
-                    try {
-                        pkt = grabber.grabPacket();
-                        lastFrameTime = System.currentTimeMillis();
-                    } catch (Exception e) {
-                        log.warn("Grab Packet Exception!");
-                    }
-
-                    // 检查是否接收到数据
-                    if (pkt == null || pkt.size() <= 0 || pkt.data() == null) {
-                        nullFrames++;
-                        if (nullFrames % 50 == 0) {
-                            log.info("Null Frame number is [{}] and rtmp : [{}]", nullFrames, rTMPPath);
-                        }
-                        //连续帧都是null时判断已经停止推流
-                        if (nullFrames >= NULL_FRAME_THRESHOLD) {
-                            stop();
-                            log.info("Video[{}] stopped!", rTMPPath);
-                        }
-                        continue;
-                    } else {
-                        nullFrames = 0;
-                    }
-
-                    PacketEvent.CountEvent countEvent = new PacketEvent.CountEvent();
-                    frameFinishCount.put(countEvent, new AtomicInteger(listeners.size()));
-
-                    //AVPacket采用计数法进行内存的回收，因此在每一个listener进行处理时，
-                    //都需要创建一个新的ref。由于JavaCV中的方法自带unref，如果没有创建
-                    //ref，一个listener处理完后就有可能回收内存。为了保险起见，自己实现了一个
-                    //Unref的逻辑
-                    for (Listener listener : listeners) {
-                        AVPacket newPkt = avcodec.av_packet_alloc();
-                        avcodec.av_packet_ref(newPkt, pkt);
-                        PacketEvent grabEvent = new PacketEvent(this, newPkt, countEvent);
-                        listener.fireAfterEventInvoked(grabEvent);
-                    }
-                    avcodec.av_packet_unref(pkt);
-                } else {//使用传统方式进行处理，效率较低（增加了编解码的时间），但是可以对画面frame进行处理
-                    Frame frame = null;
-                    try {
-                        frame = grabber.grabImage();
-                        lastFrameTime = System.currentTimeMillis();
-                    } catch (Exception e) {
-                        log.warn("Grab Image Exception!");
-                    }
-                    if (frame == null || frame.image == null) {
-                        nullFrames++;
-                        if (nullFrames % 5 == 0) {
-                            log.info("Null Frame number is [{}] and rtmp : [{}]", nullFrames, rTMPPath);
-                        }
-                        if (nullFrames >= NULL_FRAME_THRESHOLD) {
-                            stop();
-                            log.info("Video[{}] lost!", rTMPPath);
-                        }
-                        continue;
-                    }
-
-                    // PointScope用于释放frame的内存
-                    // Pointer会自动attach到PointerScope上。
-                    // 同样，clone获得的frame需要进行unref并且释放内存
-                    PointerScope pointerScope = new PointerScope();
-                    Frame newFrame = frame.clone();
-
-                    //进行抓拍操作
-                    if (capture.get() && newFrame != null) {
-                        captureFuture = executor.submit(new CaptureTask(newFrame, capturesPath));
-                        capture.set(false);
-                    }
-
-                    GrabEvent grabEvent = new GrabEvent(this, newFrame, pointerScope, grabber.getTimestamp());
-                    frameFinishCount.put(grabEvent, new AtomicInteger(listeners.size()));
-                    for (Listener listener : listeners) {
-                        listener.fireAfterEventInvoked(grabEvent);
-                    }
+                    //使用AVPacket进行推流，目前这种模式下不能对数据帧进行处理
+                    handleUsePacket();
+                } else {
+                    //使用传统方式进行处理，效率较低（增加了编解码的时间），但是可以对画面frame进行处理
+                    handleGrab();
                 }
             }
         } catch (Exception e) {
-            log.warn("Adapter [{}] throws an Exception!", getName());
-            e.printStackTrace();
+            log.warn("Adapter [{}] throws an Exception, e", getName(), e);
         } finally {
             closeAllListeners();
             grabber.stop();
             videoAdapterManagement.stopAdapter(this);
             log.info("Grabber ends for video rtmp:{}", rTMPPath);
         }
+    }
+
+    private void handleGrab() throws Exception {
+        Frame frame = null;
+        try {
+            frame = grabber.grabImage();
+            lastFrameTime = System.currentTimeMillis();
+        } catch (Exception e) {
+            log.warn("Grab Image Exception!");
+        }
+        if (frame == null || frame.image == null) {
+            nullFrames++;
+            if (nullFrames % 5 == 0) {
+                log.info("Null Frame number is [{}] and rtmp : [{}]", nullFrames, rTMPPath);
+            }
+            if (nullFrames >= NULL_FRAME_THRESHOLD) {
+                stop();
+                log.info("Video[{}] lost!", rTMPPath);
+            }
+            return;
+        }
+
+        // PointScope用于释放frame的内存
+        // Pointer会自动attach到PointerScope上。
+        // 同样，clone获得的frame需要进行unref并且释放内存
+        PointerScope pointerScope = new PointerScope();
+        Frame newFrame = frame.clone();
+
+        //进行抓拍操作
+        if (capture.get() && newFrame != null) {
+            captureFuture = executor.submit(new CaptureTask(newFrame, capturesPath));
+            capture.set(false);
+        }
+
+        GrabEvent grabEvent = new GrabEvent(this, newFrame, pointerScope, grabber.getTimestamp());
+        frameFinishCount.put(grabEvent, new AtomicInteger(listeners.size()));
+        for (Listener listener : listeners) {
+            listener.fireAfterEventInvoked(grabEvent);
+        }
+    }
+
+    private void handleUsePacket() throws Exception {
+        AVPacket pkt = null;
+        try {
+            pkt = grabber.grabPacket();
+            lastFrameTime = System.currentTimeMillis();
+        } catch (Exception e) {
+            log.warn("Grab Packet Exception, e:", e);
+        }
+
+        // 检查是否接收到数据
+        if (pkt == null || pkt.size() <= 0 || pkt.data() == null) {
+            nullFrames++;
+            if (nullFrames % 50 == 0) {
+                log.info("Null Frame number is [{}], rtmp: [{}]", nullFrames, rTMPPath);
+            }
+            //连续帧都是null时判断已经停止推流
+            if (nullFrames >= NULL_FRAME_THRESHOLD) {
+                stop();
+                log.info("Video[{}] stopped!", rTMPPath);
+            }
+        } else {
+            nullFrames = 0;
+        }
+
+        PacketEvent.CountEvent countEvent = new PacketEvent.CountEvent();
+        frameFinishCount.put(countEvent, new AtomicInteger(listeners.size()));
+
+        //AVPacket采用计数法进行内存的回收，因此在每一个listener进行处理时，
+        //都需要创建一个新的ref。由于JavaCV中的方法自带unref，如果没有创建
+        //ref，一个listener处理完后就有可能回收内存。为了保险起见，自己实现了一个
+        //Unref的逻辑
+        for (Listener listener : listeners) {
+            AVPacket newPkt = avcodec.av_packet_alloc();
+            avcodec.av_packet_ref(newPkt, pkt);
+            PacketEvent grabEvent = new PacketEvent(this, newPkt, countEvent);
+            listener.fireAfterEventInvoked(grabEvent);
+        }
+        avcodec.av_packet_unref(pkt);
     }
 
     @Override
@@ -297,17 +295,6 @@ public class RTSPVideoAdapter extends VideoAdapter {
         } else {
             removeListener(RecordListener.class);
             recording = false;
-        }
-    }
-
-    private void startPushing() {
-        if (pushing) {
-            log.warn("Video pushing has already been started.");
-        } else {
-            PushListener pushListener = new PushListener(rTMPPath, getGrabber(), this, usePacket);
-            addListener(pushListener);
-            pushListener.start();
-            pushing = true;
         }
     }
 

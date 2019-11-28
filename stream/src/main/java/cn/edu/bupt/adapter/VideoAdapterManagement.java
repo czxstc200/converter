@@ -30,7 +30,7 @@ public class VideoAdapterManagement<T extends VideoAdapter> {
         futures.put(adapter.getName(), future);
     }
 
-    public void stopAdapter(T adapter) {
+    public void stopAdapter(VideoAdapter adapter) {
         adapter.stop();
         futures.remove(adapter.getName());
         map.remove(adapter.getName());
