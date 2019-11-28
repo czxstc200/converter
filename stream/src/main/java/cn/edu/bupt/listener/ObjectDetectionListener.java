@@ -17,6 +17,7 @@ import static cn.edu.bupt.util.Constants.OBJECT_DETECTION_LISTENER_NAME;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class ObjectDetectionListener extends RTSPListener {
+
     private final OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
     private static final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private long lastUpdateTimestamp;
@@ -31,7 +32,7 @@ public class ObjectDetectionListener extends RTSPListener {
         long now = System.currentTimeMillis();
         if(now-lastUpdateTimestamp>3000) {
             lastUpdateTimestamp = now;
-            executorService.submit(new ObjectDetectionTask(event, converter));
+            executorService.submit(new ObjectDetectionTask(event, converter, rTSPVideoAdapter.getName()));
         }
     }
 

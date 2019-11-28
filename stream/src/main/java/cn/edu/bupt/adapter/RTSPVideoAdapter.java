@@ -43,9 +43,6 @@ public class RTSPVideoAdapter extends VideoAdapter {
     private String rTMPPath;
     private boolean save;
     private AtomicBoolean capture = new AtomicBoolean(false);
-    private Long lastFrameTime = System.currentTimeMillis();
-    private AtomicBoolean cv = new AtomicBoolean(false);
-    private String result = "";
     private boolean usePacket;
     private static ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Rtsp-pool-%d").daemon(false).build());
     // 用于记录每一个frame需要完成的listeners个数，在全部listener完成任务后，调用PointerScope进行内存回收
@@ -117,7 +114,6 @@ public class RTSPVideoAdapter extends VideoAdapter {
         Frame frame = null;
         try {
             frame = grabber.grabImage();
-            lastFrameTime = System.currentTimeMillis();
         } catch (Exception e) {
             log.warn("Grab Image Exception!");
         }
@@ -156,7 +152,6 @@ public class RTSPVideoAdapter extends VideoAdapter {
         AVPacket pkt = null;
         try {
             pkt = grabber.grabPacket();
-            lastFrameTime = System.currentTimeMillis();
         } catch (Exception e) {
             log.warn("Grab Packet Exception, e:", e);
         }
@@ -302,9 +297,5 @@ public class RTSPVideoAdapter extends VideoAdapter {
         executor.submit(new UnrefTask(frameFinishCount, event, isSuccess));
     }
 
-    public void send(String result) {
-        this.result = result;
-        cv.compareAndSet(false, true);
-    }
 }
 

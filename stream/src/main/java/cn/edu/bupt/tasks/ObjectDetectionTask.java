@@ -1,5 +1,7 @@
 package cn.edu.bupt.tasks;
 
+import cn.edu.bupt.client.Client;
+import cn.edu.bupt.client.ClientImpl;
 import cn.edu.bupt.event.Event;
 import cn.edu.bupt.event.GrabEvent;
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +20,14 @@ public class ObjectDetectionTask implements Runnable {
 
     private final Event event;
     private final OpenCVFrameConverter.ToIplImage converter;
+    private final String cameraName;
+    private static final Client client = ClientImpl.getClient();
+    private static final String keyName = "ObjectDetection";
 
-    public ObjectDetectionTask(Event event, OpenCVFrameConverter.ToIplImage converter) {
+    public ObjectDetectionTask(Event event, OpenCVFrameConverter.ToIplImage converter, String cameraName) {
         this.event = event;
         this.converter = converter;
+        this.cameraName = cameraName;
     }
 
     @Override
@@ -44,7 +50,7 @@ public class ObjectDetectionTask implements Runnable {
                     }
                     String result = response.body().string();
                     log.info("Object Detection result : [{}]", result);
-                    // todo: send
+                    client.sendTelemetries(cameraName, keyName, result);
                 }
             } catch (Exception e) {
                 log.error("Exception happened when send request to object detection server, e:", e);
