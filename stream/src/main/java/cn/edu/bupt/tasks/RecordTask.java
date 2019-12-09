@@ -33,11 +33,8 @@ public class RecordTask implements Runnable {
             RecordListener listener = (RecordListener) ((RTSPEvent) event).getRtspListener();
             FFmpegFrameRecorder fileRecorder = listener.getRecorder();
             if (listener.isStopped()) {
-                //TODO: stackOverFlow???
-                System.out.println(1);
                 recordListeners.add(listener);
             }
-            System.out.println(2);
             boolean success = false;
             try {
                 if (event instanceof GrabEvent) {

@@ -2,6 +2,9 @@ package cn.edu.bupt.adapter;
 
 import cn.edu.bupt.listener.Listener;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -10,7 +13,9 @@ import java.util.List;
 import java.util.Set;
 
 @Slf4j
-@Data
+@Getter
+@Setter
+@ToString
 public abstract class VideoAdapter {
 
     protected final List<Listener> listeners = new ArrayList<>();

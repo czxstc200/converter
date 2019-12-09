@@ -33,6 +33,8 @@ public class ObjectDetectionListener extends RTSPListener {
         if(now-lastUpdateTimestamp>3000) {
             lastUpdateTimestamp = now;
             executorService.submit(new ObjectDetectionTask(event, converter, rTSPVideoAdapter.getName()));
+        } else {
+            rTSPVideoAdapter.unref(event, false);
         }
     }
 

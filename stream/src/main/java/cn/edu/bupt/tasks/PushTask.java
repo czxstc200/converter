@@ -60,7 +60,7 @@ public class PushTask implements Runnable {
                 }
             }
         } catch (Exception e) {
-            log.warn("Executor exception!");
+            log.warn("Executor exception :", e);
         }
     }
 }

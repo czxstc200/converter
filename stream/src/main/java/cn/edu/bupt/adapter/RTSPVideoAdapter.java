@@ -44,7 +44,7 @@ public class RTSPVideoAdapter extends VideoAdapter {
     private String rTMPPath;
     private AtomicBoolean capture = new AtomicBoolean(false);
     private boolean usePacket;
-    private static ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Rtsp-pool-%d").daemon(true).build());
+    private static ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Rtsp-pool-%d").daemon(false).build());
     // 用于记录每一个frame需要完成的listeners个数，在全部listener完成任务后，调用PointerScope进行内存回收
     private Map<Event, AtomicInteger> frameFinishCount = new HashMap<>();
     private Future<Boolean> captureFuture;
@@ -99,10 +99,11 @@ public class RTSPVideoAdapter extends VideoAdapter {
                     handleGrab();
                 }
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             log.warn("Adapter [{}] throws an Exception, e", getName(), e);
         } finally {
+            System.out.println(stop);
             System.out.println("adapter stopped");
             grabber.stop();
             closeAllListeners();
@@ -303,17 +304,17 @@ public class RTSPVideoAdapter extends VideoAdapter {
             videoAdapterManagement.startAdapter(rtspVideoAdapter);
             executorService.scheduleAtFixedRate(() -> {
                 try {
-                    System.out.println("stop recording");
+//                    System.out.println("stop recording");
                     rtspVideoAdapter.stopRecording();
-                    System.out.println("start recording");
+//                    System.out.println("start recording");
                     rtspVideoAdapter.startRecording(rtspVideoAdapter.videoPath + DirUtil.generateFilenameByDate() + ".flv");
                 } catch (Exception e) {
 
                 }
             }, 10000, 10000, TimeUnit.MILLISECONDS);
            Thread.sleep(100000);
-           videoAdapterManagement.stopAdapter(rtspVideoAdapter);
-           Thread.sleep(5000);
+//           videoAdapterManagement.stopAdapter(rtspVideoAdapter);
+//           Thread.sleep(5000);
         } catch (Exception e) {
 
         }

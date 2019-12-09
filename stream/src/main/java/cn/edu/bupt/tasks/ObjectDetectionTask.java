@@ -50,7 +50,6 @@ public class ObjectDetectionTask implements Runnable {
                     }
                     String result = response.body().string();
                     log.info("Object Detection result : [{}]", result);
-                    System.out.println(result);
 //                    client.sendTelemetries(cameraName, keyName, result);
                 }
             } catch (Exception e) {
