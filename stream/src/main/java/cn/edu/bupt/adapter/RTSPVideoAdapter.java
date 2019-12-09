@@ -1,5 +1,8 @@
 package cn.edu.bupt.adapter;
 
+import cn.edu.bupt.event.CountEvent;
+import cn.edu.bupt.listener.ObjectDetectionListener;
+import cn.edu.bupt.listener.PushListener;
 import cn.edu.bupt.tasks.CaptureTask;
 import cn.edu.bupt.tasks.UnrefTask;
 import cn.edu.bupt.event.Event;
@@ -35,29 +38,24 @@ public class RTSPVideoAdapter extends VideoAdapter {
     private final String dataLocation;
     private final String capturesPath;
     private final String videoPath;
-    private boolean recording;
-    private boolean pushing;
     private boolean stop;
     private FFmpegFrameGrabber grabber;
     private String rTSPPath;
     private String rTMPPath;
-    private boolean save;
     private AtomicBoolean capture = new AtomicBoolean(false);
     private boolean usePacket;
-    private static ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Rtsp-pool-%d").daemon(false).build());
+    private static ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Rtsp-pool-%d").daemon(true).build());
     // 用于记录每一个frame需要完成的listeners个数，在全部listener完成任务后，调用PointerScope进行内存回收
     private Map<Event, AtomicInteger> frameFinishCount = new HashMap<>();
     private Future<Boolean> captureFuture;
     private final int NULL_FRAME_THRESHOLD = 10;
     private int nullFrames = 0;
 
-    public RTSPVideoAdapter(String rTSPPath, String rTMPPath, VideoAdapterManagement<RTSPVideoAdapter> videoAdapterManagement, boolean save, boolean usePacket) {
+    public RTSPVideoAdapter(String rTSPPath, String rTMPPath, VideoAdapterManagement<RTSPVideoAdapter> videoAdapterManagement, boolean usePacket) {
         super(rTMPPath, videoAdapterManagement);
         this.rTSPPath = rTSPPath;
         this.rTMPPath = rTMPPath;
-        this.save = save;
         this.usePacket = usePacket;
-        recording = false;
         stop = false;
         dataLocation = Constants.getRootDir() + rTMPPath.substring(rTMPPath.lastIndexOf("/") + 1) + "/";
         capturesPath = dataLocation + "captures/";
@@ -68,13 +66,13 @@ public class RTSPVideoAdapter extends VideoAdapter {
         DirUtil.judgeDirExists(dataLocation);
         DirUtil.judgeDirExists(videoPath);
         DirUtil.judgeDirExists(capturesPath);
+        log.info("RTSPVideoAdapter is starting, rtsp:[{}], rtmp [{}]", rTSPPath, rTMPPath);
+        grabberInit();
     }
 
     @Override
     public void start() throws Exception {
-        log.info("RTSPVideoAdapter is starting, rtsp:[{}], rtmp [{}]", rTSPPath, rTMPPath);
-        grabberInit();
-        log.info("Grabber started, rtsp:[{}]", rTSPPath);
+        log.info("VideoAdapter is starting, rtsp:[{}]", rTSPPath);
         startAllListeners();
         int count = 0;
         try {
@@ -82,15 +80,16 @@ public class RTSPVideoAdapter extends VideoAdapter {
                 //记录帧数
                 count++;
                 if (count % 100 == 0) {
-                    log.debug("Video[{}] counts={}", rTSPPath, count);
+                    System.out.println("Video counts : "+count);
+                    log.info("Video[{}] counts={}", rTSPPath, count);
                 }
                 //时间超过零点进行视频录像的切分
-                if (recording && timestamp < DirUtil.getZeroTimestamp()) {
-                    executor.submit(() -> {
-                        timestamp = DirUtil.getZeroTimestamp();
-                        restartRecording(videoPath + DirUtil.generateFilenameByDate() + ".flv");
-                    });
-                }
+//                if (recording && timestamp < DirUtil.getZeroTimestamp()) {
+//                    executor.submit(() -> {
+//                        timestamp = DirUtil.getZeroTimestamp();
+//                        restartRecording(videoPath + DirUtil.generateFilenameByDate() + ".flv");
+//                    });
+//                }
 
                 if (usePacket) {
                     //使用AVPacket进行推流，目前这种模式下不能对数据帧进行处理
@@ -101,10 +100,12 @@ public class RTSPVideoAdapter extends VideoAdapter {
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
             log.warn("Adapter [{}] throws an Exception, e", getName(), e);
         } finally {
-            closeAllListeners();
+            System.out.println("adapter stopped");
             grabber.stop();
+            closeAllListeners();
             videoAdapterManagement.stopAdapter(this);
             log.info("Grabber ends for video rtmp:{}", rTMPPath);
         }
@@ -140,10 +141,10 @@ public class RTSPVideoAdapter extends VideoAdapter {
             captureFuture = executor.submit(new CaptureTask(newFrame, capturesPath));
             capture.set(false);
         }
-
-        GrabEvent grabEvent = new GrabEvent(this, newFrame, pointerScope, grabber.getTimestamp());
-        frameFinishCount.put(grabEvent, new AtomicInteger(listeners.size()));
+        CountEvent countEvent = new CountEvent();
+        frameFinishCount.put(countEvent, new AtomicInteger(listeners.size()));
         for (Listener listener : listeners) {
+            GrabEvent grabEvent = new GrabEvent(this, newFrame, pointerScope, grabber.getTimestamp(), countEvent);
             listener.fireAfterEventInvoked(grabEvent);
         }
     }
@@ -171,7 +172,7 @@ public class RTSPVideoAdapter extends VideoAdapter {
             nullFrames = 0;
         }
 
-        PacketEvent.CountEvent countEvent = new PacketEvent.CountEvent();
+        CountEvent countEvent = new CountEvent();
         frameFinishCount.put(countEvent, new AtomicInteger(listeners.size()));
 
         //AVPacket采用计数法进行内存的回收，因此在每一个listener进行处理时，
@@ -226,9 +227,9 @@ public class RTSPVideoAdapter extends VideoAdapter {
             // 使用rtsp的时候需要使用 FFmpegFrameGrabber，不能再用FrameGrabber
             FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(rTSPPath);
             grabber.setOption("rtsp_transport", "tcp");
+            grabber.setTimeout(10);
             this.grabber = grabber;
             this.grabber.start();
-
             // TODO:设置回调函数后,虚拟机会崩溃
 
 //            // 设置超时,每一次grab的timeout为1000ms
@@ -262,39 +263,61 @@ public class RTSPVideoAdapter extends VideoAdapter {
     }
 
     private void startRecording(String filename) {
-        if (recording) {
-            log.warn("Video recording has already been started.");
-        } else {
-            RecordListener recordListener = new RecordListener(filename, getGrabber(), this, usePacket);
-            addListener(recordListener);
-            recordListener.start();
-            recording = true;
-        }
+        RecordListener recordListener = new RecordListener(filename, getGrabber(), this);
+        recordListener.start();
+        addListener(recordListener);
     }
 
     public void startRecording() {
-        if (recording) {
-            log.warn("Video recording has already been started.");
-        } else {
-            String videoPath = dataLocation + "videos/";
-            RecordListener recordListener = new RecordListener(videoPath + DirUtil.generateFilenameByDate() + ".flv", getGrabber(), this, usePacket);
-            recordListener.start();
-            addListener(recordListener);
-            recording = true;
-        }
+        String videoPath = dataLocation + "videos/";
+        RecordListener recordListener = new RecordListener(videoPath + DirUtil.generateFilenameByDate() + ".flv", getGrabber(), this);
+        recordListener.start();
+        addListener(recordListener);
     }
 
     public void stopRecording() {
-        if (!recording) {
-            log.warn("Can not stop recording cause recording has not been started.");
-        } else {
-            removeListener(RecordListener.class);
-            recording = false;
-        }
+        removeListener(RecordListener.class);
     }
 
     public void unref(Event event, boolean isSuccess) {
         executor.submit(new UnrefTask(frameFinishCount, event, isSuccess));
+    }
+
+    public boolean isRecording() {
+        return getListenerSet().contains(RecordListener.class);
+    }
+
+    public static void main(String[] args) {
+        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
+        String rTSP = "rtmp://58.200.131.2:1935/livetv/hunantv";
+        String rTMP = "rtmp://10.112.217.199/live";
+        VideoAdapterManagement<RTSPVideoAdapter> videoAdapterManagement = new VideoAdapterManagement<>();
+        RTSPVideoAdapter rtspVideoAdapter = new RTSPVideoAdapter(rTSP, rTMP
+                , videoAdapterManagement, false);
+        PushListener listener = new PushListener(rTMP, rtspVideoAdapter.grabber, rtspVideoAdapter);
+        rtspVideoAdapter.addListener(listener);
+        rtspVideoAdapter.addListener(new ObjectDetectionListener(rtspVideoAdapter));
+        String filename = rtspVideoAdapter.videoPath + DirUtil.generateFilenameByDate() + ".flv";
+        rtspVideoAdapter.addListener(new RecordListener(filename, rtspVideoAdapter.grabber, rtspVideoAdapter));
+        try {
+            videoAdapterManagement.startAdapter(rtspVideoAdapter);
+            executorService.scheduleAtFixedRate(() -> {
+                try {
+                    System.out.println("stop recording");
+                    rtspVideoAdapter.stopRecording();
+                    System.out.println("start recording");
+                    rtspVideoAdapter.startRecording(rtspVideoAdapter.videoPath + DirUtil.generateFilenameByDate() + ".flv");
+                } catch (Exception e) {
+
+                }
+            }, 10000, 10000, TimeUnit.MILLISECONDS);
+           Thread.sleep(100000);
+           videoAdapterManagement.stopAdapter(rtspVideoAdapter);
+           Thread.sleep(5000);
+        } catch (Exception e) {
+
+        }
+
     }
 
 }

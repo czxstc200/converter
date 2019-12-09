@@ -41,7 +41,7 @@ public class ObjectDetectionTask implements Runnable {
                 if (res) {
                     Request request = new Request.Builder()
                             .url(OBJECT_DETECTION_URL)
-                            .post(RequestBody.create(MediaType.parse("image/jpeg"), new File(ROOT_DIR + "CvTemp/" + time + ".jpg")))
+                            .post(RequestBody.create(MediaType.parse("image/png"), new File(ROOT_DIR + "CvTemp/" + time + ".png")))
                             .build();
                     OkHttpClient mOkHttpClient = new OkHttpClient.Builder().build();
                     Response response = mOkHttpClient.newCall(request).execute();
@@ -50,7 +50,8 @@ public class ObjectDetectionTask implements Runnable {
                     }
                     String result = response.body().string();
                     log.info("Object Detection result : [{}]", result);
-                    client.sendTelemetries(cameraName, keyName, result);
+                    System.out.println(result);
+//                    client.sendTelemetries(cameraName, keyName, result);
                 }
             } catch (Exception e) {
                 log.error("Exception happened when send request to object detection server, e:", e);

@@ -48,7 +48,7 @@ public class VideoController {
         String rtspPath = rtsp == null ? "rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov" : rtsp;
         boolean saveVideo = save == null ? false : save;
         boolean isUsePacket = usePacket == null ? true : usePacket;
-        videoAdapterManagement.startAdapter(new RTSPVideoAdapter(rtspPath, rtmpPath, videoAdapterManagement, saveVideo, isUsePacket));
+        videoAdapterManagement.startAdapter(new RTSPVideoAdapter(rtspPath, rtmpPath, videoAdapterManagement, isUsePacket));
         setHeader(response);
         return "{rtsp:'" + rtspPath + "'," + "rtmp:'" + rtmpPath + "'," + "saveVideo:" + saveVideo + ",usePacket:" + isUsePacket + "}";
     }
@@ -66,7 +66,7 @@ public class VideoController {
         OnvifDevice device = new OnvifDevice(ip, username, password, false);
         String rtsp = device.getMedia().getRTSPStreamUri(device.getDevices().getProfiles().get(0).getToken());
         String rtspPath = rtsp.replace("rtsp://", "rtsp://" + username + ":" + password + "@");
-        videoAdapterManagement.startAdapter(new RTSPVideoAdapter(rtspPath, rtmp, videoAdapterManagement, saveVideo, isUsePacket));
+        videoAdapterManagement.startAdapter(new RTSPVideoAdapter(rtspPath, rtmp, videoAdapterManagement, isUsePacket));
         return "{rtsp:'" + rtspPath + "'," + "rtmp:'" + rtmp + "'," + "saveVideo:" + saveVideo + ",usePacket:" + isUsePacket + "}";
     }
 

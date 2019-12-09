@@ -16,8 +16,8 @@ public class GrabEvent extends RTSPEvent {
 
     private final Frame frame;
 
-    public GrabEvent(Object source, Frame frame, PointerScope pointerScope, long timestamp) {
-        super(source);
+    public GrabEvent(Object source, Frame frame, PointerScope pointerScope, long timestamp, CountEvent countEvent) {
+        super(source, countEvent);
         this.frame = frame;
         this.pointerScope = pointerScope;
         this.timestamp = timestamp;

@@ -53,9 +53,9 @@ public abstract class VideoAdapter {
         if (removedListener == null) {
             return false;
         }
-        listenerSet.remove(listenerClass);
-        listeners.remove(removedListener);
         try {
+            listenerSet.remove(listenerClass);
+            listeners.remove(removedListener);
             removedListener.close();
             return true;
         } catch (Exception e) {

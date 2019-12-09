@@ -28,7 +28,7 @@ public class UnrefTask implements Runnable {
     @Override
     public void run() {
         if (event instanceof GrabEvent) {
-            int count = map.get(event).decrementAndGet();
+            int count = map.get(((GrabEvent) event).getCountEvent()).decrementAndGet();
             if (count == 0) {
                 ((GrabEvent) event).getPointerScope().deallocate();
                 map.remove(event);

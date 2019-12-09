@@ -27,11 +27,17 @@ public class RecordTask implements Runnable {
         Set<RecordListener> recordListeners = new HashSet<>();
         while (!queue.isEmpty()) {
             Event event = queue.poll();
+            if (event == null || ((RTSPEvent) event).getRtspListener() == null) {
+                continue;
+            }
             RecordListener listener = (RecordListener) ((RTSPEvent) event).getRtspListener();
             FFmpegFrameRecorder fileRecorder = listener.getRecorder();
             if (listener.isStopped()) {
+                //TODO: stackOverFlow???
+                System.out.println(1);
                 recordListeners.add(listener);
             }
+            System.out.println(2);
             boolean success = false;
             try {
                 if (event instanceof GrabEvent) {
@@ -55,8 +61,7 @@ public class RecordTask implements Runnable {
                     log.warn("Unknown event type!");
                 }
             } catch (Exception e) {
-                e.printStackTrace();
-                log.warn("Record cn.edu.bupt.event failed for Recorder : {}", listener.getName());
+                log.warn("Record event failed for Recorder:{}, e: ", listener.getName(), e);
             } finally {
                 listener.getRTSPVideoAdapter().unref(event, success);
             }
@@ -64,14 +69,14 @@ public class RecordTask implements Runnable {
         // 关闭recorder
         if (!recordListeners.isEmpty()) {
             Iterator<RecordListener> iterator = recordListeners.iterator();
-            iterator.forEachRemaining(recordListener -> {
-                FFmpegFrameRecorder recorder = recordListener.getRecorder();
+            iterator.forEachRemaining(listener -> {
+                FFmpegFrameRecorder recorder = listener.getRecorder();
                 try {
                     recorder.stop();
                 } catch (Exception e) {
                     log.warn("Failed to stop a file recorder, e:", e);
                 } finally {
-                    recordListener.getCloseCountDownLatch().countDown();
+                    listener.getCloseCountDownLatch().countDown();
                 }
             });
         }

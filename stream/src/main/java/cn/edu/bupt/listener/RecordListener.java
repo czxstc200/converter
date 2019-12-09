@@ -22,12 +22,12 @@ public class RecordListener extends FFmpegListener {
     private boolean isStopped;
     private long startTimestamp = -1;
     private CountDownLatch closeCountDownLatch = new CountDownLatch(1);
-    private static final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1, new BasicThreadFactory.Builder().namingPattern("Record-Pool-%d").daemon(false).build());
+    private static final ScheduledExecutorService executor = Executors.newScheduledThreadPool(10, new BasicThreadFactory.Builder().namingPattern("Record-Pool-%d").daemon(true).build());
     private static final AtomicBoolean executorStarted = new AtomicBoolean(false);
     private static final BlockingQueue<Event> queue = new LinkedBlockingQueue<>();
 
-    public RecordListener(String filename, FFmpegFrameGrabber grabber, RTSPVideoAdapter rTSPVideoAdapter, boolean usePacket) {
-        super(rTSPVideoAdapter, filename, grabber, RECORD_LISTENER_NAME, 1024, 100L, queue, usePacket);
+    public RecordListener(String filename, FFmpegFrameGrabber grabber, RTSPVideoAdapter rTSPVideoAdapter) {
+        super(rTSPVideoAdapter, filename, grabber, RECORD_LISTENER_NAME, 1024, 100L, queue);
         this.isStopped = false;
     }
 

@@ -11,19 +11,8 @@ public class PacketEvent extends RTSPEvent {
 
     private final AVPacket frame;
 
-    private CountEvent countEvent;
-
     public PacketEvent(Object source, AVPacket frame, CountEvent countEvent) {
-        super(source);
+        super(source, countEvent);
         this.frame = frame;
-        this.countEvent = countEvent;
     }
-
-    public static class CountEvent extends Event {
-
-        public CountEvent() {
-            super(new Object());
-        }
-    }
-
 }

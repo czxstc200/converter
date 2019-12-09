@@ -21,12 +21,12 @@ public class PushListener extends FFmpegListener {
 
     private long lastDTS = 0;
     private final String rTMPPath;
-    private static final ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Push-Pool-%d").daemon(false).build());
+    private static final ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Push-Pool-%d").daemon(true).build());
     private static final AtomicBoolean executorStarted = new AtomicBoolean(false);
     private static final BlockingQueue<Event> queue = new LinkedBlockingDeque<>();
 
-    public PushListener(String rTMPPath, FFmpegFrameGrabber grabber, RTSPVideoAdapter rTSPVideoAdapter, boolean usePacket) {
-        super(rTSPVideoAdapter, rTMPPath, grabber, PUSH_LISTENER_NAME, 1024, 100L, queue, usePacket);
+    public PushListener(String rTMPPath, FFmpegFrameGrabber grabber, RTSPVideoAdapter rTSPVideoAdapter) {
+        super(rTSPVideoAdapter, rTMPPath, grabber, PUSH_LISTENER_NAME, 1024, 100L, queue);
         this.rTMPPath = rTMPPath;
     }
 

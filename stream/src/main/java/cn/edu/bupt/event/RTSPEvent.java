@@ -10,7 +10,10 @@ public class RTSPEvent extends Event {
 
     private RTSPListener rtspListener;
 
-    public RTSPEvent(Object source) {
+    private CountEvent countEvent;
+
+    public RTSPEvent(Object source, CountEvent countEvent) {
         super(source);
+        this.countEvent = countEvent;
     }
 }
