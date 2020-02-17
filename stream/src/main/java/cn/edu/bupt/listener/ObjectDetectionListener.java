@@ -3,6 +3,7 @@ package cn.edu.bupt.listener;
 import cn.edu.bupt.adapter.RTSPVideoAdapter;
 import cn.edu.bupt.event.Event;
 import cn.edu.bupt.tasks.ObjectDetectionTask;
+import cn.edu.bupt.util.DirUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +12,7 @@ import org.bytedeco.javacv.OpenCVFrameConverter;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static cn.edu.bupt.util.Constants.OBJECT_DETECTION_LISTENER_NAME;
+import static cn.edu.bupt.util.Constants.*;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
@@ -25,6 +26,7 @@ public class ObjectDetectionListener extends RTSPListener {
     public ObjectDetectionListener(RTSPVideoAdapter rtspVideoAdapter) {
         super(rtspVideoAdapter, OBJECT_DETECTION_LISTENER_NAME);
         lastUpdateTimestamp = System.currentTimeMillis();
+        DirUtil.judgeDirExists(OBJECT_DETECTION_TEMP_DIR);
     }
 
     @Override

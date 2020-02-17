@@ -10,7 +10,11 @@ public class Constants {
 
     public final static String OBJECT_DETECTION_LISTENER_NAME = "CV-lis";
 
-    public final static String OBJECT_DETECTION_URL = "http://10.112.217.199:8081/classify?threshold=0.8";
+    public final static String OBJECT_DETECTION_HOST = "10.112.217.199";
+
+    public final static int OBJECT_DETECTION_PORT = 8081;
+
+    public final static String OBJECT_DETECTION_URL = "/classify?threshold=0.8";
 
     public final static String OBJECT_DETECTION_TEMP_DIR = ROOT_DIR + "CvTemp/";
 
