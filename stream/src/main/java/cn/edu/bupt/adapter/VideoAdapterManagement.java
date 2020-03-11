@@ -9,7 +9,7 @@ import java.util.concurrent.*;
 
 public class VideoAdapterManagement<T extends VideoAdapter> {
 
-    public Map<String, T> map = new ConcurrentHashMap<>();
+    public Map<String, T> adapters = new ConcurrentHashMap<>();
 
     private Map<String, Future<String>> futures = new ConcurrentHashMap<>();
 
@@ -19,10 +19,10 @@ public class VideoAdapterManagement<T extends VideoAdapter> {
     }
 
     public void startAdapter(T adapter) throws Exception {
-        if (map.containsKey(adapter.getName())) {
+        if (adapters.containsKey(adapter.getName())) {
             throw new Exception("This cn.edu.bupt.adapter name[" + adapter.getName() + "] exists!");
         }
-        map.put(adapter.getName(), adapter);
+        adapters.put(adapter.getName(), adapter);
         Future<String> future = executorService.submit(() -> {
             adapter.start();
             return String.valueOf(System.currentTimeMillis());
@@ -33,11 +33,11 @@ public class VideoAdapterManagement<T extends VideoAdapter> {
     public void stopAdapter(VideoAdapter adapter) {
         adapter.stop();
         futures.remove(adapter.getName());
-        map.remove(adapter.getName());
+        adapters.remove(adapter.getName());
     }
 
     public T getVideoAdapter(String name) {
-        return map.get(name);
+        return adapters.get(name);
     }
 
     public boolean getAdapterStatus(String adapterName) {
@@ -46,7 +46,7 @@ public class VideoAdapterManagement<T extends VideoAdapter> {
 
     public Set<String> getAllStreams() {
         Set<String> sources = new HashSet<>();
-        for (Map.Entry<String, T> entry : map.entrySet()) {
+        for (Map.Entry<String, T> entry : adapters.entrySet()) {
             sources.add(((RTSPVideoAdapter) entry.getValue()).getRTMPPath());
         }
         return sources;
