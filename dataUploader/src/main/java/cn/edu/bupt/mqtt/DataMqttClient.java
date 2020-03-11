@@ -16,12 +16,14 @@ public class DataMqttClient {
         MqttClient client = clientConnect(token);
         client.publish(Config.TELEMETRY_TOPIC, newMsg(data));
         client.disconnect();
+        mqttClientPool.returnObject(client);
     }
 
     public static void publishAttribute(String token, String data) throws Exception {
         MqttClient client = clientConnect(token);
         client.publish(Config.ATTRIBUTE_TOPIC, newMsg(data));
         client.disconnect();
+        mqttClientPool.returnObject(client);
     }
 
     private static MqttClient clientConnect(String token) throws Exception {

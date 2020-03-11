@@ -3,11 +3,11 @@ package cn.edu.bupt.util;
 import okhttp3.MediaType;
 
 public class UploadConstants {
-    public static final String HOST = "39.104.84.131";
+    public static final String HOST = "127.0.0.1";
 
     public static final MediaType APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8");
 
-    public static final String LOGIN_INFO = "{\"username\":\"czxstc200@gmail.com\",\"password\":\"password\"}";
+    public static final String LOGIN_INFO = "{\"username\":\"czxstc200@gmail.com\",\"password\":\"zx19950529\"}";
 
     public static final String LOGIN_URL = "http://"+HOST+"/api/user/login";
 

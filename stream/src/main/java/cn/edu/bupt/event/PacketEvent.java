@@ -12,7 +12,7 @@ public class PacketEvent extends RTSPEvent {
     private final AVPacket frame;
 
     public PacketEvent(Object source, AVPacket frame, CountEvent countEvent) {
-        super(source, countEvent);
+        super(source, null, countEvent);
         this.frame = frame;
     }
 }

@@ -1,15 +1,12 @@
 package cn.edu.bupt.adapter;
 
 import cn.edu.bupt.event.CountEvent;
-import cn.edu.bupt.listener.ObjectDetectionListener;
-import cn.edu.bupt.listener.PushListener;
+import cn.edu.bupt.listener.*;
 import cn.edu.bupt.tasks.CaptureTask;
 import cn.edu.bupt.tasks.UnrefTask;
 import cn.edu.bupt.event.Event;
 import cn.edu.bupt.event.GrabEvent;
 import cn.edu.bupt.event.PacketEvent;
-import cn.edu.bupt.listener.Listener;
-import cn.edu.bupt.listener.RecordListener;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +40,7 @@ public class RTSPVideoAdapter extends VideoAdapter {
     private String rTSPPath;
     private String rTMPPath;
     private AtomicBoolean capture = new AtomicBoolean(false);
+    private CountDownLatch captureCountDown = new CountDownLatch(1);
     private boolean usePacket;
     private static ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Rtsp-pool-%d").daemon(false).build());
     // 用于记录每一个frame需要完成的listeners个数，在全部listener完成任务后，调用PointerScope进行内存回收
@@ -140,12 +138,13 @@ public class RTSPVideoAdapter extends VideoAdapter {
         //进行抓拍操作
         if (capture.get() && newFrame != null) {
             captureFuture = executor.submit(new CaptureTask(newFrame, capturesPath));
+            captureCountDown.countDown();
             capture.set(false);
         }
         CountEvent countEvent = new CountEvent();
         frameFinishCount.put(countEvent, new AtomicInteger(listeners.size()));
         for (Listener listener : listeners) {
-            GrabEvent grabEvent = new GrabEvent(this, newFrame, pointerScope, grabber.getTimestamp(), countEvent);
+            GrabEvent grabEvent = new GrabEvent(this, newFrame, pointerScope, grabber.getTimestamp(), countEvent, (RTSPListener) listener);
             listener.fireAfterEventInvoked(grabEvent);
         }
     }
@@ -197,6 +196,8 @@ public class RTSPVideoAdapter extends VideoAdapter {
     public boolean capture() {
         if (capture.compareAndSet(false, true)) {
             try {
+                captureCountDown.await(5000, TimeUnit.MILLISECONDS);
+                captureCountDown = new CountDownLatch(1);
                 return captureFuture.get(5000, TimeUnit.MILLISECONDS);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -290,8 +291,8 @@ public class RTSPVideoAdapter extends VideoAdapter {
 
     public static void main(String[] args) {
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
-        String rTSP = "rtmp://58.200.131.2:1935/livetv/hunantv";
-        String rTMP = "rtmp://10.112.217.199/live";
+        String rTSP = "rtmp://58.200.131.2:1935/livetv/gxtv";
+        String rTMP = "rtmp://10.112.12.81:1935/live";
         VideoAdapterManagement<RTSPVideoAdapter> videoAdapterManagement = new VideoAdapterManagement<>();
         RTSPVideoAdapter rtspVideoAdapter = new RTSPVideoAdapter(rTSP, rTMP
                 , videoAdapterManagement, false);
@@ -308,10 +309,11 @@ public class RTSPVideoAdapter extends VideoAdapter {
                     rtspVideoAdapter.stopRecording();
 //                    System.out.println("start recording");
                     rtspVideoAdapter.startRecording(rtspVideoAdapter.videoPath + DirUtil.generateFilenameByDate() + ".flv");
+                    System.out.println(rtspVideoAdapter.capture());
                 } catch (Exception e) {
 
                 }
-            }, 10000, 10000, TimeUnit.MILLISECONDS);
+            }, 1000, 10000, TimeUnit.MILLISECONDS);
            Thread.sleep(100000);
 //           videoAdapterManagement.stopAdapter(rtspVideoAdapter);
 //           Thread.sleep(5000);

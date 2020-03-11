@@ -35,9 +35,12 @@ public class NettyClient {
 
     private final AtomicLong idGenerator = new AtomicLong(0L);
 
-    public NettyClient(String HOST, int PORT) {
+    private NettyClientPool clientPool;
+
+    public NettyClient(String HOST, int PORT, NettyClientPool clientPool) {
         this.HOST = HOST;
         this.PORT = PORT;
+        this.clientPool = clientPool;
         start();
     }
 
@@ -52,7 +55,7 @@ public class NettyClient {
                             channel.pipeline().addLast(new HttpClientCodec());
                             channel.pipeline().addLast(new HttpObjectAggregator(1024 * 10 * 1024));
                             channel.pipeline().addLast(new HttpContentDecompressor());
-                            channel.pipeline().addLast(new ClientHandler(NettyClient.this));
+                            channel.pipeline().addLast(new ClientHandler(NettyClient.this, clientPool));
                         }
                     });
             channel = bootstrap.connect().sync().channel();
@@ -72,8 +75,12 @@ public class NettyClient {
     }
 
     public void post(String url, ByteBuf content, PromiseCallback<FullHttpResponse> promiseCallback) throws Exception {
-        FullHttpRequest request = generateRequest(HttpMethod.POST, url, content, promiseCallback);
-        channel.pipeline().writeAndFlush(request);
+        try {
+            FullHttpRequest request = generateRequest(HttpMethod.POST, url, content, promiseCallback);
+            channel.pipeline().writeAndFlush(request);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -95,7 +102,7 @@ public class NettyClient {
     }
 
     public static void main(String[] args) throws Exception {
-        NettyClient nettyClient = new NettyClient("127.0.0.1", 8080);
+        NettyClient nettyClient = new NettyClient("127.0.0.1", 8080, null);
         nettyClient.post("/test?content=123",
                 Unpooled.wrappedBuffer("hello".getBytes()),
                 new PromiseCallback<FullHttpResponse>() {
