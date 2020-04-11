@@ -25,8 +25,8 @@ public class PushListener extends FFmpegListener {
     private static final AtomicBoolean executorStarted = new AtomicBoolean(false);
     private static final BlockingQueue<Event> queue = new LinkedBlockingDeque<>();
 
-    public PushListener(String rTMPPath, FFmpegFrameGrabber grabber, RTSPVideoAdapter rTSPVideoAdapter) {
-        super(rTSPVideoAdapter, rTMPPath, grabber, PUSH_LISTENER_NAME, 1024, 100L, queue);
+    public PushListener(String rTMPPath, FFmpegFrameGrabber grabber, RTSPVideoAdapter rTSPVideoAdapter, boolean usePacket) {
+        super(rTSPVideoAdapter, rTMPPath, grabber, PUSH_LISTENER_NAME, 1024, 100L, queue, usePacket);
         this.rTMPPath = rTMPPath;
     }
 

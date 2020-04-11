@@ -38,11 +38,11 @@ public class PushTask implements Runnable {
                 try {
                     if (event instanceof PacketEvent) {
                         AVPacket avPacket = ((PacketEvent) event).getFrame();
-                        if (avPacket.dts() < listener.getLastDTS()) {
-                            continue;
-                        } else {
-                            listener.setLastDTS(avPacket.dts());
-                        }
+//                        if (avPacket.dts() < listener.getLastDTS()) {
+//                            continue;
+//                        } else {
+//                            listener.setLastDTS(avPacket.dts());
+//                        }
                         success = pushRecorder.recordPacket(avPacket);
                     } else if (event instanceof GrabEvent) {
                         pushRecorder.record(((GrabEvent) event).getFrame());

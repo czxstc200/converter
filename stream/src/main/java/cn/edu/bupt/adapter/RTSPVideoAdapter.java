@@ -81,27 +81,22 @@ public class RTSPVideoAdapter extends VideoAdapter {
                     System.out.println("Video counts : "+count);
                     log.info("Video[{}] counts={}", rTSPPath, count);
                 }
-                //时间超过零点进行视频录像的切分
-//                if (recording && timestamp < DirUtil.getZeroTimestamp()) {
-//                    executor.submit(() -> {
-//                        timestamp = DirUtil.getZeroTimestamp();
-//                        restartRecording(videoPath + DirUtil.generateFilenameByDate() + ".flv");
-//                    });
-//                }
-
-                if (usePacket) {
-                    //使用AVPacket进行推流，目前这种模式下不能对数据帧进行处理
-                    handleUsePacket();
-                } else {
-                    //使用传统方式进行处理，效率较低（增加了编解码的时间），但是可以对画面frame进行处理
-                    handleGrab();
+                try {
+                    if (usePacket) {
+                        //使用AVPacket进行推流，目前这种模式下不能对数据帧进行处理
+                        handleUsePacket();
+                    } else {
+                        //使用传统方式进行处理，效率较低（增加了编解码的时间），但是可以对画面frame进行处理
+                        handleGrab();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         } catch (Throwable e) {
             e.printStackTrace();
             log.warn("Adapter [{}] throws an Exception, e", getName(), e);
         } finally {
-            System.out.println(stop);
             System.out.println("adapter stopped");
             grabber.stop();
             closeAllListeners();
@@ -265,14 +260,14 @@ public class RTSPVideoAdapter extends VideoAdapter {
     }
 
     private void startRecording(String filename) {
-        RecordListener recordListener = new RecordListener(filename, getGrabber(), this);
+        RecordListener recordListener = new RecordListener(filename, getGrabber(), this, usePacket);
         recordListener.start();
         addListener(recordListener);
     }
 
     public void startRecording() {
         String videoPath = dataLocation + "videos/";
-        RecordListener recordListener = new RecordListener(videoPath + DirUtil.generateFilenameByDate() + ".flv", getGrabber(), this);
+        RecordListener recordListener = new RecordListener(videoPath + DirUtil.generateFilenameByDate() + ".flv", getGrabber(), this, usePacket);
         recordListener.start();
         addListener(recordListener);
     }
@@ -290,37 +285,41 @@ public class RTSPVideoAdapter extends VideoAdapter {
     }
 
     public static void main(String[] args) {
+        System.setProperty("org.bytedeco.javacpp.maxphysicalbytes", "0");
+        System.setProperty("org.bytedeco.javacpp.maxbytes", "0");
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
-        String rTSP = "rtmp://58.200.131.2:1935/livetv/gxtv";
+        String rTSP = "rtsp://10.211.55.10/1080p.flv";
+//        String rTSP = "rtmp://58.200.131.2:1935/livetv/gxtv";
         String rTMP = "rtmp://10.112.12.81:1935/live";
+        boolean usePacket = false;
         VideoAdapterManagement<RTSPVideoAdapter> videoAdapterManagement = new VideoAdapterManagement<>();
         RTSPVideoAdapter rtspVideoAdapter = new RTSPVideoAdapter(rTSP, rTMP
-                , videoAdapterManagement, false);
-        PushListener listener = new PushListener(rTMP, rtspVideoAdapter.grabber, rtspVideoAdapter);
+                , videoAdapterManagement, usePacket);
+        PushListener listener = new PushListener(rTMP, rtspVideoAdapter.grabber, rtspVideoAdapter, usePacket);
         rtspVideoAdapter.addListener(listener);
-        rtspVideoAdapter.addListener(new ObjectDetectionListener(rtspVideoAdapter));
-        String filename = rtspVideoAdapter.videoPath + DirUtil.generateFilenameByDate() + ".flv";
-        rtspVideoAdapter.addListener(new RecordListener(filename, rtspVideoAdapter.grabber, rtspVideoAdapter));
+//        rtspVideoAdapter.addListener(new ObjectDetectionListener(rtspVideoAdapter));
+//        String filename = rtspVideoAdapter.videoPath + DirUtil.generateFilenameByDate() + ".flv";
+//        rtspVideoAdapter.addListener(new RecordListener(filename, rtspVideoAdapter.grabber, rtspVideoAdapter));
         try {
             videoAdapterManagement.startAdapter(rtspVideoAdapter);
-            executorService.scheduleAtFixedRate(() -> {
-                try {
-//                    System.out.println("stop recording");
-                    rtspVideoAdapter.stopRecording();
-//                    System.out.println("start recording");
-                    rtspVideoAdapter.startRecording(rtspVideoAdapter.videoPath + DirUtil.generateFilenameByDate() + ".flv");
-                    System.out.println(rtspVideoAdapter.capture());
-                } catch (Exception e) {
-
-                }
-            }, 1000, 10000, TimeUnit.MILLISECONDS);
+//            executorService.scheduleAtFixedRate(() -> {
+//                try {
+////                    System.out.println("stop recording");
+//                    rtspVideoAdapter.stopRecording();
+////                    System.out.println("start recording");
+//                    rtspVideoAdapter.startRecording(rtspVideoAdapter.videoPath + DirUtil.generateFilenameByDate() + ".flv");
+//                    System.out.println(rtspVideoAdapter.capture());
+//                } catch (Exception e) {
+//
+//                }
+//            }, 1000, 10000, TimeUnit.MILLISECONDS);
            Thread.sleep(100000);
 //           videoAdapterManagement.stopAdapter(rtspVideoAdapter);
 //           Thread.sleep(5000);
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
-
+        rtspVideoAdapter.stop();
     }
 
 }

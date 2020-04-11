@@ -27,13 +27,14 @@ public abstract class FFmpegListener extends RTSPListener {
     protected boolean isInit;
     protected boolean isStarted;
 
-    FFmpegListener(RTSPVideoAdapter rTSPVideoAdapter, String dst, FFmpegFrameGrabber grabber, String name, int queueThreshold, long offerTimeout, BlockingQueue<Event> queue) {
+    FFmpegListener(RTSPVideoAdapter rTSPVideoAdapter, String dst, FFmpegFrameGrabber grabber, String name, int queueThreshold, long offerTimeout, BlockingQueue<Event> queue,boolean usePacket) {
         super(rTSPVideoAdapter, name);
         this.queueThreshold = queueThreshold;
         this.offerTimeout = offerTimeout;
         this.queue = queue;
         this.isInit = false;
         this.isStarted = false;
+        this.usePacket = usePacket;
         recorder = fFmpegRecorderInit(dst, grabber);
     }
 
