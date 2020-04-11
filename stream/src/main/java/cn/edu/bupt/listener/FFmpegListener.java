@@ -10,7 +10,10 @@ import org.bytedeco.ffmpeg.avformat.AVFormatContext;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
 
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -18,23 +21,21 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode(callSuper = true)
 public abstract class FFmpegListener extends RTSPListener {
 
-    protected final int queueThreshold;
-    protected final long offerTimeout;
-    protected final BlockingQueue<Event> queue;
     protected final FFmpegFrameRecorder recorder;
     protected boolean usePacket;
     protected AVFormatContext fc;
     protected boolean isInit;
     protected boolean isStarted;
+    protected final ExecutorService executor;
 
-    FFmpegListener(RTSPVideoAdapter rTSPVideoAdapter, String dst, FFmpegFrameGrabber grabber, String name, int queueThreshold, long offerTimeout, BlockingQueue<Event> queue,boolean usePacket) {
+    FFmpegListener(RTSPVideoAdapter rTSPVideoAdapter, String dst, FFmpegFrameGrabber grabber, String name, boolean usePacket) {
         super(rTSPVideoAdapter, name);
-        this.queueThreshold = queueThreshold;
-        this.offerTimeout = offerTimeout;
-        this.queue = queue;
         this.isInit = false;
         this.isStarted = false;
         this.usePacket = usePacket;
+        List<ExecutorService> executorServices = rTSPVideoAdapter.getWorkers();
+        int index = Math.abs(rTSPVideoAdapter.hashCode() + this.hashCode())%executorServices.size();
+        this.executor = executorServices.get(index);
         recorder = fFmpegRecorderInit(dst, grabber);
     }
 
@@ -43,9 +44,8 @@ public abstract class FFmpegListener extends RTSPListener {
         try {
             if (isInit) {
                 recorder.start(fc);
-                startExecutor();
-                isStarted = true;
                 log.info("FFmpeg recorder started, recorder name: [{}]", name);
+                isStarted = true;
             } else {
                 throw new Exception("You must initialize the FFmpeg recorder before start it");
             }
@@ -77,23 +77,11 @@ public abstract class FFmpegListener extends RTSPListener {
 
     abstract void close0() throws Exception;
 
-    abstract void startExecutor();
+    protected abstract void pushEvent(Event event);
 
-    private void pushEvent(Event event) {
-        try {
-            if (queue.size() > this.queueThreshold) {
-                log.warn("Queue size is greater than threshold. queue size={} threshold={} timestamp={}", queue.size(), this.queueThreshold, System.currentTimeMillis());
-            }
-            if (queue.size() < 2 * this.queueThreshold) {
-                queue.offer(event, this.offerTimeout, TimeUnit.MILLISECONDS);
-                log.trace("Inserting event into queue, queue size:[{}]", queue.size());
-            } else {
-                log.warn("Clear queue");
-                queue.clear();
-            }
-        } catch (Exception e) {
-            log.warn("Event data was not accepted by the queue");
-        }
+    protected void submitTask(Runnable runnable) {
+        System.out.println("record: "+ executor);
+        executor.submit(runnable);
     }
 
     private FFmpegFrameRecorder fFmpegRecorderInit(String dst, FFmpegFrameGrabber grabber) {

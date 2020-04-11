@@ -21,13 +21,9 @@ public class RecordListener extends FFmpegListener {
 
     private boolean isStopped;
     private long startTimestamp = -1;
-    private CountDownLatch closeCountDownLatch = new CountDownLatch(1);
-    private static final ScheduledExecutorService executor = Executors.newScheduledThreadPool(10, new BasicThreadFactory.Builder().namingPattern("Record-Pool-%d").daemon(true).build());
-    private static final AtomicBoolean executorStarted = new AtomicBoolean(false);
-    private static final BlockingQueue<Event> queue = new LinkedBlockingQueue<>();
 
     public RecordListener(String filename, FFmpegFrameGrabber grabber, RTSPVideoAdapter rTSPVideoAdapter, boolean usePacket) {
-        super(rTSPVideoAdapter, filename, grabber, RECORD_LISTENER_NAME, 1024, 100L, queue, usePacket);
+        super(rTSPVideoAdapter, filename, grabber, RECORD_LISTENER_NAME, usePacket);
         this.isStopped = false;
     }
 
@@ -35,13 +31,10 @@ public class RecordListener extends FFmpegListener {
     void close0() throws Exception {
         isStarted = false;
         isStopped = true;
-        closeCountDownLatch.await(10000L, TimeUnit.MILLISECONDS);
     }
 
     @Override
-    protected void startExecutor() {
-        if (executorStarted.compareAndSet(false, true)) {
-            executor.scheduleAtFixedRate(new RecordTask(queue), 1, 5, TimeUnit.SECONDS);
-        }
+    protected void pushEvent(Event event) {
+        super.submitTask(new RecordTask(event));
     }
 }

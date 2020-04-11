@@ -19,27 +19,21 @@ import static cn.edu.bupt.util.Constants.PUSH_LISTENER_NAME;
 @Data
 public class PushListener extends FFmpegListener {
 
-    private long lastDTS = 0;
     private final String rTMPPath;
-    private static final ExecutorService executor = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("Push-Pool-%d").daemon(true).build());
-    private static final AtomicBoolean executorStarted = new AtomicBoolean(false);
-    private static final BlockingQueue<Event> queue = new LinkedBlockingDeque<>();
 
     public PushListener(String rTMPPath, FFmpegFrameGrabber grabber, RTSPVideoAdapter rTSPVideoAdapter, boolean usePacket) {
-        super(rTSPVideoAdapter, rTMPPath, grabber, PUSH_LISTENER_NAME, 1024, 100L, queue, usePacket);
+        super(rTSPVideoAdapter, rTMPPath, grabber, PUSH_LISTENER_NAME, usePacket);
         this.rTMPPath = rTMPPath;
+    }
+
+    @Override
+    protected void pushEvent(Event event) {
+        super.submitTask(new PushTask(event));
     }
 
     @Override
     void close0() throws Exception {
         recorder.stop();
         isStarted = false;
-    }
-
-    @Override
-    protected void startExecutor() {
-        if (executorStarted.compareAndSet(false, true)) {
-            executor.submit(new PushTask(queue, executorStarted));
-        }
     }
 }

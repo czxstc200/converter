@@ -4,6 +4,7 @@ import cn.edu.bupt.adapter.RTSPVideoAdapter;
 import cn.edu.bupt.discovery.DeviceDiscovery;
 import cn.edu.bupt.linux.HikUtil;
 import cn.edu.bupt.soap.OnvifDevice;
+import cn.edu.bupt.thread.Workers;
 import cn.edu.bupt.util.Constants;
 import cn.edu.bupt.adapter.VideoAdapterManagement;
 import cn.edu.bupt.util.DirUtil;
@@ -48,7 +49,7 @@ public class VideoController {
         String rtspPath = rtsp == null ? "rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov" : rtsp;
         boolean saveVideo = save == null ? false : save;
         boolean isUsePacket = usePacket == null ? true : usePacket;
-        videoAdapterManagement.startAdapter(new RTSPVideoAdapter(rtspPath, rtmpPath, videoAdapterManagement, isUsePacket));
+        videoAdapterManagement.startAdapter(new RTSPVideoAdapter(rtspPath, rtmpPath, videoAdapterManagement, Workers.getWorkers(4), isUsePacket));
         setHeader(response);
         return "{rtsp:'" + rtspPath + "'," + "rtmp:'" + rtmpPath + "'," + "saveVideo:" + saveVideo + ",usePacket:" + isUsePacket + "}";
     }
@@ -66,7 +67,7 @@ public class VideoController {
         OnvifDevice device = new OnvifDevice(ip, username, password, false);
         String rtsp = device.getMedia().getRTSPStreamUri(device.getDevices().getProfiles().get(0).getToken());
         String rtspPath = rtsp.replace("rtsp://", "rtsp://" + username + ":" + password + "@");
-        videoAdapterManagement.startAdapter(new RTSPVideoAdapter(rtspPath, rtmp, videoAdapterManagement, isUsePacket));
+        videoAdapterManagement.startAdapter(new RTSPVideoAdapter(rtspPath, rtmp, videoAdapterManagement, Workers.getWorkers(4), isUsePacket));
         return "{rtsp:'" + rtspPath + "'," + "rtmp:'" + rtmp + "'," + "saveVideo:" + saveVideo + ",usePacket:" + isUsePacket + "}";
     }
 

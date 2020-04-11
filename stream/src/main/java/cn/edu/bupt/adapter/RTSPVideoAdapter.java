@@ -20,7 +20,9 @@ import org.bytedeco.javacv.Frame;
 import cn.edu.bupt.util.Constants;
 import cn.edu.bupt.util.DirUtil;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -48,9 +50,11 @@ public class RTSPVideoAdapter extends VideoAdapter {
     private Future<Boolean> captureFuture;
     private final int NULL_FRAME_THRESHOLD = 10;
     private int nullFrames = 0;
+    private final List<ExecutorService> workers;
 
-    public RTSPVideoAdapter(String rTSPPath, String rTMPPath, VideoAdapterManagement<RTSPVideoAdapter> videoAdapterManagement, boolean usePacket) {
+    public RTSPVideoAdapter(String rTSPPath, String rTMPPath, VideoAdapterManagement<RTSPVideoAdapter> videoAdapterManagement, List<ExecutorService> workers, boolean usePacket) {
         super(rTMPPath, videoAdapterManagement);
+        this.workers = workers;
         this.rTSPPath = rTSPPath;
         this.rTMPPath = rTMPPath;
         this.usePacket = usePacket;
@@ -288,18 +292,22 @@ public class RTSPVideoAdapter extends VideoAdapter {
         System.setProperty("org.bytedeco.javacpp.maxphysicalbytes", "0");
         System.setProperty("org.bytedeco.javacpp.maxbytes", "0");
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
-        String rTSP = "rtsp://10.211.55.10/1080p.flv";
+        String rTSP = "rtsp://10.211.55.10/360p.flv";
 //        String rTSP = "rtmp://58.200.131.2:1935/livetv/gxtv";
         String rTMP = "rtmp://10.112.12.81:1935/live";
         boolean usePacket = false;
+        List<ExecutorService> workers = new ArrayList<>();
+        for (int i = 0;i<4;i++) {
+            workers.add(Executors.newSingleThreadExecutor());
+        }
         VideoAdapterManagement<RTSPVideoAdapter> videoAdapterManagement = new VideoAdapterManagement<>();
         RTSPVideoAdapter rtspVideoAdapter = new RTSPVideoAdapter(rTSP, rTMP
-                , videoAdapterManagement, usePacket);
+                , videoAdapterManagement, workers, usePacket);
         PushListener listener = new PushListener(rTMP, rtspVideoAdapter.grabber, rtspVideoAdapter, usePacket);
         rtspVideoAdapter.addListener(listener);
 //        rtspVideoAdapter.addListener(new ObjectDetectionListener(rtspVideoAdapter));
-//        String filename = rtspVideoAdapter.videoPath + DirUtil.generateFilenameByDate() + ".flv";
-//        rtspVideoAdapter.addListener(new RecordListener(filename, rtspVideoAdapter.grabber, rtspVideoAdapter));
+        String filename = rtspVideoAdapter.videoPath + DirUtil.generateFilenameByDate() + ".flv";
+        rtspVideoAdapter.addListener(new RecordListener(filename, rtspVideoAdapter.grabber, rtspVideoAdapter, usePacket));
         try {
             videoAdapterManagement.startAdapter(rtspVideoAdapter);
 //            executorService.scheduleAtFixedRate(() -> {
@@ -313,7 +321,8 @@ public class RTSPVideoAdapter extends VideoAdapter {
 //
 //                }
 //            }, 1000, 10000, TimeUnit.MILLISECONDS);
-           Thread.sleep(100000);
+           Thread.sleep(10000);
+            rtspVideoAdapter.stopRecording();
 //           videoAdapterManagement.stopAdapter(rtspVideoAdapter);
 //           Thread.sleep(5000);
         } catch (Exception e) {
@@ -321,6 +330,5 @@ public class RTSPVideoAdapter extends VideoAdapter {
         }
         rtspVideoAdapter.stop();
     }
-
 }
 

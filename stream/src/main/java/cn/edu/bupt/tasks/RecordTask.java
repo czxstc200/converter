@@ -16,66 +16,42 @@ import java.util.Set;
 @Slf4j
 public class RecordTask implements Runnable {
 
-    private final Queue<Event> queue;
+    private final Event event;
 
-    public RecordTask(Queue<Event> queue) {
-        this.queue = queue;
+    public RecordTask(Event event) {
+        this.event = event;
     }
 
     @Override
     public void run() {
-        Set<RecordListener> recordListeners = new HashSet<>();
-        while (!queue.isEmpty()) {
-            Event event = queue.poll();
-            if (event == null || ((RTSPEvent) event).getRtspListener() == null) {
-                continue;
-            }
-            RecordListener listener = (RecordListener) ((RTSPEvent) event).getRtspListener();
-            FFmpegFrameRecorder fileRecorder = listener.getRecorder();
-            if (listener.isStopped()) {
-                recordListeners.add(listener);
-            }
-            boolean success = false;
-            try {
-                if (event instanceof GrabEvent) {
-                    // 时间戳设置
-                    long timestamp = ((GrabEvent) event).getTimestamp();
-                    if (listener.getStartTimestamp() == -1) {
-                        listener.setStartTimestamp(timestamp);
-                        timestamp = 0;
-                        fileRecorder.setTimestamp(timestamp);
-                    } else {
-                        timestamp -= listener.getStartTimestamp();
-                    }
-                    if (timestamp > fileRecorder.getTimestamp()) {
-                        fileRecorder.setTimestamp(timestamp);
-                    }
-                    fileRecorder.record(((GrabEvent) event).getFrame());
-                    success = true;
-                } else if (event instanceof PacketEvent) {
-                    success = fileRecorder.recordPacket(((PacketEvent) event).getFrame());
+        RecordListener listener = (RecordListener) ((RTSPEvent) event).getRtspListener();
+        FFmpegFrameRecorder fileRecorder = listener.getRecorder();
+        boolean success = false;
+        try {
+            if (event instanceof GrabEvent) {
+                // 时间戳设置
+                long timestamp = ((GrabEvent) event).getTimestamp();
+                if (listener.getStartTimestamp() == -1) {
+                    listener.setStartTimestamp(timestamp);
+                    timestamp = 0;
+                    fileRecorder.setTimestamp(timestamp);
                 } else {
-                    log.warn("Unknown event type!");
+                    timestamp -= listener.getStartTimestamp();
                 }
-            } catch (Exception e) {
-                log.warn("Record event failed for Recorder:{}, e: ", listener.getName(), e);
-            } finally {
-                listener.getRTSPVideoAdapter().unref(event, success);
+                if (timestamp > fileRecorder.getTimestamp()) {
+                    fileRecorder.setTimestamp(timestamp);
+                }
+                fileRecorder.record(((GrabEvent) event).getFrame());
+                success = true;
+            } else if (event instanceof PacketEvent) {
+                success = fileRecorder.recordPacket(((PacketEvent) event).getFrame());
+            } else {
+                log.warn("Unknown event type!");
             }
-        }
-        // 关闭recorder
-        if (!recordListeners.isEmpty()) {
-            Iterator<RecordListener> iterator = recordListeners.iterator();
-            iterator.forEachRemaining(listener -> {
-                FFmpegFrameRecorder recorder = listener.getRecorder();
-                try {
-                    recorder.stop();
-                } catch (Exception e) {
-                    log.warn("Failed to stop a file recorder, e:", e);
-                } finally {
-                    listener.getCloseCountDownLatch().countDown();
-                }
-            });
+        } catch (Exception e) {
+            log.warn("Record event failed for Recorder:{}, e: ", listener.getName(), e);
+        } finally {
+            listener.getRTSPVideoAdapter().unref(event, success);
         }
     }
 }

@@ -15,49 +15,32 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 public class PushTask implements Runnable {
 
-    private final BlockingQueue<Event> queue;
+    private final Event event;
 
-    private final AtomicBoolean executorStarted;
-
-    public PushTask(BlockingQueue<Event> queue, AtomicBoolean executorStarted) {
-        this.queue = queue;
-        this.executorStarted = executorStarted;
+    public PushTask(Event event) {
+        this.event = event;
     }
 
     @Override
     public void run() {
         try {
-            while (true) {
-                Event event = queue.take();
-                PushListener listener = (PushListener) ((RTSPEvent) event).getRtspListener();
-                if (!listener.isStarted()) {
-                    continue;
+            PushListener listener = (PushListener) ((RTSPEvent) event).getRtspListener();
+            FFmpegFrameRecorder pushRecorder = listener.getRecorder();
+            boolean success = false;
+            try {
+                if (event instanceof PacketEvent) {
+                    AVPacket avPacket = ((PacketEvent) event).getFrame();
+                    success = pushRecorder.recordPacket(avPacket);
+                } else if (event instanceof GrabEvent) {
+                    pushRecorder.record(((GrabEvent) event).getFrame());
+                    success = true;
+                } else {
+                    throw new Exception("Unknown cn.edu.bupt.event type!");
                 }
-                FFmpegFrameRecorder pushRecorder = listener.getRecorder();
-                boolean success = false;
-                try {
-                    if (event instanceof PacketEvent) {
-                        AVPacket avPacket = ((PacketEvent) event).getFrame();
-//                        if (avPacket.dts() < listener.getLastDTS()) {
-//                            continue;
-//                        } else {
-//                            listener.setLastDTS(avPacket.dts());
-//                        }
-                        success = pushRecorder.recordPacket(avPacket);
-                    } else if (event instanceof GrabEvent) {
-                        pushRecorder.record(((GrabEvent) event).getFrame());
-                        success = true;
-                    } else {
-                        throw new Exception("Unknown cn.edu.bupt.event type!");
-                    }
-                } catch (Exception e) {
-                    log.warn("Push event failed for recorder [{}], exception: ", listener.getName(), e);
-                } finally {
-                    listener.getRTSPVideoAdapter().unref(event, success);
-                }
-                if (queue.isEmpty() && !executorStarted.get()) {
-                    break;
-                }
+            } catch (Exception e) {
+                log.warn("Push event failed for recorder [{}], exception: ", listener.getName(), e);
+            } finally {
+                listener.getRTSPVideoAdapter().unref(event, success);
             }
         } catch (Exception e) {
             log.warn("Executor exception :", e);
