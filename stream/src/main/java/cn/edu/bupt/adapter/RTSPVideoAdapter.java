@@ -297,9 +297,10 @@ public class RTSPVideoAdapter extends VideoAdapter {
         String rTMP = "rtmp://10.112.12.81:1935/live";
         boolean usePacket = false;
         List<ExecutorService> workers = new ArrayList<>();
-        for (int i = 0;i<4;i++) {
+        for (int i = 0;i<2;i++) {
             workers.add(Executors.newSingleThreadExecutor());
         }
+
         VideoAdapterManagement<RTSPVideoAdapter> videoAdapterManagement = new VideoAdapterManagement<>();
         RTSPVideoAdapter rtspVideoAdapter = new RTSPVideoAdapter(rTSP, rTMP
                 , videoAdapterManagement, workers, usePacket);
@@ -321,8 +322,8 @@ public class RTSPVideoAdapter extends VideoAdapter {
 //
 //                }
 //            }, 1000, 10000, TimeUnit.MILLISECONDS);
-           Thread.sleep(10000);
-            rtspVideoAdapter.stopRecording();
+           Thread.sleep(60000);
+//            rtspVideoAdapter.stopRecording();
 //           videoAdapterManagement.stopAdapter(rtspVideoAdapter);
 //           Thread.sleep(5000);
         } catch (Exception e) {
