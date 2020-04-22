@@ -21,7 +21,7 @@ import java.nio.file.Files;
 import static cn.edu.bupt.util.Constants.*;
 
 @Slf4j
-public class ObjectDetectionTask implements Runnable {
+public class ObjectDetectionTask implements Task {
 
     private final Event event;
     private final OpenCVFrameConverter.ToIplImage converter;
@@ -35,6 +35,10 @@ public class ObjectDetectionTask implements Runnable {
         this.converter = converter;
         this.cameraName = cameraName;
     }
+
+    private static final int priority = 3;
+
+    private static final long endTime = System.currentTimeMillis()+5000;
 
     @Override
     public void run() {
@@ -77,5 +81,15 @@ public class ObjectDetectionTask implements Runnable {
                 adapter.unref(event, false);
             }
         }
+    }
+
+    @Override
+    public int getPriority() {
+        return priority;
+    }
+
+    @Override
+    public long getEndTime() {
+        return endTime;
     }
 }

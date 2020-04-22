@@ -19,6 +19,8 @@ public class UnrefTask implements Runnable {
 
     private final boolean success;
 
+//    public static final AtomicInteger count = new AtomicInteger(0);
+
     public UnrefTask(Map<Event, AtomicInteger> map, Event event, boolean isSuccess) {
         this.map = map;
         this.event = event;
@@ -32,6 +34,7 @@ public class UnrefTask implements Runnable {
             if (count == 0) {
                 ((GrabEvent) event).getPointerScope().deallocate();
                 map.remove(event);
+//                UnrefTask.count.getAndIncrement();
             }
         } else if (event instanceof PacketEvent) {
             AVPacket avPacket = ((PacketEvent) event).getFrame();
@@ -44,6 +47,7 @@ public class UnrefTask implements Runnable {
                 if (!avPacket.isNull()) {
                     avcodec.av_packet_free(avPacket);
                 }
+//                UnrefTask.count.getAndIncrement();
             }
         } else {
             log.warn("Unknown event type!");

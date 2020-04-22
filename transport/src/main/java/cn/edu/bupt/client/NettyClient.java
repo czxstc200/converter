@@ -21,8 +21,10 @@ import static io.netty.handler.codec.stomp.StompHeaders.CONTENT_TYPE;
 @Data
 public class NettyClient {
 
+//    private Bootstrap bootstrap;
     private final Bootstrap bootstrap = new Bootstrap();
 
+//    private NioEventLoopGroup group;
     private final NioEventLoopGroup group = new NioEventLoopGroup();
 
     private Channel channel;
@@ -36,6 +38,8 @@ public class NettyClient {
     private final AtomicLong idGenerator = new AtomicLong(0L);
 
     private NettyClientPool clientPool;
+
+//    private final byte[] payload = new byte[1024*256];
 
     public NettyClient(String HOST, int PORT, NettyClientPool clientPool) {
         this.HOST = HOST;

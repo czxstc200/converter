@@ -11,6 +11,7 @@ import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
 
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -34,7 +35,8 @@ public abstract class FFmpegListener extends RTSPListener {
         this.isStarted = false;
         this.usePacket = usePacket;
         List<ExecutorService> executorServices = rTSPVideoAdapter.getWorkers();
-        int index = Math.abs(rTSPVideoAdapter.hashCode() + this.hashCode())%executorServices.size();
+        Random random = new Random();
+        int index = Math.abs(random.nextInt())%executorServices.size();
         this.executor = executorServices.get(index);
         recorder = fFmpegRecorderInit(dst, grabber);
     }
@@ -80,7 +82,7 @@ public abstract class FFmpegListener extends RTSPListener {
     protected abstract void pushEvent(Event event);
 
     protected void submitTask(Runnable runnable) {
-        System.out.println("record: "+ executor);
+//        System.out.println("record: "+ executor);
         executor.submit(runnable);
     }
 

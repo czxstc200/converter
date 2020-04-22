@@ -8,19 +8,20 @@ import cn.edu.bupt.listener.RecordListener;
 import lombok.extern.slf4j.Slf4j;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
-public class RecordTask implements Runnable {
+public class RecordTask implements Task {
 
     private final Event event;
 
     public RecordTask(Event event) {
         this.event = event;
     }
+
+    private static final int priority = 2;
+
+    private static final long endTime = System.currentTimeMillis()+5000;
 
     @Override
     public void run() {
@@ -43,7 +44,13 @@ public class RecordTask implements Runnable {
                 }
                 fileRecorder.record(((GrabEvent) event).getFrame());
                 success = true;
+//                Random random = new Random();
+//                double time = Math.abs(Math.sqrt(15)*random.nextGaussian()+30);
+//                Thread.sleep((long) time);
             } else if (event instanceof PacketEvent) {
+//                Random random = new Random();
+//                double time = Math.abs(Math.sqrt(15)*random.nextGaussian()+30);
+//                Thread.sleep((long) time);
                 success = fileRecorder.recordPacket(((PacketEvent) event).getFrame());
             } else {
                 log.warn("Unknown event type!");
@@ -53,5 +60,17 @@ public class RecordTask implements Runnable {
         } finally {
             listener.getRTSPVideoAdapter().unref(event, success);
         }
+    }
+
+
+
+    @Override
+    public int getPriority() {
+        return priority;
+    }
+
+    @Override
+    public long getEndTime() {
+        return endTime;
     }
 }
