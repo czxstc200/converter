@@ -29,6 +29,8 @@ public abstract class FFmpegListener extends RTSPListener {
     protected boolean isStarted;
     protected final ExecutorService executor;
 
+    protected static int a = 0;
+
     FFmpegListener(RTSPVideoAdapter rTSPVideoAdapter, String dst, FFmpegFrameGrabber grabber, String name, boolean usePacket) {
         super(rTSPVideoAdapter, name);
         this.isInit = false;
@@ -37,6 +39,11 @@ public abstract class FFmpegListener extends RTSPListener {
         List<ExecutorService> executorServices = rTSPVideoAdapter.getWorkers();
         Random random = new Random();
         int index = Math.abs(random.nextInt())%executorServices.size();
+//        int index = a;
+//        a++;
+//        if (a==2) {
+//            a=3;
+//        }
         this.executor = executorServices.get(index);
         recorder = fFmpegRecorderInit(dst, grabber);
     }

@@ -31,19 +31,19 @@ public class PushTask implements Task {
         try {
             PushListener listener = (PushListener) ((RTSPEvent) event).getRtspListener();
             FFmpegFrameRecorder pushRecorder = listener.getRecorder();
-            boolean success = false;
+            boolean success = true;
             try {
                 if (event instanceof PacketEvent) {
                     AVPacket avPacket = ((PacketEvent) event).getFrame();
-//                    Random random = new Random();
-//                    double time = Math.abs(Math.sqrt(5)*random.nextGaussian()+10);
-//                    Thread.sleep((long) time);
-                    success = pushRecorder.recordPacket(avPacket);
+                    Random random = new Random();
+                    double time = Math.abs(Math.sqrt(5)*random.nextGaussian()+10);
+                    Thread.sleep((long) time);
+//                    success = pushRecorder.recordPacket(avPacket);
                 } else if (event instanceof GrabEvent) {
-//                    Random random = new Random();
-//                    double time = Math.abs(Math.sqrt(5)*random.nextGaussian()+10);
-//                    Thread.sleep((long) time);
-                    pushRecorder.record(((GrabEvent) event).getFrame());
+                    Random random = new Random();
+                    double time = Math.abs(Math.sqrt(5)*random.nextGaussian()+10);
+                    Thread.sleep((long) time);
+//                    pushRecorder.record(((GrabEvent) event).getFrame());
                     success = true;
                 } else {
                     throw new Exception("Unknown cn.edu.bupt.event type!");

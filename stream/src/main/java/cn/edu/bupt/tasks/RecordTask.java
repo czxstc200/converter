@@ -27,7 +27,7 @@ public class RecordTask implements Task {
     public void run() {
         RecordListener listener = (RecordListener) ((RTSPEvent) event).getRtspListener();
         FFmpegFrameRecorder fileRecorder = listener.getRecorder();
-        boolean success = false;
+        boolean success = true;
         try {
             if (event instanceof GrabEvent) {
                 // 时间戳设置
@@ -42,16 +42,16 @@ public class RecordTask implements Task {
                 if (timestamp > fileRecorder.getTimestamp()) {
                     fileRecorder.setTimestamp(timestamp);
                 }
-                fileRecorder.record(((GrabEvent) event).getFrame());
+//                fileRecorder.record(((GrabEvent) event).getFrame());
                 success = true;
-//                Random random = new Random();
-//                double time = Math.abs(Math.sqrt(15)*random.nextGaussian()+30);
-//                Thread.sleep((long) time);
+                Random random = new Random();
+                double time = Math.abs(Math.sqrt(15)*random.nextGaussian()+30);
+                Thread.sleep((long) time);
             } else if (event instanceof PacketEvent) {
-//                Random random = new Random();
-//                double time = Math.abs(Math.sqrt(15)*random.nextGaussian()+30);
-//                Thread.sleep((long) time);
-                success = fileRecorder.recordPacket(((PacketEvent) event).getFrame());
+                Random random = new Random();
+                double time = Math.abs(Math.sqrt(15)*random.nextGaussian()+30);
+                Thread.sleep((long) time);
+//                success = fileRecorder.recordPacket(((PacketEvent) event).getFrame());
             } else {
                 log.warn("Unknown event type!");
             }

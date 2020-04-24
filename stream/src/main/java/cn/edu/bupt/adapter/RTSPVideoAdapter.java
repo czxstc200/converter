@@ -82,10 +82,10 @@ public class RTSPVideoAdapter extends VideoAdapter {
             while (!stop) {
                 //记录帧数
                 count++;
-                if (count % 100 == 0) {
-                    System.out.println("Video counts : "+count);
-                    log.info("Video[{}] counts={}", rTSPPath, count);
-                }
+//                if (count % 100 == 0) {
+//                    System.out.println("Video counts : "+count);
+//                    log.info("Video[{}] counts={}", rTSPPath, count);
+//                }
                 try {
                     if (usePacket) {
                         //使用AVPacket进行推流，目前这种模式下不能对数据帧进行处理
@@ -306,7 +306,7 @@ public class RTSPVideoAdapter extends VideoAdapter {
         ExecutorService executorService1 = Executors.newFixedThreadPool(2);
         VideoAdapterManagement<RTSPVideoAdapter> videoAdapterManagement = new VideoAdapterManagement<>();
         final AtomicInteger atomicInteger = new AtomicInteger(0);
-        for (int i = 0;i<2;i++) {
+        for (int i = 0;i<4;i++) {
             executorService1.submit(new Runnable() {
                 @Override
                 public void run() {
